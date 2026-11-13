@@ -14,9 +14,11 @@ sequenceDiagram
     participant GitHub as Public GitHub API
     participant Ollama as Project Ollama / qwen3.5:9b
     Developer->>Agent: github owner/repository PR_NUMBER
-    Agent->>Tools: initialize; tools/list
+    Agent->>Tools: initialize
+    Agent->>Tools: tools/list
     Agent->>Tools: get_change_snapshot
-    Tools->>GitHub: PR metadata + paginated files; verify SHAs
+    Tools->>GitHub: PR metadata and paginated files
+    Tools->>GitHub: Verify base and head SHAs
     GitHub-->>Tools: Base/head SHAs, metadata, patches
     Tools-->>Agent: Platform-independent snapshot
     Agent->>Tools: get_file_at_commit(head SHA, path)
