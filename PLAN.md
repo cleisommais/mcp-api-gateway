@@ -6,9 +6,9 @@ Planning reference: 2026-11-12. [Index](README.md) · [Decisions](docs/decisions
 
 Build a PR review POC for hands-on learning and an interview portfolio, using a Java agent, MCP Gateway, MCP tools, and interchangeable model providers. The review core must support GitHub, GitLab, and Bitbucket through platform-independent contracts. Development takes place in VS Code and execution is intended to use Docker.
 
-**Confirmed:** plan before implementation; Java; gateway in the final design; containers; multiple platforms and models; large PRs without a fixed file cutoff; configurable concurrency; reuse suitable servers; existing Ollama and hardware as the initial inference path, subject to validation.
+**Confirmed:** plan before implementation; Java; gateway in the final design; containers; multiple platforms and models; large PRs without a fixed file cutoff; configurable concurrency; reuse suitable servers; local NVIDIA inference. On 2026-11-13 the user requested project-owned Ollama/PostgreSQL, superseding reuse of another project's service.
 
-**Additional confirmed directions:** local Ollama as the default for iteration to avoid external inference charges; evaluate installed models before downloading more; a temporary VPS demonstration using an external API independently of the personal computer; select one initial external provider through evaluation; prepare the repository for public release and remove infrastructure after the demonstration. Commercial operation and permanent availability are not goals. Initially, do not rent a cloud GPU or move Ollama to the VPS.
+**Additional confirmed directions:** local Ollama as the default for iteration to avoid external inference charges; a suitable model in the isolated project environment; a temporary VPS demonstration using an external API independently of the personal computer; select one initial external provider through evaluation; prepare the repository for public release and remove infrastructure after the demonstration. Commercial operation and permanent availability are not goals. Initially, do not rent a cloud GPU or move Ollama to the VPS.
 
 Costs, candidates, and teardown criteria are centralized in [cloud-demo-and-portfolio.md](docs/cloud-demo-and-portfolio.md). **P:** one Docker Compose machine, initially 2 vCPUs/4 GB, and a total budget of US$5–10, both subject to measurement and revalidation. These figures are neither proven capacity nor authorization to spend during planning.
 
@@ -20,7 +20,7 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 
 ## Proposed phases
 
-**F1 is implemented and verified**, as described in the [execution guide](docs/f1-mcp-stdio.md). F2–F8 remain planned. Necessary security, validation, and honest coverage reporting accompany the first feature that needs them; F7 expands robustness rather than postponing those protections.
+**F1 and F2 are implemented and verified**, as described in the [F1 guide](docs/f1-mcp-stdio.md) and [F2 guide](docs/f2-local-pr-review.md). F3–F8 remain planned. Necessary security, validation, and honest coverage reporting accompany the first feature that needs them; F7 expands robustness rather than postponing those protections.
 
 ### F1 — MCP fundamentals, without a model
 
@@ -35,10 +35,12 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 
 ### F2 — Manual review with local inference
 
+**Implemented on 2026-11-13 on `feat/f2-local-pr-review`:** project-owned Compose infrastructure, Ollama 0.40.16, `qwen3.5:9b`, a narrow public-GitHub read-only MCP adapter, fixed-SHA retrieval, bounded context, validated findings, and local reports. Four real synthetic PRs include a correct 22-file change. See the [guide](docs/f2-local-pr-review.md) for results and limits. PostgreSQL is healthy but queue processing remains F4. No comparison model was downloaded into another project's environment.
+
 - **Learn:** transform a diff into context; distinguish MCP tools from model calls; understand context windows and output validation.
-- **Deliver:** manual input with platform, connection/repository, and PR/MR number; metadata/diff/context retrieval through MCP at a fixed SHA; a structured local report with coverage. Use fixtures before a real repository. Integrate existing Ollama without creating another instance.
-- **Dependencies:** F1; a server providing the required operations; read credentials for real data; endpoint access and an experimental model choice. Perform the simple checks and four examples in [local-inference.md](docs/local-inference.md).
-- **Done when:** a GPU-suitable model produces verifiable findings and accepted JSON; initially compare the `qwen3:14b` baseline with `qwen3.5:9b`, updating the runtime when necessary. Reject invented files/locations, out-of-scope arguments, and invalid output; paginate files and report partial analysis when a PR exceeds context.
+- **Deliver:** manual input with platform, connection/repository, and PR/MR number; metadata/diff/context retrieval through MCP at a fixed SHA; a structured local report with coverage. Use F1 fixtures before a real repository. Own Ollama and PostgreSQL in this project's Compose setup, following D20.
+- **Dependencies:** F1; a server providing the required operations; endpoint access and an experimental model choice. Public GitHub reads require no application token in F2; private repositories and bot writes remain later work. Perform the simple checks and four examples in [local-inference.md](docs/local-inference.md).
+- **Done when:** a GPU-suitable model produces verifiable findings and accepted JSON. The isolated F2 environment starts with `qwen3.5:9b`; comparing another model remains an F6 experiment if useful. Reject invented files/locations, out-of-scope arguments, and invalid output; paginate files and report partial analysis when a PR exceeds context.
 - **Validate:** four known examples, with more than 20 files in one; check truncated content, timeout, and invalid schema handling. Observe cold/warm loading when useful for learning. Do not publish automatically at this stage.
 - **Later:** automation, inline comments, and optimizations motivated by actual use. Evaluate model tool calling, while allowing deterministic context retrieval by the harness initially.
 
@@ -106,4 +108,4 @@ Read the [F1 guide](docs/f1-mcp-stdio.md) to run it without AI and follow each c
 
 ## Current scope
 
-The user authorized creating `develop`, committing the documentation, and starting F1 on a working branch. This phase implements only the educational MCP call and its Docker build/tests. It does not start F2, update Ollama/models, or modify other projects' infrastructure. The future maintenance sequence remains in the [inference plan](docs/local-inference.md).
+The user authorized F2, project-owned Ollama/PostgreSQL, downloading a suitable local model, creating code/commits/PR fixtures in the public `cleisommais/pr-test-repo`, and committing the project changes. F2 produces local reports; gateway mediation, webhooks, durable jobs, and PR publication remain later phases. Other projects' containers and volumes are preserved.

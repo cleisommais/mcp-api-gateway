@@ -29,10 +29,10 @@ These choices resolve Q01–Q03 and implement P01 only within F1. They do not ye
 | D06 | C | Support large PRs without a fixed 20-file limit and disclose incomplete coverage |
 | D07 | C | Configurable concurrency across repositories without a fixed two-job global limit |
 | D08 | C | Reuse existing MCP Servers when suitable |
-| D09 | C | Reuse existing Ollama and NVIDIA GPU for initial inference, subject to quality/capacity validation |
+| D09 | C, superseded in part by D20 | Original direction: reuse existing Ollama and NVIDIA GPU. The GPU remains; F2 now owns its Ollama instance |
 | D10 | C | Original planning task: Markdown only; other projects read-only; no infrastructure, code, commit, or push in that delivery |
 | D11 | C | Hands-on learning and interview portfolio, without commercial operation or permanent availability |
-| D12 | C | Existing Ollama as development/validation default; evaluate installed models before downloads; no automatic updates |
+| D12 | C, superseded in part by D20 | Original direction: existing Ollama and installed models first. F2 now uses isolated infrastructure and an explicitly downloaded model; application requests still never update/pull implicitly |
 | D13 | C | Demonstrate on a temporary VPS using an external model API independently of the personal computer; initially no cloud GPU or Ollama migration to the VPS |
 | D14 | C | Select one initial external provider by quality and total cost per review; configurable endpoint/model/credentials; no implicit automatic external fallback |
 | D15 | C | Prepare a public repository with documentation, reproducible examples, evaluations, and a short recording, without credentials/private information |
@@ -40,6 +40,7 @@ These choices resolve Q01–Q03 and implement P01 only within F1. They do not ye
 | D17 | C | Size choices and validation for a learning POC; do not require questions, SLOs, or production operational processes to proceed |
 | D18 | C | Update Ollama when needed and consider a newer/GPU-suitable model; existing runtime/models are not permanent constraints |
 | D19 | C | English is the project language for documentation, diagrams, code comments, tool descriptions, application messages, and future commit messages |
+| D20 | C, 2026-11-13 | Own Ollama and PostgreSQL in this repository's Docker Compose, with separate containers/volumes/network; install a GPU-suitable model and use the public `cleisommais/pr-test-repo` for code, commit, and PR exercises. Preserve other projects' infrastructure |
 
 Hardware, version, and models were **confirmed by the user** in addition to earlier inspection evidence. The canonical record is [local-inference.md](local-inference.md); custom-model characteristics are not inferred from its name or automatically included in that confirmation.
 
@@ -50,12 +51,12 @@ Hardware, version, and models were **confirmed by the user** in addition to earl
 | P01 | P | Java 21, Maven, Spring Boot, Spring Security, and Spring AI, initially imperative | Framework-free MCP SDK/HTTP client reduces abstraction in F1 but needs more manual integration later |
 | P02 | P | One application for ingress, worker, core, and publication; gateway in a separate process | Making every role a microservice increases operations without demonstrated need |
 | P03 | P | Dedicated PostgreSQL for jobs, publication, and auditing; database-backed queue | An in-memory queue does not support recovery; a broker can be reconsidered after measurement |
-| P04 | P | Docker Compose for application/database in both profiles; reference existing local inference | Duplicate Ollama/models consume disk/VRAM and complicate ownership/maintenance; cloud uses an external API |
+| P04 | Implemented locally in F2; updated by D20 | Compose with project-owned PostgreSQL/Ollama and separate named volumes; cloud uses an external API | Uses additional model disk space in exchange for the requested independent lifecycle |
 | P05 | P | GitHub first and GitHub App for automation | PAT/machine-user options need permission, lifecycle, and personal-dependency evaluation |
 | P06 | P | Model receives read tools; application publishes after validation | Model-controlled writes increase prompt injection impact and complicate idempotency |
 | P07 | P | Static MVP without shell, PR execution, merge, or automatic approval | Future execution requires sandboxing and a different risk design |
-| P08 | P | Short comparison of existing `qwen3:14b` and `qwen3.5:9b` after checking runtime support | `gpt-oss:20b` is optional; do not require exhaustive installed-model testing or infer quality from novelty |
-| P09 | P | Initially access local Ollama through `http://host.docker.internal:11434` | Shared networking reduces host dependency but exposes the application to a network with other services; see inventory |
+| P08 | Implemented candidate in F2 | Start isolated inference with `qwen3.5:9b`, then compare another model in F6 if useful | Four examples support a POC starting point, not a general quality ranking |
+| P09 | Implemented in F2; updated by D20 | Java uses `http://ollama:11434` on the project network; host port is loopback-only 11435 | No external network attachment or other-project dependency |
 | P10 | P | External fallback disabled by default, enabled explicitly by repository/policy | Automatic continuity can disclose code and incur unauthorized costs |
 | P11 | P | Separate tool rounds from the final JSON Schema response | Tools and schema in the same call need model/version-specific validation |
 | P12 | P | Start with one local inference call at a time and a bounded application queue | Initial shared-GPU experiment setting, not a global review limit |
@@ -67,6 +68,8 @@ Hardware, version, and models were **confirmed by the user** in addition to earl
 API candidates, dated financial references, comparison, and teardown are centralized in [cloud-demo-and-portfolio.md](cloud-demo-and-portfolio.md). Provider, VPS SKU/region, and final limits remain **Q**.
 
 ## Consulted compatibility
+
+F2 keeps Java 21/MCP SDK 2.1.0 and uses the JDK HTTP client for Ollama, without adding Spring solely for one API call. The narrow public-read MCP adapter avoids requiring a personal token to run the public fixtures; the official server and GitHub App remain candidates for F4. F2 pins Ollama 0.40.16 and PostgreSQL 17.6-alpine. [F2 results](f2-local-pr-review.md) record the tested model digest and limits.
 
 The sources below were consulted on 2026-11-12. They guide future choices; F1 pins its own dependencies above, while the broader application stack remains proposed.
 

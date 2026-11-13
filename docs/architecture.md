@@ -80,7 +80,9 @@ This diagram shows which components communicate. The next diagram shows their ex
 
 **P:** one Java container contains the webhook endpoint, background routine, agent, and publisher. These are parts of one program, not four microservices. A separate Java gateway container supports learning MCP connections and authorization at that boundary. PostgreSQL stores jobs, results, and audit records. The active `divine-touch` database will not be reused implicitly.
 
-Existing Ollama remains outside this project's Compose setup. Remote MCP Servers do not require local containers. Local HTTP servers may have their own containers. With `stdio`, the client starts and controls a subprocess and its streams: there is no HTTP URL between containers. An educational stdio server can be a child of the client/gateway; do not mount the Docker socket into the gateway to launch arbitrary containers. If an existing server requires stdio, evaluate controlled packaging of its executable with the hosting process before assuming HTTP.
+F2 owns Ollama and PostgreSQL in this project's Compose setup, following the user's isolation request (D20). The Java review container starts a read-only GitHub MCP subprocess over stdio and calls `http://ollama:11434` separately for inference. PostgreSQL is provisioned for F4 but does not participate in manual F2 reviews. The [F2 guide](f2-local-pr-review.md) distinguishes the implemented flow from the future automatic design above.
+
+Remote MCP Servers do not require local containers. Local HTTP servers may have their own containers. With `stdio`, the client starts and controls a subprocess and its streams: there is no HTTP URL between containers. An educational stdio server can be a child of the client/gateway; do not mount the Docker socket into the gateway to launch arbitrary containers. If an existing server requires stdio, evaluate controlled packaging of its executable with the hosting process before assuming HTTP.
 
 Prefer Streamable HTTP for independent client/server services when both support the selected profile. Legacy SSE is not automatically equivalent. Compare the [transport specification](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports) and [Java SDK](https://java.sdk.modelcontextprotocol.io/latest/) support against each implementation; parts of the consulted SDK support the newest revision only in preview.
 
@@ -88,7 +90,7 @@ Prefer Streamable HTTP for independent client/server services when both support 
 
 | Profile | Components and dependencies |
 | --- | --- |
-| Local, confirmed development default | Java/database containers and required MCP Servers; the model access layer uses existing Ollama as described in [local inference](local-inference.md) |
+| Local, confirmed development default | Project-owned Java/PostgreSQL/Ollama containers and required MCP Servers; the model access layer calls the project's Ollama service as described in [local inference](local-inference.md) |
 | Cloud, confirmed demonstration | The same agent/gateway/publisher roles on a VPS using the selected external model API; no dependency on the personal computer, its Ollama, or desktop MCP Servers |
 
 **P for cloud hosting:** one Docker Compose host, initially 2 vCPUs/4 GB subject to measurement; application, gateway, PostgreSQL, and optional local servers, with HTTPS on the same host. Database, gateway, and internal services use private networking. Initially, no cloud GPU, Ollama on the VPS, managed database, paid load balancer, or Kubernetes. The design and temporary lifecycle are described in [cloud-demo-and-portfolio.md](cloud-demo-and-portfolio.md).

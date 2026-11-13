@@ -2,7 +2,7 @@
 
 [Index](../README.md) · [Phases F1–F8](../PLAN.md) · [C/P/Q/F classification](decisions.md).
 
-Criteria describe planned checks, not evidence that every capability is delivered. **C** identifies explicitly requested scope; proposed implementation choices are marked **P** in the criterion. **F** denotes future work. Phase indicates first delivery and later hardening where needed. F1's implemented subset and verified results are documented in the [F1 guide](f1-mcp-stdio.md); later-phase requirements remain planned. Existing RF/RNF identifiers are retained for traceability.
+Criteria describe planned checks, not evidence that every capability is delivered. **C** identifies explicitly requested scope; proposed implementation choices are marked **P** in the criterion. **F** denotes future work. Phase indicates first delivery and later hardening where needed. Implemented subsets and verified results are documented in the [F1 guide](f1-mcp-stdio.md) and [F2 guide](f2-local-pr-review.md); later-phase requirements remain planned. Existing RF/RNF identifiers are retained for traceability.
 
 ## Functional requirements
 
@@ -35,7 +35,7 @@ Criteria describe planned checks, not evidence that every capability is delivere
 | RF25 | Local timeout and unavailability | C | F2 | Simulate timeout/error/busy service; stop or reschedule with a limit; release the application slot and record possibly remaining server-side inference |
 | RF26 | Arguments and JSON separate from policy | C | F2/F3 | Validate schema and semantics before each tool; compare SHA, repository, and paths against authorized context even when model-generated |
 | RF27 | Explicit external fallback | C | F2/F6 | Local failure never sends code to another provider automatically; verify no external call without enabled policy; enabling requires destination and data scope |
-| RF28 | Local and cloud demonstration profiles | C | F2/F6/F8 | Development uses existing Ollama; demonstration uses an explicitly configured external API and completes webhook → durable job → agent → gateway tools → model → publication, initially without desktop, cloud GPU, or Ollama on the VPS |
+| RF28 | Local and cloud demonstration profiles | C | F2/F6/F8 | Development uses project-owned Ollama/PostgreSQL (D20); demonstration uses an explicitly configured external API and completes webhook → durable job → agent → gateway tools → model → publication, initially without desktop, cloud GPU, or Ollama on the VPS |
 | RF29 | Exportable evidence | C | All; completion F8 | Export publishable examples, labeled results, metrics, decisions, and a short recording; artifacts remain accessible after VPS deletion without an online endpoint |
 | RF30 | Demonstration teardown | C | F8 | Runbook identifies campaign resources, exports evidence, deletes VM/billable extras, and checks residual balance/billing; powering off is not teardown evidence; execution is operational, outside model tools |
 
