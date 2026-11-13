@@ -1,215 +1,215 @@
-# Arquitetura e contratos
+# Architecture and contracts
 
-[Índice](../README.md) · [Decisões](decisions.md) · [Segurança](security-and-identity.md). Desenho inicial **P**, alinhado às direções confirmadas.
+[Index](../README.md) · [Decisions](decisions.md) · [Security](security-and-identity.md). Initial **P** design aligned with confirmed directions.
 
-## Por onde a review começa
+## Where a review starts
 
-O fluxo principal é automático: **a pessoa envia commits e abre ou atualiza uma PR; a plataforma Git envia um webhook ao endpoint da nossa aplicação Java; o agente analisa aquela alteração e a aplicação publica o resultado na PR**. A pessoa usa o acesso normal ao GitHub/GitLab/Bitbucket; não precisa fazer um segundo login na nossa aplicação a cada review.
+The primary flow is automatic: **a developer pushes commits and opens or updates a PR; the Git platform sends a webhook to our Java application's endpoint; the agent analyzes the change and the application publishes the result on the PR**. Developers use their normal GitHub/GitLab/Bitbucket access; they do not need a second login to our application for each review.
 
-O endpoint de webhook faz parte do mesmo serviço Java que executa o agente. Ao receber o evento, ele verifica se veio da plataforma esperada e se corresponde ao repositório/evento configurado. Essa é a **validação da entrada**: conferir o pedido recebido, não analisar o código ainda.
+The webhook endpoint belongs to the same Java service that runs the agent. It checks that the event came from the expected platform and matches the configured repository/event. This is **input validation**: checking the incoming request, not analyzing code yet.
 
-Para não deixar a conexão do webhook esperando toda a análise, a proposta é:
+To avoid making the webhook connection wait for the entire analysis, the proposal is:
 
-1. Receber e validar o evento da PR.
-2. Salvar no PostgreSQL um registro de análise pendente, identificando evento, repositório e PR. O commit exato será conferido e fixado ao preparar a análise.
-3. Responder à plataforma com sucesso HTTP, por exemplo `202 Accepted`. Isso confirma apenas que o evento foi recebido e registrado; não significa que a review terminou. O nome técnico dessa confirmação é **acknowledgement**, abreviado **ACK**.
-4. Uma rotina da mesma aplicação Java busca análises pendentes no banco e executa o agente. Essa rotina é o **worker**; não é outro servidor obrigatório. O banco guarda os registros, não chama nem executa o agente.
-5. O agente obtém o código da alteração por ferramentas MCP, consulta o modelo e organiza os achados.
-6. A aplicação valida os achados e publica o resumo na PR, indicando o commit analisado.
+1. Receive and validate the PR event.
+2. Save a pending review record in PostgreSQL, identifying the event, repository, and PR. The exact commit is checked and fixed when preparing the analysis.
+3. Return HTTP success to the platform, for example `202 Accepted`. This confirms only that the event was received and recorded; it does not mean the review is complete. This confirmation is an **acknowledgement**, abbreviated **ACK**.
+4. A routine in the same Java application fetches pending reviews from the database and runs the agent. That routine is the **worker**, not a mandatory separate server. The database stores records; it does not invoke or execute the agent.
+5. The agent retrieves changed code through MCP tools, queries the model, and organizes findings.
+6. The application validates the findings and publishes a summary on the PR, identifying the analyzed commit.
 
-**Harness** era o termo usado para a aplicação que coordena o agente: obter contexto, chamar ferramentas/modelo e validar o resultado. Não representa um serviço adicional. Nos diagramas abaixo, usamos **agente Java** para deixar esse papel mais claro.
+**Harness** refers to the application coordinating the agent: retrieving context, calling tools/the model, and validating results. It is not an additional service. The diagrams below use **Java agent** to make this responsibility clear.
 
-O disparo manual mencionado no planejamento é um caminho auxiliar para os primeiros exercícios e reprocessamento: informar uma PR já existente sem depender de webhook. Ele fica fora do diagrama principal e não muda o início automático descrito acima.
+The planned manual trigger supports early exercises and reprocessing: provide an existing PR without relying on a webhook. It is outside the primary diagram and does not change the automatic entry point described above.
 
-## Papéis e fronteiras
+## Roles and boundaries
 
-| Papel | Responsabilidade |
+| Role | Responsibility |
 | --- | --- |
-| Agente Java (host/harness) | Coordena a análise de um commit: obtém contexto, chama ferramentas/modelo e organiza os achados |
-| Worker | Rotina em segundo plano na mesma aplicação Java; busca análises pendentes e chama o agente |
-| MCP Client | Mantém conexão com um servidor e consome descoberta/ferramentas no perfil de protocolo selecionado |
-| MCP Server | Expõe ferramentas e contexto; não precisa conter modelo de IA |
-| MCP Gateway | Servidor MCP para o agente e cliente MCP para downstream; autoriza e roteia chamadas |
-| Camada de modelos | Seleciona provedor/modelo; aplica destino permitido, timeout, orçamento e política de envio de dados |
-| Ollama | Serviço de inferência; executa um artefato de modelo e oferece uma API |
-| Modelo | Pesos, quantização, template e capacidades executados pelo serviço; não é o harness |
-| Adaptador de plataforma | Traduz identidade de PR/MR, paginação, diffs, permissões e operações de uma oferta concreta |
-| Endpoint do webhook | Recebe o evento da plataforma, verifica autenticidade/repositório e registra uma análise pendente |
-| Publicador | Confere resultado, SHA e política e realiza escrita controlada na plataforma |
+| Java agent (host/harness) | Coordinates commit analysis: retrieves context, calls tools/the model, and organizes findings |
+| Worker | Background routine in the same Java application; fetches pending reviews and invokes the agent |
+| MCP Client | Maintains a server connection and consumes discovery/tools using the selected protocol profile |
+| MCP Server | Exposes tools and context; does not need to contain an AI model |
+| MCP Gateway | MCP Server for the agent and MCP Client for downstream servers; authorizes and routes calls |
+| Model access layer | Selects provider/model; applies allowed destinations, timeout, budget, and data-transmission policy |
+| Ollama | Inference service that runs a model artifact and exposes an API |
+| Model | Weights, quantization, template, and capabilities executed by the service; not the harness |
+| Platform adapter | Translates PR/MR identity, pagination, diffs, permissions, and operations for a specific offering |
+| Webhook endpoint | Receives platform events, verifies authenticity/repository, and records a pending review |
+| Publisher | Checks findings, SHA, and policy, then performs controlled writes to the platform |
 
-OpenAI, Anthropic e DeepSeek são provedores de modelos neste desenho; não são automaticamente MCP Servers. Ollama não substitui o agente ou o gateway. A comunicação MCP padroniza o protocolo, não os nomes e a semântica de todas as ferramentas.
+OpenAI, Anthropic, and DeepSeek are model providers in this design, not automatically MCP Servers. Ollama does not replace the agent or gateway. MCP standardizes communication, not every tool's name and semantics.
 
 ```mermaid
 flowchart LR
-  Dev["Pessoa envia commits e abre ou atualiza a PR"] --> Git
-  subgraph EXT["Fronteira externa: plataforma e conteúdo não confiável"]
+  Dev["Developer pushes commits and opens or updates a PR"] --> Git
+  subgraph EXT["External boundary: platform and untrusted content"]
     Git["GitHub / GitLab / Bitbucket"]
   end
-  Git -->|"webhook HTTPS"| In
-  subgraph APP["Fronteira da aplicação Java"]
-    In["Endpoint: recebe e confere o evento"] -->|"salva análise pendente"| DB[("PostgreSQL: trabalhos e resultados")]
-    W["Agente Java: execução em segundo plano"] -->|"busca análises pendentes e atualiza estado"| DB
+  Git -->|"HTTPS webhook"| In
+  subgraph APP["Java application boundary"]
+    In["Endpoint: receive and validate event"] -->|"save pending review"| DB[("PostgreSQL: jobs and results")]
+    W["Java agent: background execution"] -->|"fetch pending reviews and update state"| DB
     W --> MC["MCP Client"]
-    W --> Models["Camada de modelos"]
-    W --> V["Validação e consolidação"]
-    V --> Pub["Publicador determinístico"]
+    W --> Models["Model access layer"]
+    W --> V["Validation and consolidation"]
+    V --> Pub["Deterministic publisher"]
   end
-  In -->|"resposta HTTP: evento recebido e registrado"| Git
-  subgraph GOV["Fronteira do gateway"]
-    GW["MCP Server upstream / políticas / MCP Clients downstream"]
+  In -->|"HTTP response: event received and recorded"| Git
+  subgraph GOV["Gateway boundary"]
+    GW["Upstream MCP Server / policies / downstream MCP Clients"]
   end
-  subgraph DOWN["Fronteira de servidores aprovados"]
-    S["MCP Servers e adaptação semântica"]
+  subgraph DOWN["Approved-server boundary"]
+    S["MCP Servers and semantic adaptation"]
   end
-  MC ==>|"MCP: descoberta e chamadas"| GW
-  GW ==>|"MCP: encaminhamento autorizado"| S
-  S -->|"API Git com credencial própria"| Git
-  Pub -->|"API de publicação"| Git
-  subgraph INF["Fronteira da inferência local compartilhada"]
-    O["Ollama existente"] --> M["Modelo em GPU/CPU"]
+  MC ==>|"MCP: discovery and calls"| GW
+  GW ==>|"MCP: authorized forwarding"| S
+  S -->|"Git API with its own credentials"| Git
+  Pub -->|"Publication API"| Git
+  subgraph INF["Shared local inference boundary"]
+    O["Existing Ollama"] --> M["Model on GPU/CPU"]
   end
-  Models -.->|"HTTP de inferência; não MCP"| O
-  Models -.->|"API: somente se habilitada"| Cloud["Provedor externo"]
+  Models -.->|"Inference HTTP; not MCP"| O
+  Models -.->|"API: only when enabled"| Cloud["External provider"]
 ```
 
-Linhas espessas representam MCP; linhas pontilhadas representam consultas ao modelo. Toda passagem entre caixas exige avaliação própria de confiança. Conteúdo retornado por servidor aprovado continua sendo dado não confiável.
+Thick lines represent MCP; dotted lines represent model calls. Each boundary crossing needs its own trust evaluation. Content returned by an approved server remains untrusted data.
 
-Este diagrama mostra quem conversa com quem. A sequência temporal está no diagrama seguinte. A seta **agente → banco** representa a consulta feita pela rotina de execução, e não um disparo iniciado pelo banco. “PostgreSQL próprio” significa apenas dados desta POC, separados dos bancos dos outros projetos; não exige banco gerenciado.
+This diagram shows which components communicate. The next diagram shows their execution order. The **agent → database** arrow is the execution routine querying the database, not the database triggering execution. A dedicated PostgreSQL database means POC data is separate from other projects; it does not require a managed database.
 
-## Divisão inicial de processos
+## Initial process layout
 
-**P:** um container Java reúne endpoint de webhook, rotina em segundo plano, agente e publicação. São partes do mesmo programa, não quatro microserviços. Um container Java separado para gateway permite aprender a conexão MCP e a autorização nessa fronteira. PostgreSQL armazena trabalhos, resultados e registros de auditoria. O banco ativo do `divine-touch` não será reutilizado implicitamente.
+**P:** one Java container contains the webhook endpoint, background routine, agent, and publisher. These are parts of one program, not four microservices. A separate Java gateway container supports learning MCP connections and authorization at that boundary. PostgreSQL stores jobs, results, and audit records. The active `divine-touch` database will not be reused implicitly.
 
-O Ollama já existente permanece externo ao Compose do projeto. Servidores MCP remotos não geram container local. Servidores HTTP locais podem usar containers próprios. Para `stdio`, o cliente inicia e controla um subprocesso e seus streams: não há URL HTTP entre containers. Um servidor `stdio` didático pode ser filho do cliente/gateway; não montar o socket Docker no gateway para lançar containers arbitrários. Se um servidor existente exigir `stdio`, avaliar empacotamento controlado do executável no processo hospedeiro antes de presumir HTTP.
+Existing Ollama remains outside this project's Compose setup. Remote MCP Servers do not require local containers. Local HTTP servers may have their own containers. With `stdio`, the client starts and controls a subprocess and its streams: there is no HTTP URL between containers. An educational stdio server can be a child of the client/gateway; do not mount the Docker socket into the gateway to launch arbitrary containers. If an existing server requires stdio, evaluate controlled packaging of its executable with the hosting process before assuming HTTP.
 
-Preferir Streamable HTTP quando cliente e servidor forem serviços independentes e ambos suportarem o perfil escolhido. SSE legado não deve ser presumido equivalente. A especificação [de transportes](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports) e a matriz do [SDK Java](https://java.sdk.modelcontextprotocol.io/latest/) precisam ser confrontadas com cada implementação; a revisão mais recente tem suporte ainda em preview em parte do SDK consultado.
+Prefer Streamable HTTP for independent client/server services when both support the selected profile. Legacy SSE is not automatically equivalent. Compare the [transport specification](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports) and [Java SDK](https://java.sdk.modelcontextprotocol.io/latest/) support against each implementation; parts of the consulted SDK support the newest revision only in preview.
 
-## Perfis local e cloud temporário
+## Local and temporary cloud profiles
 
-| Perfil | Componentes e dependências |
+| Profile | Components and dependencies |
 | --- | --- |
-| Local, padrão de desenvolvimento confirmado | Containers Java/banco e MCP Servers necessários; camada de modelos acessa Ollama existente conforme [inferência local](local-inference.md) |
-| Cloud, demonstração confirmada | Mesmos papéis de agente/gateway/publicador em VPS com API externa selecionada; nenhum caminho depende do computador pessoal, de seu Ollama ou de servidores MCP no desktop |
+| Local, confirmed development default | Java/database containers and required MCP Servers; the model access layer uses existing Ollama as described in [local inference](local-inference.md) |
+| Cloud, confirmed demonstration | The same agent/gateway/publisher roles on a VPS using the selected external model API; no dependency on the personal computer, its Ollama, or desktop MCP Servers |
 
-**P de hospedagem cloud:** um host com Docker Compose, 2 vCPUs/4 GB iniciais sujeitos a medição; aplicação, gateway, PostgreSQL e servidores locais opcionais, com HTTPS no mesmo host. Banco, gateway e serviços internos ficam em rede privada. Sem GPU cloud, Ollama na VPS, banco gerenciado, load balancer pago ou Kubernetes inicialmente. O desenho e o ciclo temporário estão em [cloud-demo-and-portfolio.md](cloud-demo-and-portfolio.md).
+**P for cloud hosting:** one Docker Compose host, initially 2 vCPUs/4 GB subject to measurement; application, gateway, PostgreSQL, and optional local servers, with HTTPS on the same host. Database, gateway, and internal services use private networking. Initially, no cloud GPU, Ollama on the VPS, managed database, paid load balancer, or Kubernetes. The design and temporary lifecycle are described in [cloud-demo-and-portfolio.md](cloud-demo-and-portfolio.md).
 
-O perfil define explicitamente endpoint, modelo, referência de credencial e destinos permitidos; falha local não seleciona cloud por conta própria. Um webhook HTTPS chama o serviço diretamente, sem pipeline Git obrigatório. A opção de API externa muda o destino da inferência, mantendo ferramentas sob o MCP Gateway da aplicação.
+The profile explicitly sets endpoint, model, credential reference, and allowed destinations; a local failure does not select cloud inference automatically. An HTTPS webhook calls the service directly without requiring a Git pipeline. External inference changes the model destination while tools remain governed by the application's MCP Gateway.
 
-## Sequência da review automática
+## Automatic review sequence
 
 ```mermaid
 sequenceDiagram
-  actor D as Pessoa desenvolvedora
-  participant P as Plataforma Git
-  participant E as Endpoint do serviço Java
+  actor D as Developer
+  participant P as Git platform
+  participant E as Java service endpoint
   participant B as PostgreSQL
-  participant A as Agente Java em segundo plano
-  participant G as Gateway MCP
+  participant A as Background Java agent
+  participant G as MCP Gateway
   participant S as MCP Server
-  participant M as Serviço de modelo selecionado
-  participant U as Publicador
-  D->>P: Envia commits e abre ou atualiza PR/MR
-  P->>E: Webhook com identificação do evento e da PR
-  E->>E: Conferir origem, repositório e tipo de evento
-  E->>B: Salvar evento e análise pendente sem duplicar
-  B-->>E: Registro salvo
-  E-->>P: HTTP 202: evento recebido e registrado
-  Note over E,A: Endpoint e rotina de execução pertencem à mesma aplicação Java
-  A->>B: Buscar e reservar próxima análise pendente
-  B-->>A: Dados do trabalho
-  A->>G: MCP: consultar PR e fixar commit analisado
-  G->>G: Autorizar identidade, ferramenta e recurso
-  G->>S: MCP: obter metadados, diff e arquivos naquele commit
-  S->>P: Ler dados do repositório e da PR
-  P-->>S: Conteúdo solicitado
-  S-->>G: Metadados, diff, arquivos e limitações
-  G-->>A: Dados para análise
-  A->>M: Enviar contexto de código e pedir review
-  M-->>A: Achados candidatos ou pedido de contexto adicional
-  Note over A,S: Contexto adicional segue o mesmo caminho MCP autorizado
-  A->>A: Validar achados, evidências e cobertura
-  A->>U: Entregar resultado do commit analisado
-  U->>P: Conferir se a PR continua no mesmo commit
-  alt PR ainda no commit analisado
-    U->>P: Publicar resumo na PR
-    U->>B: Guardar resultado e identificação da publicação
-  else PR recebeu novo commit ou deixou de ser elegível
-    U->>B: Marcar análise anterior como desatualizada
+  participant M as Selected model service
+  participant U as Publisher
+  D->>P: Push commits and open or update PR/MR
+  P->>E: Webhook identifying event and PR
+  E->>E: Check origin, repository, and event type
+  E->>B: Save event and pending review without duplication
+  B-->>E: Record saved
+  E-->>P: HTTP 202: event received and recorded
+  Note over E,A: Endpoint and execution routine belong to the same Java application
+  A->>B: Fetch and reserve the next pending review
+  B-->>A: Job data
+  A->>G: MCP: query PR and fix the analyzed commit
+  G->>G: Authorize identity, tool, and resource
+  G->>S: MCP: retrieve metadata, diff, and files at that commit
+  S->>P: Read repository and PR data
+  P-->>S: Requested content
+  S-->>G: Metadata, diff, files, and limitations
+  G-->>A: Analysis data
+  A->>M: Send code context and request review
+  M-->>A: Candidate findings or request for more context
+  Note over A,S: Additional context follows the same authorized MCP path
+  A->>A: Validate findings, evidence, and coverage
+  A->>U: Hand over results for the analyzed commit
+  U->>P: Check whether the PR is still at the same commit
+  alt PR still at the analyzed commit
+    U->>P: Publish summary on the PR
+    U->>B: Store result and publication identifier
+  else PR received a new commit or is no longer eligible
+    U->>B: Mark previous analysis as outdated
   end
 ```
 
-O acesso direto ao servidor na F1/F2 é um passo didático; a partir da F3, o acesso do agente às ferramentas passa pelo gateway. A publicação é responsabilidade da aplicação e não precisa ser uma ferramenta disponível ao modelo.
+Direct server access in F1/F2 is an educational step; from F3 onward, agent tool access passes through the gateway. Publication is an application responsibility and need not be a tool exposed to the model.
 
-## Obtenção do código: API ou clone
+## Retrieving code: API or clone
 
-O agente precisa saber **o que mudou** e ler os arquivos no **commit exato** que está revisando. O webhook identifica a PR e seus eventos; ele não substitui a obtenção desse conteúdo.
+The agent must know **what changed** and read files at the **exact commit** under review. The webhook identifies the PR and event; it does not replace content retrieval.
 
-Clonar o projeto é uma forma de obter arquivos, mas não é obrigatório. **Minha proposta inicial para esta POC é obter metadados, diff e arquivos pelas ferramentas do MCP Server da plataforma**, que consulta sua API. Isso permite aprender MCP e fazer a review sem manter um clone completo para cada análise.
+Cloning is one retrieval method, not a requirement. **The initial POC proposal is to retrieve metadata, diffs, and files through the platform MCP Server's tools**, which query its API. This supports MCP learning and review without maintaining a complete clone for every analysis.
 
-Se o servidor/ferramenta escolhido precisar de arquivos locais, pode haver um clone ou fetch seguido da seleção daquele commit, feito por uma operação controlada de leitura. Nesse caso, documentaremos onde fica a cópia e como é descartada. Não é necessário executar o projeto, instalar suas dependências ou oferecer shell ao modelo para revisar o código.
+If the chosen server/tool needs local files, a controlled read operation can clone or fetch and select the commit. In that case, document where the copy lives and how it is discarded. Reviewing code does not require running the project, installing its dependencies, or exposing a shell to the model.
 
-O requisito é analisar o commit certo; **clone ainda não foi definido como requisito ou implementação obrigatória**. API e clone são detalhes de como a ferramenta obtém os dados, mantendo o agente acessando essas ferramentas pelo MCP Gateway.
+The requirement is to analyze the correct commit; **cloning is not an approved requirement or mandatory implementation**. API versus clone is a tool implementation detail; the agent still accesses tools through the MCP Gateway.
 
-Há uma corrida possível entre consultar head e publicar. Usar precondição da plataforma quando disponível; caso contrário, fixar o SHA no texto, verificar novamente e marcar/suprimir resultado obsoleto conforme política. Não prometer atomicidade entre API externa e banco.
+A race can occur between checking the head and publishing. Use platform preconditions when available; otherwise identify the SHA in the text, check again, and mark/suppress outdated results according to policy. Do not promise atomicity between an external API and the database.
 
-## Contrato comum proposto
+## Proposed common contract
 
-Os nomes abaixo são conceituais **P**, não ferramentas de fornecedor nem contrato aprovado. O adaptador pode ficar junto ao gateway ou servidor, conforme as capacidades existentes; a semântica comum deve impedir acoplamento do núcleo.
+Names below are conceptual **P** operations, not vendor tool names or approved contracts. Adaptation can live with the gateway or server according to available capabilities; the shared semantics must keep the core independent.
 
-| Operação conceitual | Entrada/resultado esperado |
+| Conceptual operation | Expected input/result |
 | --- | --- |
-| `identify_change_request` | Plataforma, oferta, connectionId, repositoryId e número local → identidade canônica |
-| `get_change_request` | Identidade → base/head SHA, branches, autor, draft, estado e capacidades |
-| `list_changed_files` | Identidade + snapshot + cursor → página, próximo cursor, totais conhecidos e sinal de completude |
-| `get_change_diff` | Snapshot + arquivo/hunk + cursor → diff, lados/linhas, renomeação e indicação de truncamento/indisponibilidade |
-| `get_file_at_commit` | Repositório autorizado + SHA + caminho validado → conteúdo limitado, encoding/hash e condição de disponibilidade |
-| `get_change_state` | Identidade → head/estado atuais para checagem de obsolescência |
-| `publish_summary` | Resultado validado, SHA, cobertura e chave lógica → ID/URL remotos; operação do publicador, não ferramenta do modelo no MVP |
-| `publish_inline_comment` | Snapshot + coordenada específica de diff + achado validado → comentário ou capacidade não suportada; F |
+| `identify_change_request` | Platform, offering, connectionId, repositoryId, and local number → canonical identity |
+| `get_change_request` | Identity → base/head SHA, branches, author, draft, state, and capabilities |
+| `list_changed_files` | Identity + snapshot + cursor → page, next cursor, known totals, and completeness indication |
+| `get_change_diff` | Snapshot + file/hunk + cursor → diff, sides/lines, rename information, and truncation/unavailability |
+| `get_file_at_commit` | Authorized repository + SHA + validated path → bounded content, encoding/hash, and availability |
+| `get_change_state` | Identity → current head/state for outdated-review checks |
+| `publish_summary` | Validated result, SHA, coverage, and logical key → remote ID/URL; publisher operation, not a model tool in the MVP |
+| `publish_inline_comment` | Snapshot + platform-specific diff coordinate + validated finding → comment or unsupported capability; F |
 
-Identidade canônica deve incluir instância/base URL aprovada e conexão, além do repositório e número; `owner/repo#123` sozinho não distingue ofertas/instâncias. A base URL vem do cadastro, nunca de um argumento livre produzido pelo modelo.
+Canonical identity includes the approved instance/base URL and connection, as well as repository and number; `owner/repo#123` alone does not distinguish offerings/instances. The base URL comes from registration, never a free-form model argument.
 
-**P de resultado de review:** reviewId, attemptId, snapshot, provider/model/digest, versão do prompt/schema, achados, cobertura, limitações e status. Cada achado referencia arquivo, lado/linha ou hunk, severidade, explicação, evidência e SHA. Uma falha geral sem localização verificável vira limitação/resumo, não comentário de linha inventado.
+**P for review output:** reviewId, attemptId, snapshot, provider/model/digest, prompt/schema version, findings, coverage, limitations, and status. Each finding references file, side/line or hunk, severity, explanation, evidence, and SHA. A general issue without a verifiable location becomes a limitation/summary, not an invented inline comment.
 
-Erros normalizados: não autorizado, não encontrado, rate limit com prazo de retry, snapshot indisponível, conteúdo binário, diff truncado, schema alterado, timeout e falha transitória. Não converter indisponibilidade em conteúdo vazio válido.
+Normalize errors: unauthorized, not found, rate limit with retry timing, unavailable snapshot, binary content, truncated diff, changed schema, timeout, and transient failure. Do not convert unavailable data into valid empty content.
 
-## Diferenças entre plataformas
+## Platform differences
 
-| Alvo | Condições a validar antes do adaptador |
+| Target | Conditions to validate before implementing its adapter |
 | --- | --- |
-| GitHub.com / Enterprise Cloud | App, repositórios selecionados, rate limit, paginação de arquivos/diffs e posições de review |
-| GitHub Enterprise Server | Host configurado, versão da instalação, APIs/transporte e suporte do MCP Server; não inferir paridade com github.com |
-| GitLab.com / Self-Managed | MR/IID por projeto, SHA/diff refs, paginação, limites de diff, tokens e formato das posições; diferenças por versão |
-| Bitbucket Cloud | Workspace/repositório, PR, paginação, auth e coordenadas de comentários específicas |
-| Bitbucket Data Center | Instância e versão próprias, endpoints/permissões e contratos distintos de Cloud; avaliar separadamente |
+| GitHub.com / Enterprise Cloud | App, selected repositories, rate limits, file/diff pagination, and review positions |
+| GitHub Enterprise Server | Configured host, installation version, APIs/transport, and MCP Server support; do not infer parity with github.com |
+| GitLab.com / Self-Managed | Project-local MR/IID, SHA/diff refs, pagination, diff limits, tokens, and position format; version differences |
+| Bitbucket Cloud | Workspace/repository, PR, pagination, authentication, and comment coordinates |
+| Bitbucket Data Center | Its own instance/version, endpoints/permissions, and contracts distinct from Cloud; evaluate separately |
 
-Referências de entrada por webhook: [GitLab](https://docs.gitlab.com/user/project/integrations/webhooks/), [Bitbucket Cloud](https://support.atlassian.com/bitbucket-cloud/docs/manage-webhooks/). Limites exatos de APIs e paridade entre ofertas permanecem pendentes de testes; não há servidor Bitbucket escolhido.
+Webhook references: [GitLab](https://docs.gitlab.com/user/project/integrations/webhooks/), [Bitbucket Cloud](https://support.atlassian.com/bitbucket-cloud/docs/manage-webhooks/). Exact API limits and offering parity remain pending tests; no Bitbucket server has been selected.
 
-## Catálogo, conexões e reaproveitamento
+## Catalog, connections, and reuse
 
-Um **registry** descreve servidores aprovados; não é o processo em execução. A **configuração de conexão** resolve versão, URL ou comando fixo, transporte e referência de credencial. O **MCP Server** é o processo/serviço que atende. O **MCP Client** efetua as chamadas. Registro em catálogo não concede autorização de uso.
+A **registry** describes approved servers; it is not the running process. **Connection configuration** resolves version, URL or fixed command, transport, and credential reference. The **MCP Server** is the serving process/service. The **MCP Client** makes the calls. Catalog registration does not grant usage authorization.
 
-Servidor remoto costuma exigir URL e autenticação. Local pode exigir processo, pacote ou container. Para a POC, conferir as ferramentas necessárias, leitura por SHA, paginação, transporte e auth do servidor escolhido e anotar a versão/configuração que funcionou. Revisar mudanças de schema/descrição antes de usá-las; não exigir um processo corporativo de aprovação de fornecedores.
+Remote servers usually require a URL and authentication. Local servers may require a process, package, or container. For the POC, check required tools, SHA-specific reads, pagination, transport, and authentication for the selected server, recording the working version/configuration. Review schema/description changes before using them; do not require a corporate vendor-approval process.
 
-O [GitHub MCP Server oficial](https://github.com/github/github-mcp-server) é candidato. O suporte documentado de App em `stdio` está registrado em [decisions.md](decisions.md); validar a versão e os recursos efetivamente usados. Repetir as checagens necessárias ao adicionar outro servidor/plataforma. Se faltar uma capacidade essencial, avaliar complemento/adaptador estreito antes de reimplementar todas as APIs. Um servidor próprio pequeno continua válido como exercício F1.
+The [official GitHub MCP Server](https://github.com/github/github-mcp-server) is a candidate. Documented App support over stdio is recorded in [decisions.md](decisions.md); validate the actual version and features used. Repeat necessary checks when adding another server/platform. If an essential capability is missing, evaluate a narrow adapter/complement before reimplementing every API. A small custom server remains a valid F1 exercise.
 
-## PRs grandes, cobertura e consolidação
+## Large PRs, coverage, and consolidation
 
-1. Fixar snapshot e enumerar todas as páginas. Verificar totais quando disponíveis; página repetida/cursor em loop e ausência de dados esperados interrompem a declaração de completude.
-2. Criar manifesto de arquivos/hunks: código, testes, configuração, gerados e binários; renomeações, adições e exclusões. Exclusões seguem política explícita e ficam visíveis.
-3. Reservar tokens para instruções, schemas de ferramentas, histórico e saída. Dividir diffs/contexto pelo restante da janela efetiva; não cortar a lista depois de 20 arquivos.
-4. Agrupar por funcionalidade/dependência quando houver evidência; ler contexto adicional somente no repositório/SHA autorizados, com limite por chamada e trabalho.
-5. Validar e deduplicar achados e realizar passagem de consolidação entre arquivos com evidências selecionadas. Não transportar resumos de um snapshot para outro sem revalidação.
-6. Publicar manifesto com enumeração completa/incompleta e itens analisados, excluídos e pendentes, por motivo. Separar cobertura de enumeração da cobertura de análise; relatar hunks/tokens se só parte de um arquivo foi processada.
+1. Fix the snapshot and enumerate all pages. Check totals when available; repeated pages/cursor loops and missing expected data prevent a completeness claim.
+2. Create a file/hunk manifest: code, tests, configuration, generated files, and binaries; renames, additions, and deletions. Exclusions follow explicit policy and remain visible.
+3. Reserve tokens for instructions, tool schemas, history, and output. Split diffs/context within the remaining effective window; do not stop the file list at 20.
+4. Group by feature/dependency when supported by evidence; retrieve additional context only from the authorized repository/SHA, bounded per call and job.
+5. Validate/deduplicate findings and run a cross-file consolidation pass using selected evidence. Do not carry summaries across snapshots without revalidation.
+6. Report enumeration completeness and analyzed, excluded, and pending items with reasons. Separate enumeration coverage from analysis coverage; report hunks/tokens when only part of a file was processed.
 
-Lotes isolados podem perder relações entre componentes. Uma passagem de consolidação reduz essa limitação, mas não garante detectar todos os bugs. Avaliar especificamente um conjunto com bugs que dependam de dois ou mais arquivos e comparar com análise isolada. Ao atingir token, duração, quota ou fonte truncada, o estado é parcial; nunca afirmar cobertura completa por ter analisado apenas os lotes recebidos.
+Isolated batches can miss relationships between components. Consolidation reduces this limitation without guaranteeing detection of every bug. Evaluate examples requiring two or more files and compare against isolated analysis. Token, duration, quota, or truncated-source limits result in partial analysis; never claim complete coverage just because all received batches were processed.
 
-## Trabalhos, recuperação e concorrência
+## Jobs, recovery, and concurrency
 
-**P de estados:** queued → running → validating → publishing → succeeded/partial; finais alternativos failed/cancelled/superseded. Separar status de análise e publicação para representar resultado parcial publicado ou falha de envio. Na F2, relatório local; na F4, estado durável.
+**P for states:** queued → running → validating → publishing → succeeded/partial; alternative terminal states failed/cancelled/superseded. Keep analysis and publication status separate to represent published partial results or delivery failure. F2 uses local reports; F4 adds durable state.
 
-Para a POC, o banco guarda evento, repositório/PR, commit analisado, estado da execução, tentativa e resultado/publicação. A rotina Java consulta os pendentes e marca aquele que começou a executar. Identificar evento e resumo evita duplicação em reentregas; se houver falha, registrar o motivo e permitir reprocessamento. Mecanismos mais elaborados de reserva/recuperação podem ser estudados depois, sem mudar esse fluxo básico.
+For the POC, the database stores event, repository/PR, analyzed commit, execution state, attempt, and result/publication. The Java routine queries pending jobs and marks the one it starts. Identifying events and summaries prevents duplication on redelivery; failures record a reason and allow reprocessing. More elaborate reservation/recovery mechanisms can be studied later without changing this basic flow.
 
-Separar limites configuráveis de jobs e chamadas à inferência/plataforma. Aumentar jobs não exige aumentar a GPU em paralelo. Começar com fila simples limitada e tratamento de rate limit; fairness avançado fica como exercício opcional se surgir necessidade. Cancelar job não prova cancelamento imediato de inferência remota; observar a ocupação restante. A avaliação prática está em [requirements.md](requirements.md).
+Keep configurable job limits separate from inference/platform call limits. More jobs do not require more parallel GPU requests. Begin with a simple bounded queue and rate-limit handling; advanced fairness is an optional exercise if needed. Cancelling a job does not prove immediate cancellation of remote inference; observe remaining occupancy. Practical evaluation is described in [requirements.md](requirements.md).
 
-Rede, volumes, health checks e manutenção da inferência local estão centralizados em [local-inference.md](local-inference.md). VPS, orçamento, evidências públicas e encerramento estão em [cloud-demo-and-portfolio.md](cloud-demo-and-portfolio.md); o encerramento operacional não é uma ferramenta concedida ao modelo.
+Networking, volumes, health checks, and local inference maintenance are centralized in [local-inference.md](local-inference.md). VPS, budget, public evidence, and teardown are in [cloud-demo-and-portfolio.md](cloud-demo-and-portfolio.md); operational teardown is not a tool granted to the model.

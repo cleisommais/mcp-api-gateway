@@ -1,107 +1,109 @@
-# Plano de entrega e aprendizado
+# Delivery and learning plan
 
-Referência de planejamento: 12/11/2026. [Índice](README.md) · [Decisões](docs/decisions.md) · [Requisitos](docs/requirements.md).
+Planning reference: 2026-11-12. [Index](README.md) · [Decisions](docs/decisions.md) · [Requirements](docs/requirements.md).
 
-## Objetivo e limites
+## Objective and boundaries
 
-Construir uma POC de PR review para aprendizado prático e portfólio de entrevistas, com agente Java, MCP Gateway, acesso a ferramentas MCP e provedores de modelos intercambiáveis. O núcleo deve funcionar para GitHub, GitLab e Bitbucket por contratos independentes da plataforma. O desenvolvimento ocorre no VS Code e a execução pretendida é em Docker.
+Build a PR review POC for hands-on learning and an interview portfolio, using a Java agent, MCP Gateway, MCP tools, and interchangeable model providers. The review core must support GitHub, GitLab, and Bitbucket through platform-independent contracts. Development takes place in VS Code and execution is intended to use Docker.
 
-**Confirmado:** planejamento antes da implementação; Java; gateway no desenho final; containers; múltiplas plataformas e modelos; PRs grandes sem corte fixo de arquivos; concorrência configurável; reaproveitamento de servidores adequados; Ollama e hardware existentes como caminho inicial de inferência, sujeito a validação.
+**Confirmed:** plan before implementation; Java; gateway in the final design; containers; multiple platforms and models; large PRs without a fixed file cutoff; configurable concurrency; reuse suitable servers; existing Ollama and hardware as the initial inference path, subject to validation.
 
-**Complemento confirmado:** Ollama local como padrão de iteração para evitar cobrança de inferência externa; avaliar modelos instalados antes de novos downloads; demonstração temporária em VPS com API externa, independente do computador pessoal; um provedor externo inicial escolhido por avaliação; repositório preparado para publicação pública e encerramento da infraestrutura após a demonstração. Não há objetivo de serviço comercial ou disponibilidade permanente. Não contratar GPU cloud nem levar Ollama à VPS inicialmente.
+**Additional confirmed directions:** local Ollama as the default for iteration to avoid external inference charges; evaluate installed models before downloading more; a temporary VPS demonstration using an external API independently of the personal computer; select one initial external provider through evaluation; prepare the repository for public release and remove infrastructure after the demonstration. Commercial operation and permanent availability are not goals. Initially, do not rent a cloud GPU or move Ollama to the VPS.
 
-Custos, candidatos e critérios de encerramento estão centralizados em [cloud-demo-and-portfolio.md](docs/cloud-demo-and-portfolio.md). **P:** uma máquina com Docker Compose, inicialmente 2 vCPUs/4 GB, e orçamento total de US$ 5–10, ambos sujeitos a medição e revalidação; esses números não são capacidade comprovada nem autorização de gasto nesta tarefa.
+Costs, candidates, and teardown criteria are centralized in [cloud-demo-and-portfolio.md](docs/cloud-demo-and-portfolio.md). **P:** one Docker Compose machine, initially 2 vCPUs/4 GB, and a total budget of US$5–10, both subject to measurement and revalidation. These figures are neither proven capacity nor authorization to spend during planning.
 
-**Proposta de MVP:** análise estática, relatório manual primeiro, automação GitHub depois, resumo publicado pela aplicação e modelo com ferramentas apenas de leitura. Sem executar código da PR, shell genérico, alteração de código, merge ou aprovação automática. Comentários por linha ficam para evolução. Detalhes de stack permanecem propostas em [decisions.md](docs/decisions.md).
+**Proposed MVP:** static analysis, a manual report first, GitHub automation later, an application-controlled summary, and read-only tools available to the model. No PR code execution, generic shell, code modification, merge, or automatic approval. Inline comments are future work. Stack details remain proposals in [decisions.md](docs/decisions.md).
 
-Não iniciar Kubernetes, Kafka, Redis, múltiplos agentes especializados ou infraestrutura distribuída sem necessidade demonstrada. A existência desses componentes no `iam-trainer` não justifica copiá-los.
+Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distributed infrastructure without demonstrated need. Their presence in `iam-trainer` is not a reason to copy them.
 
-**Escala da POC:** usar as sugestões de [open-questions.md](docs/open-questions.md) para resolver escolhas técnicas no próprio exercício, sem exigir respostas do usuário a cada detalhe. Não há SLO/SLA, alta disponibilidade, política corporativa de retenção ou homologação formal como condição de entrega. Logs simples, poucos exemplos conhecidos e controles básicos de credencial, autorização e gasto são suficientes. Atualizar Ollama e experimentar modelo mais adequado quando isso facilitar a inferência local faz parte da preparação, sem ficar preso ao ambiente antigo.
+**POC scale:** use the recommendations in [open-questions.md](docs/open-questions.md) to resolve technical choices within each exercise without asking the user about every detail. SLOs/SLAs, high availability, corporate retention policies, and formal staging approval are not delivery conditions. Simple logs, a few known examples, and basic credential, authorization, and spending controls are sufficient. Updating Ollama and trying a model better suited to local inference are part of preparation when useful; the old environment is not a permanent constraint.
 
-## Etapas propostas
+## Proposed phases
 
-Os entregáveis abaixo descrevem trabalho futuro; não foram implementados nesta entrega. Segurança mínima, validação e relato honesto de cobertura acompanham a primeira funcionalidade que depende deles; a F7 amplia a robustez, sem adiar essas proteções.
+**F1 is implemented and verified**, as described in the [execution guide](docs/f1-mcp-stdio.md). F2–F8 remain planned. Necessary security, validation, and honest coverage reporting accompany the first feature that needs them; F7 expands robustness rather than postponing those protections.
 
-### F1 — Fundamentos MCP, sem modelo
+### F1 — MCP fundamentals, without a model
 
-- **Aprender:** host, cliente, servidor, descoberta, schema, chamada, resultado e transporte. Retomar records, interfaces, exceções e build Java em um exemplo pequeno.
-- **Entregar:** cliente Java e um servidor didático com uma ferramenta de leitura de fixture determinística. Escolher um perfil de protocolo suportado pelos dois lados, fixar dependências e documentar execução em Docker. `stdio` é uma opção didática; HTTP pode demonstrar containers independentes.
-- **Dependências:** selecionar JDK/build/SDK compatíveis e o transporte. Java 21/Maven e SDK Java oficial são propostas. Não depende de GitHub App, GPU ou modelo.
-- **Concluir quando:** descobrir a ferramenta, mostrar o schema, chamá-la com argumento válido e tratar argumento inválido e servidor indisponível de forma compreensível. Registrar o perfil de protocolo e encerrar a conexão corretamente.
-- **Validar:** resultado conhecido da fixture, erro de schema e falha de conexão; observar mensagens sem credenciais. Confirmar o exercício no ambiente Docker escolhido.
-- **Depois:** IA, diffs reais, gateway com políticas, autenticação delegada e publicação.
+**Completed on 2026-11-12:** Java 21, Maven, MCP SDK 2.1.0, stdio, and protocol 2025-11-25; `get_review_fixture`, seven integration tests, and Docker execution without networking. The implementation is on `feat/f1-mcp-stdio`, created after the documentation commit on `develop`.
 
-### F2 — Review manual com inferência local
+- **Learn:** host, client, server, discovery, schema, calls, results, and transport. Revisit Java records, interfaces, exceptions, and builds through a small example.
+- **Deliver:** a Java client and an educational server with a deterministic read-only fixture tool. Choose a shared protocol profile, pin dependencies, and document Docker execution. Stdio is an educational option; HTTP can demonstrate independent containers.
+- **Dependencies:** select compatible JDK/build/SDK versions and transport. Java 21/Maven and the official Java SDK were the initial proposals. No GitHub App, GPU, or model is required.
+- **Done when:** discover the tool, display its schema, call it with a valid argument, and explain invalid arguments and unavailable-server errors. Record the protocol profile and close the connection correctly.
+- **Validate:** known fixture output, schema error, and connection failure; inspect messages without credentials. Confirm execution in the chosen Docker environment.
+- **Later:** AI, real diffs, gateway policies, delegated authentication, and publication.
 
-- **Aprender:** transformação de diff em contexto, diferenças entre ferramenta MCP e chamada ao modelo, janela de contexto e validação da saída.
-- **Entregar:** entrada manual com plataforma, conexão/repositório e número da PR/MR; obtenção de metadados/diff/contexto via MCP e SHA fixo; relatório local estruturado com cobertura. Usar fixtures antes do repositório real. Integrar o Ollama existente sem criar outra instância.
-- **Dependências:** F1; servidor que forneça as operações necessárias; credencial de leitura para dados reais; acesso ao endpoint e seleção experimental do modelo. Fazer as checagens simples e os quatro exemplos de [local-inference.md](docs/local-inference.md).
-- **Concluir quando:** um modelo adequado à GPU produzir achados verificáveis e JSON aceito; comparar inicialmente o baseline `qwen3:14b` com o candidato `qwen3.5:9b`, atualizando o runtime quando necessário. Rejeitar arquivo/localização inventados, argumentos fora do escopo e saída inválida; paginar arquivos e evidenciar análise parcial em PR maior que o contexto.
-- **Validar:** quatro exemplos conhecidos, incluindo mais de 20 arquivos em um deles; conferir tratamento de conteúdo truncado, timeout e schema inválido. Observar carga fria/quente se for útil ao aprendizado. Não publicar automaticamente nessa etapa.
-- **Depois:** automação, comentários por linha e otimizações motivadas pelo uso. Tool calling pelo modelo é avaliado, mas o harness pode inicialmente buscar contexto de forma determinística.
+### F2 — Manual review with local inference
 
-### F3 — Gateway mínimo governado
+- **Learn:** transform a diff into context; distinguish MCP tools from model calls; understand context windows and output validation.
+- **Deliver:** manual input with platform, connection/repository, and PR/MR number; metadata/diff/context retrieval through MCP at a fixed SHA; a structured local report with coverage. Use fixtures before a real repository. Integrate existing Ollama without creating another instance.
+- **Dependencies:** F1; a server providing the required operations; read credentials for real data; endpoint access and an experimental model choice. Perform the simple checks and four examples in [local-inference.md](docs/local-inference.md).
+- **Done when:** a GPU-suitable model produces verifiable findings and accepted JSON; initially compare the `qwen3:14b` baseline with `qwen3.5:9b`, updating the runtime when necessary. Reject invented files/locations, out-of-scope arguments, and invalid output; paginate files and report partial analysis when a PR exceeds context.
+- **Validate:** four known examples, with more than 20 files in one; check truncated content, timeout, and invalid schema handling. Observe cold/warm loading when useful for learning. Do not publish automatically at this stage.
+- **Later:** automation, inline comments, and optimizations motivated by actual use. Evaluate model tool calling, while allowing deterministic context retrieval by the harness initially.
 
-- **Aprender:** gateway como servidor upstream e cliente downstream; roteamento, identidade e autorização por recurso.
-- **Entregar:** processo Java separado com cadastro administrativo de servidor, catálogo permitido, mapeamento de ferramentas, validação por chamada e auditoria. Migrar o acesso direto experimental da F2 para agente → gateway → servidor.
-- **Dependências:** F1/F2; matriz de transporte/protocolo; emissor apropriado para tokens, se adotado OAuth. Não criar um IdP próprio. A identidade local do laboratório deve ser explícita e restrita.
-- **Concluir quando:** cada chamada carregar escopo de trabalho/repositório/SHA, negar acesso cruzado, ferramenta não permitida e destino não cadastrado; credenciais downstream permanecerem fora do modelo. Conectar agente e gateway como containers independentes.
-- **Validar:** casos permitidos/negados, argumentos adulterados, troca de repositório, servidor indisponível, mudança de schema e correlação ponta a ponta.
-- **Depois:** catálogo empresarial completo, múltiplas organizações e delegação interativa ampla.
+### F3 — Minimal governed gateway
 
-### F4 — Automação, persistência e publicação
+- **Learn:** gateway as upstream server and downstream client; routing, identity, and resource authorization.
+- **Deliver:** a separate Java process with administrative server registration, an allowed catalog, tool mapping, per-call validation, and auditing. Move F2's experimental direct access to agent → gateway → server.
+- **Dependencies:** F1/F2; transport/protocol compatibility checks; an appropriate token issuer if OAuth is adopted. Do not build an IdP. The local lab identity must be explicit and restricted.
+- **Done when:** each call carries job/repository/SHA scope and rejects cross-resource access, unapproved tools, and unregistered destinations; downstream credentials remain outside the model. Run agent and gateway as independent containers.
+- **Validate:** allowed/denied calls, tampered arguments, repository switching, unavailable server, schema changes, and end-to-end correlation.
+- **Later:** a complete enterprise catalog, multiple organizations, and broad interactive delegation.
 
-- **Aprender:** webhook autenticado, instalação de aplicação, trabalho durável, recuperação e efeitos externos.
-- **Entregar:** GitHub como primeira integração proposta; endpoint valida o webhook, salva a análise pendente e responde à plataforma confirmando recebimento. Uma rotina em segundo plano da mesma aplicação Java executa o agente, que usa credenciais apropriadas, respeita branches/drafts e entrega o resumo à publicação. PostgreSQL e fila simples no banco são propostas, sem broker adicional; sequência explicada em [architecture.md](docs/architecture.md).
-- **Dependências:** F3; GitHub App instalada e permissões definidas; servidor MCP compatível com automação; banco próprio; endpoint HTTPS acessível. Para webhook local, avaliar túnel; GitHub não alcança diretamente `localhost`.
-- **Concluir quando:** entrega duplicada gerar um trabalho lógico; reinício recuperar trabalho; novo commit invalidar revisão anterior; publicação registrar SHA e cobertura e lidar com resultado ambíguo sem duplicar deliberadamente o resumo.
-- **Validar:** assinatura inválida, evento irrelevante, draft, branch filtrada, revogação de instalação, expiração de token, rate limit, crash após publicação e PR atualizada durante análise. Distinguir tempo de resposta ao webhook do tempo de execução da review.
-- **Depois:** outras plataformas e comentários por linha. Alta disponibilidade não é objetivo desta POC temporária.
+### F4 — Automation, persistence, and publication
 
-### F5 — Segundo servidor ou plataforma
+- **Learn:** authenticated webhooks, app installation, durable jobs, recovery, and external effects.
+- **Deliver:** GitHub as the proposed first integration; the endpoint validates a webhook, saves a pending review, and confirms receipt. A background routine in the same Java application runs the agent, uses appropriate credentials, respects branch/draft rules, and hands the summary to publication. PostgreSQL and a simple database queue are proposals, without an additional broker; see [architecture.md](docs/architecture.md).
+- **Dependencies:** F3; installed GitHub App and defined permissions; an automation-compatible MCP Server; a dedicated database; an accessible HTTPS endpoint. Consider a tunnel for local webhooks; GitHub cannot directly reach `localhost`.
+- **Done when:** duplicate delivery produces one logical job; restart allows recovery; a new commit invalidates the previous review; publication records SHA and coverage and handles ambiguous results without deliberately duplicating the summary.
+- **Validate:** invalid signature, irrelevant event, draft, filtered branch, revoked installation, token expiration, rate limits, crash after publication, and PR changes during analysis. Distinguish webhook response time from review execution time.
+- **Later:** other platforms and inline comments. High availability is not a goal of this temporary POC.
 
-- **Aprender:** o que MCP padroniza e o que precisa de tradução semântica.
-- **Entregar:** segundo servidor ou adaptador, preferencialmente de outra plataforma, passando os mesmos testes de contrato. Se apenas trocar servidor GitHub, registrar que isso não valida GitLab/Bitbucket.
-- **Dependências:** F3/F4; oferta alvo escolhida (cloud ou versão self-hosted), servidor aprovado e credencial compatível.
-- **Concluir quando:** identificar alteração, enumerar arquivos, ler por SHA, produzir relatório e publicar resumo sem modificar regras de análise do núcleo. Declarar capacidades ausentes.
-- **Validar:** paginação, diffs omitidos, renomeações, estado atual, permissões e localização de comentários na oferta selecionada.
-- **Depois:** cobertura das demais ofertas e comentários por linha com tradução específica.
+### F5 — Second server or platform
 
-### F6 — Segundo modelo ou provedor
+- **Learn:** what MCP standardizes and what requires semantic translation.
+- **Deliver:** a second server or adapter, preferably for another platform, passing the same contract checks. Replacing only the GitHub server does not validate GitLab/Bitbucket.
+- **Dependencies:** F3/F4; selected offering (cloud or self-hosted version), an approved server, and compatible credentials.
+- **Done when:** identify a change, enumerate files, read by SHA, produce a report, and publish a summary without changing the core analysis rules. Declare missing capabilities.
+- **Validate:** pagination, omitted diffs, renames, current state, permissions, and comment locations for the selected offering.
+- **Later:** remaining offerings and inline comments with platform-specific mapping.
 
-- **Aprender:** comparar qualidade, custo, contexto, uso de ferramentas e latência sem acoplar o harness ao provedor.
-- **Entregar:** comparar modelos locais já instalados e fazer uma triagem pequena de candidatos externos em PRs conhecidas, com orçamento explícito. Selecionar inicialmente apenas um provedor externo para a demonstração, registrando qualidade e custo total por review. Esta etapa compara alternativas; o primeiro uso de modelo local já ocorre na F2.
-- **Dependências:** F2/F3; benchmark reproduzível; consentimento/política de envio de dados se sair do ambiente local. Não exige atualizar Ollama automaticamente.
-- **Concluir quando:** mudar endpoint/modelo pela configuração, manter o contrato de achados e demonstrar bloqueio de fallback externo não autorizado.
-- **Validar:** qualidade por caso, saída estruturada, ferramentas, indisponibilidade, consumo, tempo e orçamento nas mesmas condições; contabilizar contexto reenviado, chamadas adicionais, retries e raciocínio cobrado. Endpoint, modelo e referência de credencial permanecem configuráveis; não tratar Plus como crédito de API.
-- **Depois:** seleção dinâmica por tarefa, modelos adicionais e otimizações justificadas por medição.
+### F6 — Second model or provider
 
-### F7 — Experimentos de concorrência, falhas e segurança
+- **Learn:** compare quality, cost, context, tool use, and latency without coupling the harness to one provider.
+- **Deliver:** compare installed local models and run a small external-candidate trial on known PRs with an explicit budget. Select only one initial external provider for the demonstration, recording quality and total cost per review. Local inference already starts in F2.
+- **Dependencies:** F2/F3; reproducible evaluation; consent/data policy for sending data outside the local environment. Automatic Ollama updates are not required.
+- **Done when:** change endpoint/model through configuration, preserve the findings contract, and demonstrate that unauthorized external fallback is blocked.
+- **Validate:** per-case quality, structured output, tools, unavailability, usage, time, and budget under the same conditions; count resent context, additional calls, retries, and billed reasoning. Endpoint, model, and credential reference stay configurable; Plus is not an API credit balance.
+- **Later:** task-based selection, additional models, and optimizations justified by measurements.
 
-- **Aprender:** limites reais da GPU, concorrência, cobertura e resistência a falhas.
-- **Entregar:** um exemplo com dois repositórios, controles separados de jobs e inferência, uma PR maior que o contexto e testes pontuais de falha/injeção. Fair scheduling avançado fica opcional.
-- **Dependências:** fluxo básico funcionando; escolher um experimento por vez conforme o aprendizado, sem metas de produção pendentes para aprovar.
-- **Concluir quando:** conseguir explicar concorrência, falha e cobertura nos exemplos executados, sem acesso fora do escopo ou cobertura parcial apresentada como completa.
-- **Validar:** uma indisponibilidade/timeout, um reinício e os casos de prompt injection e bug entre arquivos; registrar resultados e limitações. Não exigir teste de carga, caos ou amostra estatística.
-- **Depois:** aprofundar apenas o que for útil ao aprendizado ou a um problema observado; infraestrutura distribuída não é objetivo desta POC.
+### F7 — Concurrency, failure, and security experiments
 
-### F8 — Demonstração temporária e entrega de portfólio
+- **Learn:** actual GPU limits, concurrency, coverage, and failure handling.
+- **Deliver:** an example involving two repositories, separate job/inference controls, a PR larger than context, and targeted failure/injection checks. Advanced fair scheduling is optional.
+- **Dependencies:** a working basic flow; choose one experiment at a time based on learning needs, without pending production targets to approve.
+- **Done when:** explain concurrency, failure, and coverage in the executed examples, with no out-of-scope access or partial coverage presented as complete.
+- **Validate:** one unavailability/timeout, one restart, and the prompt injection and cross-file bug examples; record results and limitations. Do not require load tests, chaos testing, or statistical samples.
+- **Later:** investigate only what helps learning or solves an observed problem; distributed infrastructure is not a POC objective.
 
-- **Aprender:** operar o fluxo completo fora do computador pessoal, medir custo e reproduzir o ciclo de criação, demonstração e encerramento.
-- **Entregar:** instruções reproduzíveis para uma VPS com Docker Compose, webhook HTTPS direto, persistência, agente, ferramentas pelo gateway, API externa selecionada e resumo publicado na PR. Preparar README, exemplos sintéticos, resultados, limitações e gravação curta para repositório público.
-- **Dependências:** F4 e seleção externa da F6, controles de segurança/orçamento aplicáveis e fluxo validado localmente. A demonstração pode ocorrer antes de F5 e do endurecimento completo da F7; não exige todas as plataformas nem promessa de capacidade comercial.
-- **Concluir quando:** abrir/atualizar PR produz resultado na PR sem depender do desktop/Ollama pessoal, permite correlacionar evento/trabalho/MCP/modelo/publicação e preserva evidências depois da exclusão da VM. Não é obrigatório usar pipeline Git para disparar o fluxo.
-- **Validar:** configuração candidata 2 vCPUs/4 GB por CPU/RAM/fila/latência, preço e crédito elegível antes do provisionamento, limites de chamadas/tokens/retries/duração, sanitização dos artefatos e inventário final de recursos cobrados. Medir custo bruto e desembolso após créditos, conforme [plano cloud](docs/cloud-demo-and-portfolio.md).
-- **Depois:** remover infraestrutura temporária e conferir cobrança residual; manter apenas evidências e instruções públicas. Não manter endpoint online para entrevistas.
+### F8 — Temporary demonstration and portfolio delivery
 
-Documentação e exemplos de portfólio evoluem em cada fase; publicar código/repositório, gravar a demonstração e provisionar recursos são tarefas futuras, não ações desta atualização de planejamento.
+- **Learn:** operate the full flow outside the personal computer, measure cost, and reproduce setup, demonstration, and teardown.
+- **Deliver:** reproducible instructions for one VPS with Docker Compose, direct HTTPS webhook, persistence, agent, gateway-mediated tools, the selected external model API, and a summary published on the PR. Prepare README, synthetic examples, results, limitations, and a short recording for a public repository.
+- **Dependencies:** F4 and F6's external provider selection, applicable security/budget controls, and a locally validated flow. Demonstration can precede F5 and full F7 hardening; it does not require every platform or a commercial capacity promise.
+- **Done when:** opening/updating a PR produces a result without the personal desktop/Ollama, correlates event/job/MCP/model/publication, and preserves evidence after VM deletion. A Git pipeline is not required to trigger the flow.
+- **Validate:** the candidate 2 vCPU/4 GB machine through CPU/RAM/queue/latency observations; price and eligible credit before provisioning; call/token/retry/duration limits; sanitized artifacts and the final billable-resource inventory. Measure gross cost and cash spending after credits, following the [cloud plan](docs/cloud-demo-and-portfolio.md).
+- **Later:** remove temporary infrastructure and check residual billing; keep only public evidence and instructions. Do not maintain an online endpoint for interviews.
 
-## Primeiro exercício hands-on recomendado
+Portfolio documentation and examples develop throughout the phases. Publishing code/the repository, recording the demonstration, and provisioning resources are future tasks, not actions performed by a planning update.
 
-Implementar, após autorização para a próxima tarefa, uma ferramenta didática conceitual `get_review_fixture` que recebe um identificador de cenário e devolve um pequeno diff conhecido. O cliente descobre o schema, chama o cenário válido e tenta um identificador inválido. Esse nome é uma proposta de exercício, não contrato aprovado.
+## Recommended first hands-on exercise
 
-Explicar cada peça e executar sem IA. O sucesso é compreender a mensagem que cruza a fronteira MCP e o erro retornado. A escolha pontual de SDK/versão/transporte deve ser registrada antes do build. As [questões abertas](docs/open-questions.md) distinguem essas escolhas dos bloqueios de etapas posteriores.
+The exercise is available: `get_review_fixture` takes a scenario identifier and returns a known synthetic diff. The client discovers the schema, calls the valid scenario, and tries invalid inputs. This is the F1 educational contract, not the final Git integration contract.
 
-## Limite desta entrega
+Read the [F1 guide](docs/f1-mcp-stdio.md) to run it without AI and follow each component. The goal is to understand the message crossing the MCP boundary and the returned error. Versions and transport are recorded in the guide and POM.
 
-Somente documentação e diagnóstico de leitura. Atualização de imagem, download de modelo, alteração de rede/volume, instalação de dependências e implementação aguardam nova instrução. A sequência futura de manutenção está no [plano de inferência](docs/local-inference.md).
+## Current scope
+
+The user authorized creating `develop`, committing the documentation, and starting F1 on a working branch. This phase implements only the educational MCP call and its Docker build/tests. It does not start F2, update Ollama/models, or modify other projects' infrastructure. The future maintenance sequence remains in the [inference plan](docs/local-inference.md).

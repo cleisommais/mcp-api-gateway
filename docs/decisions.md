@@ -1,88 +1,95 @@
-# Decisões e propostas
+# Decisions and proposals
 
-[Índice](../README.md) · [Plano](../PLAN.md). Registro em 12/11/2026, derivado de `prompt.md`, da inspeção local e do complemento do usuário sobre POC, cloud temporária e portfólio.
+[Index](../README.md) · [Plan](../PLAN.md). Record dated 2026-11-12, derived from the original `prompt.md`, local inspection, and user clarifications about the POC, temporary cloud deployment, and portfolio.
 
-## Classificação
+## Classification
 
-- **C — Confirmada pelo usuário:** direção explicitamente indicada. Não aprova automaticamente tecnologia ou valor sugerido para realizá-la.
-- **P — Proposta técnica inicial:** recomendação ajustável, ainda sem aprovação.
-- **Q — Questão em aberto:** depende de escolha ou evidência; ver [open-questions.md](open-questions.md).
-- **F — Evolução futura:** fora da entrega inicial proposta, sem compromisso de data.
+- **C — Confirmed by the user:** an explicitly stated direction. It does not automatically approve a suggested technology or value used to implement it.
+- **P — Initial technical proposal:** an adjustable recommendation, not yet approved.
+- **Q — Open question:** requires a choice or evidence; see [open-questions.md](open-questions.md).
+- **F — Future enhancement:** outside the proposed initial delivery, with no committed date.
 
-Constatações do ambiente são evidências, não decisões. Os IDs RF/RNF usam esta classificação para o requisito; quando a estratégia de implementação for proposta, ela é identificada no texto.
+Environment observations are evidence, not decisions. RF/RNF identifiers use these classifications for requirements; proposed implementation strategies are identified in the text. Implemented F1 choices are recorded below without turning every proposal into a user decision.
 
-## Direções confirmadas
+## Technical choices implemented in F1
 
-| ID | Status | Direção |
+The user authorized starting the phase and Git workflow. The exercise uses **Java 21, Maven, official MCP SDK 2.1.0, and stdio**, with protocol **2025-11-25** negotiated in tests. Client and server are separate processes inside one container. The implemented educational tool is `get_review_fixture`.
+
+These choices resolve Q01–Q03 and implement P01 only within F1. They do not yet include Spring, inference, or the gateway. The [phase guide](f1-mcp-stdio.md) records execution, sources, and seven tests. D10's historical Markdown-only restriction applied to the planning delivery; later authorization permits this implementation and the documentation commit.
+
+## Confirmed directions
+
+| ID | Status | Direction |
 | --- | --- | --- |
-| D01 | C | Usar Java e desenvolver em incrementos explicados, planejando antes de implementar |
-| D02 | C | Manter MCP Gateway no desenho e no aprendizado, mesmo que introduzido gradualmente |
-| D03 | C | Executar localmente em containers Docker |
-| D04 | C | Projetar para GitHub, GitLab e Bitbucket, sem núcleo preso à API GitHub |
-| D05 | C | Permitir múltiplos provedores/modelos, inclusive locais |
-| D06 | C | Suportar PRs grandes sem limite fixo de 20 arquivos e declarar cobertura incompleta |
-| D07 | C | Concorrência configurável para vários repositórios, sem fixar dois trabalhos globais |
-| D08 | C | Aproveitar MCP Servers existentes quando atenderem às necessidades |
-| D09 | C | Reaproveitar Ollama e GPU NVIDIA existentes para o primeiro caminho de inferência, sujeito à qualidade e capacidade |
-| D10 | C | Nesta tarefa, somente Markdown; consultas aos outros projetos em leitura; sem infraestrutura, código, commit ou push |
-| D11 | C | Finalidade de aprendizado e portfólio de entrevistas, sem operação comercial ou instalação permanentemente disponível |
-| D12 | C | Ollama existente como padrão de desenvolvimento/validação; avaliar modelos já instalados antes de novos downloads; sem atualização automática |
-| D13 | C | Demonstrar em VPS temporária com API externa de modelo, independente do computador pessoal; inicialmente sem GPU cloud nem migração do Ollama para a VPS |
-| D14 | C | Escolher inicialmente um provedor externo por qualidade e custo total por review; endpoint, modelo e credenciais configuráveis; sem fallback externo automático implícito |
-| D15 | C | Preparar repositório público com documentação, exemplos reproduzíveis, avaliações e gravação curta, sem credenciais ou informações privadas |
-| D16 | C | Exportar evidências e remover VM e recursos cobrados ao concluir a demonstração; não depender de endpoint permanente |
-| D17 | C | Dimensionar escolhas e validações como POC de aprendizado; não exigir perguntas, SLOs ou processos operacionais de produção para avançar |
-| D18 | C | Atualizar Ollama se necessário e considerar modelo mais atual/apropriado à GPU; runtime/modelos existentes não são restrições permanentes |
+| D01 | C | Use Java and develop in explained increments, planning before implementation |
+| D02 | C | Keep MCP Gateway in the design and learning goals, introducing it gradually |
+| D03 | C | Run locally in Docker containers |
+| D04 | C | Design for GitHub, GitLab, and Bitbucket without tying the core to GitHub APIs |
+| D05 | C | Allow multiple providers/models, including local models |
+| D06 | C | Support large PRs without a fixed 20-file limit and disclose incomplete coverage |
+| D07 | C | Configurable concurrency across repositories without a fixed two-job global limit |
+| D08 | C | Reuse existing MCP Servers when suitable |
+| D09 | C | Reuse existing Ollama and NVIDIA GPU for initial inference, subject to quality/capacity validation |
+| D10 | C | Original planning task: Markdown only; other projects read-only; no infrastructure, code, commit, or push in that delivery |
+| D11 | C | Hands-on learning and interview portfolio, without commercial operation or permanent availability |
+| D12 | C | Existing Ollama as development/validation default; evaluate installed models before downloads; no automatic updates |
+| D13 | C | Demonstrate on a temporary VPS using an external model API independently of the personal computer; initially no cloud GPU or Ollama migration to the VPS |
+| D14 | C | Select one initial external provider by quality and total cost per review; configurable endpoint/model/credentials; no implicit automatic external fallback |
+| D15 | C | Prepare a public repository with documentation, reproducible examples, evaluations, and a short recording, without credentials/private information |
+| D16 | C | Export evidence and delete the VM/billable resources after demonstration; no permanent endpoint dependency |
+| D17 | C | Size choices and validation for a learning POC; do not require questions, SLOs, or production operational processes to proceed |
+| D18 | C | Update Ollama when needed and consider a newer/GPU-suitable model; existing runtime/models are not permanent constraints |
+| D19 | C | English is the project language for documentation, diagrams, code comments, tool descriptions, application messages, and future commit messages |
 
-Hardware, versão e modelos foram **confirmados pelo usuário**, além da evidência da inspeção anterior. O registro canônico está em [local-inference.md](local-inference.md); características técnicas do modelo customizado não são inferidas do nome nem incluídas automaticamente nessa confirmação.
+Hardware, version, and models were **confirmed by the user** in addition to earlier inspection evidence. The canonical record is [local-inference.md](local-inference.md); custom-model characteristics are not inferred from its name or automatically included in that confirmation.
 
-## Propostas e tradeoffs
+## Proposals and tradeoffs
 
-| ID | Status | Proposta | Alternativa e consequência |
+| ID | Status | Proposal | Alternative and consequence |
 | --- | --- | --- | --- |
-| P01 | P | Java 21, Maven, Spring Boot, Spring Security e Spring AI, inicialmente imperativos | SDK MCP e cliente HTTP sem framework reduzem abstrações na F1; mais integração manual depois |
-| P02 | P | Aplicação única com entrada, worker, núcleo e publicador; gateway em outro processo | Separar todos em microserviços amplia operação sem evidência de necessidade |
-| P03 | P | PostgreSQL próprio para trabalhos, publicação e auditoria; fila no banco | Fila em memória não atende recuperação; broker pode ser revisto após medição |
-| P04 | P | Docker Compose para aplicação/banco nos dois perfis; no local, referenciar inferência existente | Duplicar Ollama/modelos consome disco/VRAM e dificulta propriedade e manutenção; cloud usa API externa |
-| P05 | P | GitHub primeiro e GitHub App para automação | PAT/machine user exigem avaliação de permissões, ciclo de vida e dependência pessoal |
-| P06 | P | Modelo recebe ferramentas de leitura; aplicação publica após validação | Escrita pelo modelo aumenta impacto de prompt injection e dificulta idempotência |
-| P07 | P | MVP estático sem shell, execução de PR, merge ou aprovação automática | Execução futura exige sandbox e outro desenho de risco |
-| P08 | P | Comparação curta de `qwen3:14b` existente com `qwen3.5:9b`, após conferir suporte do runtime | `gpt-oss:20b` é comparação opcional; não exigir teste exaustivo de todos os instalados nem inferir qualidade pela novidade |
-| P09 | P | No perfil local, acessar Ollama por `http://host.docker.internal:11434` inicialmente | Rede compartilhada reduz dependência do host, mas conecta a aplicação à rede com outros serviços; detalhes no inventário |
-| P10 | P | Fallback externo desabilitado por padrão, habilitação explícita por política/repositório | Continuidade automática pode divulgar código e gerar custos não autorizados |
-| P11 | P | Separar rodadas de ferramentas da resposta final por JSON Schema | Combinação de ferramentas e schema na mesma chamada precisa validação por modelo/versão |
-| P12 | P | Começar com uma chamada local de inferência por vez e fila limitada na aplicação | É valor inicial de experimento da GPU compartilhada, não limite global de reviews |
-| P13 | P | Uma VPS com Docker Compose, inicialmente 2 vCPUs e 4 GB de RAM | Medir capacidade de JVMs, banco e servidores MCP; sem banco gerenciado, load balancer pago ou Kubernetes inicialmente |
-| P14 | P | Priorizar recurso gratuito/crédito de baixo esforço, depois VPS proporcional ao uso | Oracle Always Free, DigitalOcean e Hetzner são candidatos; nenhuma contratação ou elegibilidade foi confirmada |
-| P15 | P | Orçamento total inicial de US$ 5–10 para infraestrutura e inferência da demonstração | Meta a validar; reservar margem para adicionais, tributos/câmbio e atraso de medição; créditos não são garantidos |
-| P16 | P | Obter diff e arquivos do commit pelas ferramentas MCP da plataforma, inicialmente sem exigir clone completo | Clone/fetch pode ser uma implementação da ferramenta se for útil depois; não exige executar código da PR ou oferecer shell ao modelo |
+| P01 | P | Java 21, Maven, Spring Boot, Spring Security, and Spring AI, initially imperative | Framework-free MCP SDK/HTTP client reduces abstraction in F1 but needs more manual integration later |
+| P02 | P | One application for ingress, worker, core, and publication; gateway in a separate process | Making every role a microservice increases operations without demonstrated need |
+| P03 | P | Dedicated PostgreSQL for jobs, publication, and auditing; database-backed queue | An in-memory queue does not support recovery; a broker can be reconsidered after measurement |
+| P04 | P | Docker Compose for application/database in both profiles; reference existing local inference | Duplicate Ollama/models consume disk/VRAM and complicate ownership/maintenance; cloud uses an external API |
+| P05 | P | GitHub first and GitHub App for automation | PAT/machine-user options need permission, lifecycle, and personal-dependency evaluation |
+| P06 | P | Model receives read tools; application publishes after validation | Model-controlled writes increase prompt injection impact and complicate idempotency |
+| P07 | P | Static MVP without shell, PR execution, merge, or automatic approval | Future execution requires sandboxing and a different risk design |
+| P08 | P | Short comparison of existing `qwen3:14b` and `qwen3.5:9b` after checking runtime support | `gpt-oss:20b` is optional; do not require exhaustive installed-model testing or infer quality from novelty |
+| P09 | P | Initially access local Ollama through `http://host.docker.internal:11434` | Shared networking reduces host dependency but exposes the application to a network with other services; see inventory |
+| P10 | P | External fallback disabled by default, enabled explicitly by repository/policy | Automatic continuity can disclose code and incur unauthorized costs |
+| P11 | P | Separate tool rounds from the final JSON Schema response | Tools and schema in the same call need model/version-specific validation |
+| P12 | P | Start with one local inference call at a time and a bounded application queue | Initial shared-GPU experiment setting, not a global review limit |
+| P13 | P | One Docker Compose VPS, initially 2 vCPUs/4 GB RAM | Measure JVMs, database, and MCP Servers; initially no managed database, paid load balancer, or Kubernetes |
+| P14 | P | Prefer low-effort free resources/credits, then usage-proportional VPS billing | Oracle Always Free, DigitalOcean, and Hetzner are candidates; no purchase or eligibility confirmed |
+| P15 | P | Initial US$5–10 total demonstration budget for infrastructure and inference | Target to validate; reserve margin for extras, taxes/exchange rates, and metering delay; credits are not guaranteed |
+| P16 | P | Retrieve commit diffs/files through platform MCP tools, initially without requiring a full clone | Clone/fetch can be a tool implementation later; it does not require PR code execution or a model shell |
 
-Os candidatos de API, referências econômicas datadas, comparação e encerramento estão em [cloud-demo-and-portfolio.md](cloud-demo-and-portfolio.md), evitando replicar preços nestas decisões. Provedor, SKU/região da VPS e limites finais continuam **Q**.
+API candidates, dated financial references, comparison, and teardown are centralized in [cloud-demo-and-portfolio.md](cloud-demo-and-portfolio.md). Provider, VPS SKU/region, and final limits remain **Q**.
 
-## Compatibilidade consultada
+## Consulted compatibility
 
-As fontes abaixo foram consultadas em 12/11/2026. São bases para seleção futura; nenhum BOM, imagem ou versão de dependência foi fixado.
+The sources below were consulted on 2026-11-12. They guide future choices; F1 pins its own dependencies above, while the broader application stack remains proposed.
 
-- A documentação consultada de **Spring AI 2.0.2** declara suporte a **Spring Boot 4.0.x e 4.1.x**. Boot 4.1.2 declara Java 17–27 e Maven 3.6.3+. Assim, Java 21/Maven é uma combinação candidata compatível nessas condições. Não misturar uma linha arbitrária de Boot com outra de Spring AI. Usar BOMs compatíveis, inclusive Spring Security gerenciado por Boot, e confirmar o conjunto no build da F1/F2. Fontes: [Spring AI](https://docs.spring.io/spring-ai/reference/getting-started.html), [Boot](https://docs.spring.io/spring-boot/system-requirements.html).
-- O [SDK Java oficial](https://java.sdk.modelcontextprotocol.io/latest/) oferece clientes/servidores síncronos e assíncronos. A documentação distingue o suporte habitual do preview de servidor para a revisão MCP **2026-07-28**. O suporte integral cliente/gateway/downstream a essa revisão não foi comprovado. Escolher um perfil comum testável; não adotar `latest` implicitamente. Transportes Spring são fornecidos por Spring AI 2.0+; verificar a matriz concreta ao selecionar dependências.
-- A integração [Spring AI Ollama](https://docs.spring.io/spring-ai/reference/api/chat/ollama-chat.html) documenta endpoint, modelo, contexto, ferramentas e saída por schema. Propõe-se a integração nativa inicialmente, com download automático desabilitado. Os recursos ainda precisam de teste contra o servidor **0.18.0** encontrado. A documentação atual não constitui prova de compatibilidade retroativa.
-- O [servidor oficial GitHub](https://github.com/github/github-mcp-server) é candidato, não escolha final. Sua [documentação de GitHub App](https://github.com/github/github-mcp-server/blob/main/docs/github-app-auth.md) descreve autenticação de instalação no modo local `stdio`, com renovação de token, e informa que esse modo não se aplica ao comando HTTP. Validar a versão distribuída e o modo escolhido; isso não comprova compatibilidade do servidor remoto com o mesmo fluxo.
-- O [release oficial do Ollama](https://github.com/ollama/ollama/releases/tag/v0.40.16) resolvido pela consulta de `releases/latest` é posterior ao 0.18.0 encontrado. Isso justifica avaliar atualização, mas não aprova migrar diretamente para esse alvo. A avaliação e o rollback estão em [local-inference.md](local-inference.md).
+- Consulted **Spring AI 2.0.2** documentation supports **Spring Boot 4.0.x and 4.1.x**. Boot 4.1.2 documents Java 17–27 and Maven 3.6.3+. Java 21/Maven is therefore a compatible candidate under those conditions. Do not mix arbitrary Boot/Spring AI lines. Use compatible BOMs, including Boot-managed Spring Security, and confirm the combination when introducing Spring in a later build. Sources: [Spring AI](https://docs.spring.io/spring-ai/reference/getting-started.html), [Boot](https://docs.spring.io/spring-boot/system-requirements.html).
+- The [official Java SDK](https://java.sdk.modelcontextprotocol.io/latest/) provides synchronous/asynchronous clients and servers. Its documentation distinguishes standard support from server preview for MCP **2026-07-28**. Full client/gateway/downstream support for that revision is unproven. Choose a testable common profile rather than adopting `latest` implicitly. Spring transports come from Spring AI 2.0+; verify the concrete dependency matrix.
+- [Spring AI Ollama](https://docs.spring.io/spring-ai/reference/api/chat/ollama-chat.html) documents endpoint, model, context, tools, and schema output. Native integration with automatic download disabled is proposed. Features still need testing against the found **0.18.0** server or an explicitly updated runtime. Current documentation does not prove backward compatibility.
+- The [official GitHub server](https://github.com/github/github-mcp-server) is a candidate, not the final choice. Its [GitHub App documentation](https://github.com/github/github-mcp-server/blob/main/docs/github-app-auth.md) describes installation authentication with token renewal in local stdio mode and states this mode does not apply to the HTTP command. Verify the distributed version/mode; this does not prove equivalent remote-server compatibility.
+- The [official Ollama release](https://github.com/ollama/ollama/releases/tag/v0.40.16) resolved by `releases/latest` is newer than the found 0.18.0. This supports evaluating an update, not blindly adopting that target. Evaluation and rollback are in [local-inference.md](local-inference.md).
 
-## Evoluções futuras
+## Future enhancements
 
-| ID | Status | Evolução | Condição |
+| ID | Status | Enhancement | Condition |
 | --- | --- | --- | --- |
-| E01 | F | Comentários por linha | Mapear diff/commit/posição e validar API de cada oferta |
-| E02 | F | OAuth delegado interativo/local | Operação realmente precisar ocorrer em nome do usuário |
-| E03 | F | Catálogo corporativo integrado | Ter registry aprovado e governança definida |
-| E04 | F | Escala distribuída e infraestrutura adicional | Benchmark demonstrar necessidade |
-| E05 | F | Modelos adicionais, tuning e roteamento por tarefa | Comparação de qualidade, custo e contexto justificar |
+| E01 | F | Inline comments | Map diff/commit/position and validate each offering's API |
+| E02 | F | Interactive/local delegated OAuth | An operation actually needs to act on the user's behalf |
+| E03 | F | Integrated enterprise catalog | Approved registry and defined governance |
+| E04 | F | Distributed scaling and additional infrastructure | Measurements demonstrate need |
+| E05 | F | Additional models, tuning, and per-task routing | Quality/cost/context comparison justifies them |
 
-## Metas ainda não aprovadas
+## Unapproved targets
 
-ACK p95 de 2 s, review p95 de 3 min, timeout total de 5 min, dez reviews simultâneas, duas por repositório e uma ativa por PR/SHA são **exemplos anteriores**, não compromissos. Não aplicá-los como padrão aprovado nem como capacidade comprovada. Metas devem identificar hardware, cotas, tamanho, modelo e orçamento. O planejamento de medição está em [requirements.md](requirements.md).
+Webhook ACK p95 of 2 s, review p95 of 3 min, total timeout of 5 min, ten concurrent reviews, two per repository, and one active review per PR/SHA are **earlier illustrative proposals**, not commitments. Do not apply them as approved defaults or proven capacity. Any targets must identify hardware, quotas, size, model, and budget. Measurement is described in [requirements.md](requirements.md).
 
-Conforme a orientação mais recente, esta POC não precisa definir SLOs, percentis de desempenho, política corporativa de retenção ou garantias de fairness para ser concluída. Registrar valores de alguns exemplos e limitações basta. Os controles básicos de credencial, autorização, saída, cobertura e custo continuam porque fazem parte do fluxo e do aprendizado.
+The latest direction does not require SLOs, latency percentiles, corporate retention policies, or fairness guarantees to complete this POC. Record values from a few examples and their limitations. Basic credential, authorization, output, coverage, and cost controls remain part of the flow and learning.
 
-O tamanho inicial da VPS e a meta de US$ 5–10 também são **P**, não garantia de desempenho/custo nem permissão de provisionamento nesta tarefa.
+Initial VPS size and the US$5–10 target are also **P**, not performance/cost guarantees or permission to provision during planning.

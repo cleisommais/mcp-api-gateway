@@ -1,104 +1,104 @@
-# Demonstração cloud temporária e portfólio
+# Temporary cloud demonstration and portfolio
 
-[Índice](../README.md) · [Plano F1–F8](../PLAN.md) · [Decisões](decisions.md) · [Inferência local](local-inference.md).
+[Index](../README.md) · [F1–F8 plan](../PLAN.md) · [Decisions](decisions.md) · [Local inference](local-inference.md).
 
-Complemento de planejamento em **12/11/2026**. **C:** aprendizado prático e portfólio para entrevistas; desenvolvimento principalmente local, demonstração cloud temporária e remoção posterior. Não há objetivo de serviço comercial ou disponibilidade permanente. Esta documentação não provisiona recursos nem autoriza gasto nesta tarefa.
+Planning addition dated **2026-11-12**. **C:** hands-on learning and interview portfolio; primarily local development, temporary cloud demonstration, then teardown. Commercial operation and permanent availability are not objectives. This document does not provision resources or authorize spending during planning.
 
-## Dois caminhos de execução
+## Two execution paths
 
-| Caminho | Inferência | Finalidade e limite |
+| Path | Inference | Purpose and boundary |
 | --- | --- | --- |
-| Desenvolvimento e validação | Ollama existente, começando pelos modelos instalados | Padrão confirmado para evitar cobrança de API durante as iterações; qualidade, contexto, tool calling, JSON, velocidade e VRAM são medidos |
-| Demonstração cloud | Uma API externa explicitamente configurada | VPS funciona sem desktop/Ollama pessoal; sem GPU cloud nem Ollama na VPS inicialmente; selecionar um provedor para o primeiro deploy |
+| Development and validation | Existing Ollama, starting with installed models | Confirmed default to avoid API charges during iteration; measure quality, context, tool calling, JSON, speed, and VRAM |
+| Cloud demonstration | One explicitly configured external API | VPS works without personal desktop/Ollama; initially no cloud GPU or Ollama on the VPS; select one provider for the first deployment |
 
-O Java permanece harness/agente nos dois caminhos. As mesmas políticas de MCP, identidade, SHA, cobertura e publicação continuam aplicáveis. Inferência externa configurada como principal da demonstração é diferente de fallback automático; a falha do modelo local não autoriza envio externo.
+Java remains the harness/agent in both paths. MCP, identity, SHA, coverage, and publication policies still apply. An external API configured as the demonstration's primary model is different from automatic fallback; local-model failure does not authorize external transmission.
 
 ```mermaid
 flowchart LR
-  PR["Abrir ou atualizar PR"] -->|"webhook HTTPS direto"| TLS
-  subgraph VPS["VPS temporária — Docker Compose (P)"]
-    TLS["Entrada HTTPS / proxy"] --> App["Entrada, worker e agente Java"]
-    App -->|"persistir antes do ACK"| DB[("PostgreSQL próprio")]
-    App ==>|"MCP"| GW["MCP Gateway Java"]
-    App --> Pub["Validação e publicador"]
-    LS["MCP Server local opcional na VPS"]
+  PR["Open or update PR"] -->|"Direct HTTPS webhook"| TLS
+  subgraph VPS["Temporary VPS — Docker Compose (P)"]
+    TLS["HTTPS ingress / proxy"] --> App["Ingress, worker, and Java agent"]
+    App -->|"persist before acknowledgement"| DB[("Dedicated PostgreSQL")]
+    App ==>|"MCP"| GW["Java MCP Gateway"]
+    App --> Pub["Validation and publisher"]
+    LS["Optional local MCP Server on VPS"]
     GW ==>|"MCP"| LS
   end
-  GW ==>|"MCP"| RS["MCP Server remoto aprovado"]
-  LS --> Git["Plataforma Git"]
+  GW ==>|"MCP"| RS["Approved remote MCP Server"]
+  LS --> Git["Git platform"]
   RS --> Git
-  App -.->|"API de inferência explícita"| Model["Provedor externo selecionado"]
-  Pub -->|"resultado na PR"| Git
+  App -.->|"Explicit inference API"| Model["Selected external provider"]
+  Pub -->|"Result on the PR"| Git
 ```
 
-Não é necessário pipeline Git para iniciar a review: o webhook chama o serviço diretamente. Um pipeline de build/deploy futuro é uma escolha independente. Para demonstrar independência do computador pessoal, servidores MCP necessários devem ser remotos ou executáveis na própria VPS, com credenciais válidas ali; não depender de túnel ou processo hospedado no desktop.
+A Git pipeline is unnecessary to start a review: the webhook calls the service directly. A future build/deployment pipeline is an independent choice. Desktop independence requires necessary MCP Servers to be remote or runnable on the VPS with valid credentials there; do not depend on a desktop tunnel/process.
 
-## Hospedagem proposta
+## Proposed hosting
 
-**P:** uma máquina com Docker Compose, inicialmente **2 vCPUs e 4 GB de RAM**. Executar aplicação, gateway, PostgreSQL e, se necessário, servidor MCP local, com limites de memória e concorrência medidos. Não executar os modelos nessa máquina. Medir RSS/heap das JVMs, CPU, banco, fila, disco e latência; reduzir carga ou rever tamanho antes de alegar capacidade.
+**P:** one Docker Compose machine, initially **2 vCPUs and 4 GB RAM**. Run application, gateway, PostgreSQL, and a local MCP Server if needed, with measured memory/concurrency limits. Do not run the models on this machine. Observe JVM RSS/heap, CPU, database, queue, disk, and latency; reduce load or revisit size before claiming capacity.
 
-Evitar banco gerenciado, load balancer pago e Kubernetes nesta POC. Um proxy HTTPS no mesmo host é proposta de terminação TLS, não um load balancer pago. Planejar DNS/certificado, firewall e backup/exportação mínimos; gateway, banco e servidores internos não precisam de portas públicas. Construir imagens antes da janela paga quando possível e validar `amd64`/`arm64` dos componentes se escolher ARM.
+Avoid a managed database, paid load balancer, and Kubernetes in this POC. A same-host HTTPS proxy is proposed TLS termination, not a paid load balancer. Plan minimal DNS/certificate, firewall, and backup/export needs; gateway, database, and internal servers do not need public ports. Build images before the paid window when possible and validate `amd64`/`arm64` components if selecting ARM.
 
-Ordem de pesquisa confirmada como preferência: recurso gratuito/crédito disponível sem esforço excessivo; depois VPS com cobrança proporcional ao tempo; uma única máquina. Se obter gratuidade consumir mais esforço que a demonstração, avaliar a VPS paga curta dentro da meta de custo.
+Confirmed research preference: low-effort available free resources/credits first, then a usage-proportional VPS; one machine. If obtaining free resources takes more effort than the demonstration, consider a short paid VPS within the cost target.
 
-| Candidato, ainda não escolhido | Referência e verificação em 12/11/2026 | Pendência antes de provisionar |
+| Candidate, not yet selected | Reference/check on 2026-11-12 | Pending before provisioning |
 | --- | --- | --- |
-| Oracle Always Free | [Documentação oficial](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) descreve recursos elegíveis e possível falta de capacidade; opção Ampere requer ARM | Disponibilidade/região, limites vigentes, imagens/componentes ARM e conta elegível; não confundir trial com gratuidade permanente de qualquer recurso |
-| DigitalOcean | Referência fornecida pelo usuário de **US$ 0,03571/h** para 2 vCPUs/4 GiB também aparece no [catálogo oficial](https://www.digitalocean.com/pricing/droplets); 48 h correspondem a aproximadamente **US$ 1,71 de compute** | SKU/região, disco, IP, tráfego, impostos e preço final no momento; não aplicar esse valor a outra configuração, como v5 |
-| Crédito DigitalOcean | Usuário trouxe referência de **US$ 5** para elegíveis; a [página oficial](https://www.digitalocean.com/pricing) exemplifica crédito de US$ 5 válido por 90 dias | Elegibilidade e saldo desta conta não foram consultados; não descontar crédito antes de confirmar concessão/validade |
-| Hetzner | [Catálogo oficial](https://www.hetzner.com/cloud/) consultado como alternativa; não foi fixado preço/região/SKU nesta atualização | Preço final, moeda/impostos, disponibilidade, arquitetura e termos de cobrança/exclusão no deploy |
+| Oracle Always Free | [Official documentation](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) describes eligible resources and possible capacity shortages; Ampere requires ARM | Region/availability, current limits, ARM images/components, and eligible account; do not confuse trial credits with permanent free access to arbitrary resources |
+| DigitalOcean | User-provided **US$0.03571/h** for 2 vCPUs/4 GiB also appears in the [official catalog](https://www.digitalocean.com/pricing/droplets); 48 h is approximately **US$1.71 compute** | SKU/region, disk, IP, traffic, taxes, and final current price; do not apply this figure to a different configuration such as v5 |
+| DigitalOcean credit | User supplied a **US$5** reference for eligible accounts; the [official page](https://www.digitalocean.com/pricing) illustrates US$5 credit valid for 90 days | Account eligibility/balance was not queried; do not deduct credits before confirming their award/expiration |
+| Hetzner | [Official catalog](https://www.hetzner.com/cloud/) consulted as an alternative; no price/region/SKU pinned in this update | Final price, currency/taxes, availability, architecture, and billing/deletion terms at deployment |
 
-A [documentação DigitalOcean de cobrança](https://docs.digitalocean.com/products/droplets/details/pricing/) informa granularidade por segundo com mínimo e cobrança enquanto a CPU Droplet estiver apenas desligada. A referência horária serve ao cálculo, não exige cobrança em blocos de uma hora. Excluir a VM encerra compute; recursos adicionais devem ser verificados separadamente.
+[DigitalOcean billing documentation](https://docs.digitalocean.com/products/droplets/details/pricing/) describes per-second billing with a minimum and continued CPU Droplet charges while powered off. The hourly reference supports estimation, not mandatory hour-long billing blocks. Deleting the VM ends compute billing; check additional resources separately.
 
-## API econômica: pesquisa e escolha futura
+## Economical API: research and future selection
 
-Os nomes abaixo são candidatos fornecidos pelo usuário, sem ranking de qualidade ou provedor vencedor. Preços são snapshots de fontes oficiais, em **US$ por milhão de tokens de entrada sem cache / saída**, não custo por review. Revalidar disponibilidade, endpoint, identificador exato, tier, região, tool calling, schema e política de dados antes da comparação e novamente antes do deploy.
+The following are user-provided candidates, without a quality ranking or winning provider. Prices are dated official-source snapshots, in **US$ per million uncached input / output tokens**, not cost per review. Revalidate availability, endpoint, exact identifier, tier, region, tool calling, schema support, and data policy before comparison and again before deployment.
 
-| Candidato | Referência consultada em 12/11/2026 | Condição a avaliar |
+| Candidate | Reference consulted on 2026-11-12 | Condition to evaluate |
 | --- | --- | --- |
-| GPT-6 Luna | [Modelo oficial](https://developers.openai.com/api/docs/models/gpt-6-luna): **0,10 / 0,50** | API/modo de raciocínio alteram compatibilidade de function calling; testar a integração Java escolhida e saída estruturada |
-| Claude Haiku 5.5 | [Preços oficiais](https://platform.claude.com/docs/en/about-claude/pricing): **0,05 / 0,25** até 100 mil tokens de prompt; **0,25 / 1,25** acima disso | Cada chamada é tarifada pela faixa aplicável; validar cache, ferramentas, schema e qualidade |
-| GPT-OSS via Groq | [Catálogo oficial](https://console.groq.com/docs/models): `openai/gpt-oss-20b` **0,075 / 0,30**; 120b **0,15 / 0,60** | Oferta hospedada tem limites/semântica próprios; não presumir equivalência operacional ao modelo local |
-| DeepSeek Flash | [Preços oficiais](https://api-docs.deepseek.com/quick_start/pricing/): **0,15 / 0,60** fora do pico e **0,30 / 1,20** no pico, entrada sem cache | Fixar alias/versão, janela de cobrança e capacidades; JSON genérico não comprova aderência a JSON Schema |
-| Mistral Small | [Preços oficiais](https://docs.mistral.ai/inference/pricing): variante publicada Small 4 **0,15 / 0,60** | Selecionar identificador da variante e validar capacidades; não substituir silenciosamente um modelo já avaliado |
+| GPT-6 Luna | [Official model](https://developers.openai.com/api/docs/models/gpt-6-luna): **0.10 / 0.50** | API/reasoning mode affects function-calling compatibility; test the chosen Java integration and structured output |
+| Claude Haiku 5.5 | [Official prices](https://platform.claude.com/docs/en/about-claude/pricing): **0.05 / 0.25** for prompts up to 100,000 tokens; **0.25 / 1.25** above | Each call uses its applicable prompt band; validate cache, tools, schema, and quality |
+| GPT-OSS via Groq | [Official catalog](https://console.groq.com/docs/models): `openai/gpt-oss-20b` **0.075 / 0.30**; 120b **0.15 / 0.60** | Hosted offering has its own limits/semantics; do not assume operational equivalence with the local model |
+| DeepSeek Flash | [Official prices](https://api-docs.deepseek.com/quick_start/pricing/): **0.15 / 0.60** off-peak and **0.30 / 1.20** peak, uncached input | Pin alias/version, billing window, and capabilities; generic JSON does not prove JSON Schema conformance |
+| Mistral Small | [Official prices](https://docs.mistral.ai/inference/pricing): published Small 4 variant **0.15 / 0.60** | Select the variant identifier and validate capabilities; do not silently replace an evaluated model |
 
-Planos gratuitos de **Gemini** e **Groq** podem entrar na triagem se cotas e políticas de dados servirem à POC. Consultar [preços/tier Gemini](https://ai.google.dev/gemini-api/docs/pricing) e [limites Groq](https://console.groq.com/docs/rate-limits); gratuidade não garante volume suficiente ou tratamento adequado de código privado. Não usar dados privados na triagem pública por padrão.
+Free **Gemini** and **Groq** plans can enter screening if their quotas/data policies suit the POC. Consult [Gemini pricing/tier](https://ai.google.dev/gemini-api/docs/pricing) and [Groq limits](https://console.groq.com/docs/rate-limits); free access guarantees neither sufficient volume nor appropriate private-code handling. Do not use private data by default in public evaluation.
 
-**P de seleção econômica:** reutilizar quatro cenários rotulados do benchmark local — bug conhecido, alteração correta, bug entre arquivos e prompt injection. Fazer triagem documental de todos os candidatos e executar apenas um ou dois finalistas, conforme orçamento, antes de escolher **um** provedor inicial. Registrar achados válidos, falsos positivos, ferramentas/argumentos, saída, cobertura, tempo e custo. Não implementar todos os provedores para realizar a primeira demonstração.
+**P for economical selection:** reuse four labeled local-evaluation cases: known bug, correct change, cross-file bug, and prompt injection. Screen candidates through documentation and execute only one or two finalists within budget before selecting **one** initial provider. Record valid findings, false positives, tools/arguments, output, coverage, time, and cost. Do not implement every provider to deliver the first demonstration.
 
-Medir custo de todas as tentativas, inclusive reviews falhas/parciais, retries, reparos de JSON, contexto reenviado em cada rodada, instruções, schemas, resultados de ferramentas e tokens de raciocínio cobrados. Separar entrada sem cache, leitura/gravação de cache, saída e taxas adicionais. Quando raciocínio já integrar o total faturável de saída, não somá-lo novamente. Comparar gasto total do ensaio e custo por review aceita; preço por token sozinho não decide.
+Measure all attempts, including failed/partial reviews, retries, JSON repairs, context resent each round, instructions, schemas, tool results, and billed reasoning tokens. Separate uncached input, cache reads/writes, output, and additional fees. When reasoning is already included in billable output, do not count it twice. Compare total experiment spending and cost per accepted review; token prices alone do not decide.
 
-Endpoint/modelo e referência de credencial continuam configuráveis, com destinos aprovados. Não reutilizar login do Codex como credencial do Java nem presumir créditos de API por possuir **ChatGPT Plus**; a separação está documentada em [local-inference.md](local-inference.md).
+Endpoint/model and credential reference remain configurable with approved destinations. Do not reuse Codex login as a Java credential or assume **ChatGPT Plus** supplies API credits; the separation is documented in [local-inference.md](local-inference.md).
 
-## Orçamento e janela paga
+## Budget and paid window
 
-**P, meta a validar:** **US$ 5–10 no total**, infraestrutura e inferência da demonstração. Escolher o teto concreto antes de gastar; não interpretar a faixa como saldo disponível ou autorização de contratação. Registrar custo bruto, créditos efetivamente aplicados e desembolso líquido separadamente.
+**P, target to validate:** **US$5–10 total** for demonstration infrastructure and inference. Choose the concrete cap before spending; the range is neither an available balance nor purchase authorization. Record gross cost, actually applied credits, and net cash spending separately.
 
-Estimativa total = compute pelo período + armazenamento/IP/tráfego/backups/outros adicionais + todas as chamadas de modelo + margem para tributos/câmbio e atraso de medição. Verificar também mínimo de recarga/pré-pagamento do provedor: desembolso antecipado pode exceder o consumo do teste. O exemplo de US$ 1,71/48 h cobre apenas compute.
+Estimated total = compute for the period + storage/IP/traffic/backups/other extras + all model calls + margin for taxes/exchange rates and delayed metering. Check minimum top-up/prepayment too: upfront cash outlay may exceed test consumption. The US$1.71/48 h example covers compute only.
 
-Desenvolver e validar localmente primeiro; subir VPS somente com fluxo pronto. Antes da janela paga, definir número de PRs/tentativas, limite por review e por campanha, tokens, chamadas, retries e duração; reservar parte do teto para infraestrutura e imprevistos. Alertas de faturamento não garantem bloqueio automático ou medição instantânea. A aplicação precisa impedir novas chamadas ao esgotar seu limite, sem fallback externo implícito.
+Develop and validate locally first; create the VPS only when the flow is ready. Before the paid window, define PRs/attempts, per-review/campaign limits, tokens, calls, retries, and duration; reserve part of the cap for infrastructure and unexpected costs. Billing alerts do not guarantee automatic cutoff or instant measurements. The application must prevent new calls after its limit, without implicit external fallback.
 
-## Evidências e preparação pública
+## Evidence and public-release preparation
 
-Produzir gradualmente, usando fixtures e repositórios de demonstração publicáveis:
+Produce gradually using publishable fixtures and demonstration repositories:
 
-- README, diagramas e decisões, instruções de execução local/cloud e versões/configuração reproduzíveis sem valores secretos.
-- Exemplos de PR e resultado com SHA, achados, cobertura, limitações e correlação entre webhook, job, autorização, MCP, modelo e publicação.
-- Avaliações com gabarito, falsos positivos, tentativas de prompt injection e acessos negados, além de medições de latência, memória e custo real com condições do ensaio.
-- Gravação curta mostrando abrir/atualizar PR, andamento e resultado publicado; ocultar credenciais, painéis sensíveis e dados privados.
-- Registro da janela de execução, recursos usados, exportação de artefatos e encerramento, permitindo entender o resultado após a remoção do endpoint.
+- README, diagrams, decisions, local/cloud execution instructions, and reproducible versions/configuration without secrets.
+- PR/result examples with SHA, findings, coverage, limitations, and webhook/job/authorization/MCP/model/publication correlation.
+- Evaluations with expected results, false positives, prompt injection attempts, and denied access, plus latency, memory, and actual-cost measurements with their conditions.
+- A short recording showing PR creation/update, progress, and the published result; hide credentials, sensitive dashboards, and private data.
+- A record of execution window, resources, artifact export, and teardown so the result remains understandable after endpoint removal.
 
-Antes de tornar o repositório público, revisar arquivos **e histórico**, licenças/proveniência de exemplos, links de PR e permissões dos dados. Os caminhos absolutos, nomes de projetos alheios e detalhes internos do inventário atual são notas de diagnóstico; preparar uma versão pública sanitizada, com caminhos parametrizados e apenas informações adequadas à publicação. Preservar requisitos e evidências técnicas úteis sem expor informação privada. `prompt.md` também entra nessa revisão; não foi removido nem publicado nesta tarefa.
+Before making the repository public, review files **and history**, example licenses/provenance, PR links, and data permissions. Absolute paths, other projects' names, and internal inventory details are diagnostic notes; prepare a sanitized public version with parameterized paths and only publishable information. Preserve useful requirements/evidence without exposing private information. The original `prompt.md`, if retained in a publication source/history, is also subject to this review; this document does not remove or publish it.
 
-Exemplos de configuração futura usam placeholders/referências de segredo. Não versionar chaves de App, tokens, `.env` real, credenciais de cloud, prompts com código privado ou faturas com dados pessoais. Medições propostas devem permanecer separadas de resultados efetivamente executados. Não há obrigação de manter instalação online depois da POC.
+Future configuration examples use placeholders/secret references. Do not version App keys, tokens, real `.env` files, cloud credentials, prompts with private code, or invoices containing personal data. Keep proposed measurements separate from executed results. An online installation is not required after the POC.
 
-## Encerramento proposto
+## Proposed teardown
 
-1. Encerrar entrada de novos trabalhos, concluir/cancelar tentativas e desabilitar/remover webhook da demonstração para evitar retries contra endpoint descartado.
-2. Exportar exemplos, métricas, resultados, custo e gravação; verificar leitura dos arquivos sanitizados fora da VPS antes de excluir dados.
-3. Inventariar VM, volumes, snapshots, backups, IPs reservados, balanceadores eventualmente criados e demais recursos da campanha. Na tarefa futura de encerramento, excluir somente os recursos identificados como pertencentes à POC.
-4. Excluir a VM e os adicionais cobrados sem necessidade de retenção; verificar recursos órfãos, DNS e agendamentos. Apenas parar container, executar Compose down ou desligar a VM pode deixar cobrança ativa.
-5. Revogar/remover credenciais temporárias e acesso da demonstração, sem revogar identidades compartilhadas de outros projetos; registrar o que foi mantido e por quê.
-6. Conferir painel/fatura e consumo da API após a atualização da medição. Registrar horário de exclusão, custo final e cobrança residual, se houver. O término da demonstração exige evidência de encerramento, não só tela de servidor desligado.
+1. Stop accepting new jobs, finish/cancel attempts, and disable/remove the demonstration webhook to avoid retries against a discarded endpoint.
+2. Export examples, metrics, results, costs, and recording; verify sanitized files can be read outside the VPS before deleting data.
+3. Inventory VM, volumes, snapshots, backups, reserved IPs, any load balancers, and other campaign resources. During the future teardown task, delete only resources identified as belonging to the POC.
+4. Delete the VM and unneeded billable extras; check orphan resources, DNS, and schedules. Stopping a container, running Compose down, or powering off the VM may leave charges active.
+5. Revoke/remove temporary credentials and demonstration access without revoking shared identities from other projects; record what remains and why.
+6. Check the dashboard/invoice and API usage after metering updates. Record deletion time, final cost, and any residual charges. Completion needs teardown evidence, not just a powered-off-server screen.
 
-Nenhuma criação, alteração ou exclusão de infraestrutura foi executada nesta atualização. O próximo exercício continua sendo a F1 sem IA.
+No infrastructure creation, modification, or deletion was performed by this planning update. The initial learning exercise is F1 without AI.
