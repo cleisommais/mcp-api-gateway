@@ -21,11 +21,12 @@ public final class ManualReview {
                 if (!valid) System.exit(1);
                 return;
             }
-            if (args.length != 3 || !"github".equals(args[0])) {
-                throw new IllegalArgumentException("Usage: github owner/repository PR_NUMBER | --probe-tools");
+            if (args.length != 3 || !java.util.Set.of("github", "gitlab").contains(args[0])) {
+                throw new IllegalArgumentException("Usage: github|gitlab namespace/repository CHANGE_NUMBER | --probe-tools");
             }
+            dev.cleisommais.mcp.f5.GitLabAccess.validateRepository(args[1]);
             var metadata = model.metadata();
-            try (var source = source(args[1], Integer.parseInt(args[2]))) {
+            try (var source = source(args[0], args[1], Integer.parseInt(args[2]))) {
                 var report = new ReviewEngine(Integer.parseInt(env("OLLAMA_CONTEXT_LENGTH", "8192")),
                         Integer.parseInt(env("REVIEW_MAX_BATCHES", "4")), env("REVIEW_PROMPT_PROFILE", "calibrated"),
                         Integer.parseInt(env("REVIEW_OUTPUT_TOKENS", "4096"))).review(source, model);
@@ -33,7 +34,7 @@ public final class ManualReview {
                 report.put("retrieval", source instanceof GatewayReviewSource gateway ? gateway.trace() : java.util.Map.of("mode", "direct-stdio"));
                 var directory = Path.of(env("REPORT_DIR", Files.isDirectory(Path.of("/reports")) ? "/reports" : "reports"));
                 Files.createDirectories(directory);
-                String name = args[1].replace('/', '-') + "-pr" + args[2] + "-" + report.get("headSha").toString().substring(0, 12) + ".json";
+                String name = (args[0].equals("gitlab") ? "gitlab-" : "") + args[1].replace('/', '-') + "-pr" + args[2] + "-" + report.get("headSha").toString().substring(0, 12) + ".json";
                 var path = directory.resolve(name);
                 Files.writeString(path, Json.write(report) + "\n");
                 System.out.println("Report: " + path + "; status=" + report.get("status") + "; files=" + report.get("enumeratedFiles")
@@ -47,10 +48,15 @@ public final class ManualReview {
     }
 
     static ReviewData.Source source(String repository, int number) {
+        return source("github", repository, number);
+    }
+    static ReviewData.Source source(String platform, String repository, int number) {
         return switch (env("MCP_SOURCE", "gateway")) {
             case "gateway" -> new GatewayReviewSource(URI.create(env("MCP_GATEWAY_URL", "http://gateway:8080")),
-                    System.getenv("GATEWAY_TOKEN"), repository, number);
-            case "direct" -> new McpReviewSource(repository, number);
+                    System.getenv("GATEWAY_TOKEN"), platform, repository, number, java.util.UUID.randomUUID());
+            case "direct" -> new McpReviewSource(platform, repository, number,
+                    platform.equals("gitlab") && System.getenv("GITLAB_READ_TOKEN") != null
+                            ? java.util.Map.of("GITLAB_READ_TOKEN", System.getenv("GITLAB_READ_TOKEN")) : java.util.Map.of());
             default -> throw new IllegalArgumentException("MCP_SOURCE must be gateway or direct");
         };
     }

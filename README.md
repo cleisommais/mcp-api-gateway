@@ -2,7 +2,7 @@
 
 A PR/MR review POC with a Java agent, MCP Gateway, and adapters for GitHub, GitLab, and Bitbucket. Its purpose is hands-on learning and an interview portfolio demonstrating MCP Client, MCP Servers, authorization, and auditing.
 
-**Status as of 2026-11-13:** F1–F3 are implemented, and **F4's local webhook/queue/worker implementation is verified** on `codex/f4-webhook-jobs-private-repos`. Live GitHub App authentication and a private PR #1 review are verified. Bot publication and real GitHub delivery still await the remaining [installation steps](docs/f4-github-app-setup.md). F2's initial quality claim was corrected; the [model investigation](docs/f3-model-evaluation.md) separates reasoning quality from valid JSON.
+**Status as of 2026-11-14:** F1–F3 and F4's local webhook/queue/worker implementation are verified. **F5 adds live-validated GitLab.com review and summary publication** on `codex/f5-gitlab-adapter`: private [MR !1](https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/1) produced the expected finding, and repeated publication updated one summary. GitLab automation remains unsupported. Live GitHub App authentication and private PR #1 review are verified; real GitHub webhook/publication still await the remaining [installation steps](docs/f4-github-app-setup.md). The [model investigation](docs/f3-model-evaluation.md) separates reasoning quality from valid JSON.
 
 **Project language: English.** Documentation, diagrams, code comments, tool descriptions, application messages, and future commit messages use English.
 
@@ -21,6 +21,7 @@ This is not intended to become a commercial service or a permanently available i
 | [F3: model quality investigation](docs/f3-model-evaluation.md) | Identical-input comparisons, larger models, reasoning settings, failures, and conclusions |
 | [F4: webhook jobs and private access](docs/f4-webhook-jobs.md) | Edge admission, PostgreSQL queue, worker, installation tokens, and publication recovery |
 | [F4: install the GitHub App](docs/f4-github-app-setup.md) | Step-by-step registration, key, selected repositories, local settings, tunnel, and first live review |
+| [F5: second platform, GitLab.com](docs/f5-gitlab-platform.md) | Shared contracts, semantic translation, credentials, manual review/publication, live evidence and unsupported capabilities |
 | [Requirements](docs/requirements.md) | Functional/nonfunctional requirement IDs, acceptance, measurement, and phase |
 | [Architecture](docs/architecture.md) | Components, contracts, flows, and coverage |
 | [Security and identity](docs/security-and-identity.md) | Credentials, authorization, and threats |
@@ -43,6 +44,8 @@ docker compose --profile review run --rm review github cleisommais/pr-test-repo 
 ```
 
 Reports appear in `reports/`. Ollama uses host loopback port 11435 and PostgreSQL 15432. F4's optional edge uses 18081; the worker and MCP Gateway have no host ports by default. `compose.debug.yaml` explicitly restores a loopback gateway debugging port if needed. The initializer preserves existing values and generates missing database/gateway/webhook secrets in ignored `.env`. PostgreSQL now stores durable review jobs.
+
+For the second platform, configure `GITLAB_READ_TOKEN` in `.env`, then run `docker compose --profile review run --rm review gitlab cleisommais/pr-test-repo 1`. The [F5 guide](docs/f5-gitlab-platform.md) explains the separate publication token and explicit `gitlab-publish` command. The model/review container receives neither GitLab credential.
 
 The [F4 guide](docs/f4-webhook-jobs.md) explains the current boundaries and the [private fixture PRs](https://github.com/cleisommais/pr-test-repo-private/pulls). A signed local fixture exercised the real queue, gateway, and model with publication disabled. Enable bot comments only after following the App guide. `complete` still describes mechanical coverage/validation, and quality requires human review. Optional two-model verification is planned for F6 and remains disabled/unimplemented in F4.
 

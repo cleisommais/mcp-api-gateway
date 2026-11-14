@@ -25,12 +25,18 @@ final class GatewayReviewSource implements Source {
     private String serverAlias = "unresolved";
     private final String repository;
     private final int number;
+    private final String platform;
     private Snapshot pinned;
 
     GatewayReviewSource(URI endpoint, String secret, String repository, int number) {
         this(endpoint, secret, repository, number, UUID.randomUUID());
     }
     GatewayReviewSource(URI endpoint, String secret, String repository, int number, UUID jobId) {
+        this(endpoint, secret, "github", repository, number, jobId);
+    }
+    GatewayReviewSource(URI endpoint, String secret, String platform, String repository, int number, UUID jobId) {
+        if (!Set.of("github", "gitlab").contains(platform)) throw new IllegalArgumentException("Unsupported review platform");
+        this.platform = platform;
         this.jobId = jobId.toString();
         if (!Set.of("http", "https").contains(endpoint.getScheme()) || endpoint.getHost() == null
                 || endpoint.getUserInfo() != null || endpoint.getQuery() != null || endpoint.getFragment() != null
@@ -43,19 +49,25 @@ final class GatewayReviewSource implements Source {
         try {
             var initialized = client.initialize();
             if (!"review-mcp-gateway".equals(initialized.serverInfo().name()) || !"0.3.0".equals(initialized.serverInfo().version())
-                    || !"2025-11-25".equals(initialized.protocolVersion()) || !client.listTools().tools().stream()
-                    .map(McpSchema.Tool::name).collect(Collectors.toSet()).equals(Set.of("github.get_change_snapshot",
-                            "github.get_file_at_commit", "github.get_change_state", "github.close_review"))) {
+                    || !"2025-11-25".equals(initialized.protocolVersion())) {
                 throw new IllegalStateException("Unexpected gateway profile or catalog");
+            }
+            var catalog = client.listTools().tools().stream().map(McpSchema.Tool::name).collect(Collectors.toSet());
+            if (!dev.cleisommais.mcp.f3.GatewayCatalog.schemas().keySet().containsAll(catalog)
+                    || !catalog.containsAll(dev.cleisommais.mcp.f3.GatewayCatalog.schemas(Set.of(platform)).keySet())) {
+                throw new IllegalStateException("Unexpected gateway catalog");
             }
         } catch (RuntimeException error) { client.closeGracefully(); throw error; }
     }
 
     @Override public Snapshot snapshot() throws Exception {
         if (pinned == null) {
-            var data = new LinkedHashMap<>(Json.map(call("github.get_change_snapshot", scope(false))));
+            var data = new LinkedHashMap<>(Json.map(call(platform + ".get_change_snapshot", scope(false))));
             if (data.get("_gateway") instanceof Map<?, ?>) serverAlias = Json.text(Json.map(data.remove("_gateway")), "server");
             pinned = Json.read(Json.write(data), new TypeRef<>() {});
+            if (!platform.equals(pinned.platform()) || !repository.equals(pinned.repository()) || number != pinned.number()) {
+                throw new SecurityException("Gateway returned a different resource");
+            }
         }
         return pinned;
     }
@@ -64,11 +76,11 @@ final class GatewayReviewSource implements Source {
         var arguments = scope(true);
         arguments.put("sha", sha);
         arguments.put("path", path);
-        return Json.text(Json.map(call("github.get_file_at_commit", arguments)), "content");
+        return Json.text(Json.map(call(platform + ".get_file_at_commit", arguments)), "content");
     }
 
     @Override public boolean isCurrent(Snapshot snapshot) throws Exception {
-        return Boolean.TRUE.equals(Json.map(call("github.get_change_state", scope(true))).get("current"));
+        return Boolean.TRUE.equals(Json.map(call(platform + ".get_change_state", scope(true))).get("current"));
     }
 
     Map<String, Object> trace() { return Map.of("mode", "gateway", "jobId", jobId, "server", serverAlias, "protocol", "2025-11-25"); }
@@ -90,7 +102,7 @@ final class GatewayReviewSource implements Source {
     }
 
     @Override public void close() {
-        try { if (pinned != null) call("github.close_review", scope(true)); }
+        try { if (pinned != null) call(platform + ".close_review", scope(true)); }
         catch (Exception error) { System.err.println("Gateway review cleanup failed; restart gateway to release abandoned lab jobs."); }
         finally { client.closeGracefully(); }
     }

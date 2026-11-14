@@ -43,6 +43,7 @@ These choices resolve Q01–Q03 and implement P01 only within F1. They do not ye
 | D20 | C, 2026-11-13 | Own Ollama and PostgreSQL in this repository's Docker Compose, with separate containers/volumes/network; install a GPU-suitable model and use the public `cleisommais/pr-test-repo` for code, commit, and PR exercises. Preserve other projects' infrastructure |
 | D21 | C, 2026-11-13 | Proceed with F3 while correcting the F2 quality gap: compare another/larger model when results are poor and investigate model versus prompt/agent causes; valid JSON is not sufficient evidence of successful scenarios |
 | D22 | C, 2026-11-13 | Start F4 and add synthetic tests/PRs in `cleisommais/pr-test-repo-private`; investigate private access. Provide GitHub App installation steps at the end rather than requiring installation during implementation |
+| D23 | C, 2026-11-14 | Start F5 using the user's GitLab.com `cleisommais/pr-test-repo`; the user supplied separate read/publication tokens for private access, synthetic fixture creation and summary publication |
 
 Hardware, version, and models were **confirmed by the user** in addition to earlier inspection evidence. The canonical record is [local-inference.md](local-inference.md); custom-model characteristics are not inferred from its name or automatically included in that confirmation.
 
@@ -69,6 +70,7 @@ Hardware, version, and models were **confirmed by the user** in addition to earl
 | P17 | Implemented in F4 | Signed webhook admission plus installation/repository/PR policy, durable PostgreSQL queue, and retained internal worker-to-MCP authentication | IP allowlists are optional public-edge defense later, not caller identity or a replacement for HMAC |
 | P18 | Implemented/tested locally in F4; live App checks pending | Repository-scoped short-lived installation tokens and bot-owned summary reconciliation; private keys stay in ignored mounted files | A connected developer tool is not the running application's GitHub credential |
 | P19 | Proposed for F6 | Optional primary-plus-verifier model mode, disabled by default, explicit model/call/time/spending settings | A second model can add false positives or agree on an error; evaluate it instead of blindly merging outputs |
+| P20 | Implemented/live-validated in F5 | Narrow GitLab.com REST v4 MCP adapter and platform/repository-scoped gateway routing, preserving analysis rules; explicit manual summary publisher with separate credentials | The official GitLab MCP server was considered but not integrated or declared incapable; Self-Managed, Bitbucket, inline positions and GitLab automation remain separate work. [Evidence](evaluation/f5/README.md) |
 
 API candidates, dated financial references, comparison, and teardown are centralized in [cloud-demo-and-portfolio.md](cloud-demo-and-portfolio.md). Provider, VPS SKU/region, and final limits remain **Q**.
 

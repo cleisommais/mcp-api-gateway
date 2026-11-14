@@ -14,11 +14,18 @@ public record GatewayConfig(String principal, int maxOpenJobs, List<Registration
                                String protocol, List<String> repositories, String credentialMode) {
         public Registration {
             if (credentialMode == null) credentialMode = "anonymous";
-            if (!List.of("anonymous", "app").contains(credentialMode)) throw new IllegalArgumentException("Unapproved credential mode");
+            if (!List.of("anonymous", "app", "token").contains(credentialMode)) throw new IllegalArgumentException("Unapproved credential mode");
             repositories = List.copyOf(repositories);
         }
         public Registration(String id, String transport, String mainClass, String version, String protocol, List<String> repositories) {
             this(id, transport, mainClass, version, protocol, repositories, "anonymous");
+        }
+        public String platform() {
+            return switch (mainClass) {
+                case "dev.cleisommais.mcp.f2.GitHubMcpServer" -> "github";
+                case "dev.cleisommais.mcp.f5.GitLabMcpServer" -> "gitlab";
+                default -> throw new IllegalArgumentException("Unapproved server process");
+            };
         }
     }
 
@@ -28,15 +35,19 @@ public record GatewayConfig(String principal, int maxOpenJobs, List<Registration
         var repositories = new HashSet<String>();
         var ids = new HashSet<String>();
         for (var server : servers) {
-            if (!"stdio".equals(server.transport()) || !"dev.cleisommais.mcp.f2.GitHubMcpServer".equals(server.mainClass())
-                    || !"0.2.0".equals(server.version()) || !"2025-11-25".equals(server.protocol())
+            String platform = server.platform();
+            if (!"stdio".equals(server.transport())
+                    || !(platform.equals("github") ? "0.2.0" : "0.1.0").equals(server.version())
+                    || !(platform.equals("github") ? List.of("anonymous", "app") : List.of("anonymous", "token")).contains(server.credentialMode())
+                    || !"2025-11-25".equals(server.protocol())
                     || server.id() == null || !server.id().matches("[a-zA-Z0-9-]{1,64}") || !ids.add(server.id())
                     || server.repositories() == null || server.repositories().isEmpty()) {
                 throw new IllegalArgumentException("Unapproved server registration");
             }
             for (String repository : server.repositories()) {
-                if (!repository.matches("[A-Za-z0-9_-]+/[A-Za-z0-9_.-]+") || repository.endsWith("/..")
-                        || repository.endsWith("/.") || !repositories.add(repository)) {
+                dev.cleisommais.mcp.f5.GitLabAccess.validateRepository(repository);
+                if ((platform.equals("github") && repository.split("/").length != 2)
+                        || !repositories.add(platform + ":" + repository)) {
                     throw new IllegalArgumentException("Invalid or ambiguously routed repository");
                 }
             }
@@ -48,8 +59,8 @@ public record GatewayConfig(String principal, int maxOpenJobs, List<Registration
         return Json.read(Files.readString(path), new TypeRef<>() {});
     }
 
-    Registration route(String repository) {
-        return servers.stream().filter(server -> server.repositories().contains(repository)).findFirst()
+    Registration route(String platform, String repository) {
+        return servers.stream().filter(server -> server.platform().equals(platform) && server.repositories().contains(repository)).findFirst()
                 .orElseThrow(() -> new SecurityException("Repository is not registered"));
     }
 }

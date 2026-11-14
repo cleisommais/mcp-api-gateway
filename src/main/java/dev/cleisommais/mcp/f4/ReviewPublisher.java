@@ -66,7 +66,10 @@ public final class ReviewPublisher {
         throw new IOException("Comment enumeration limit reached; publication was not attempted");
     }
     static String summary(JobStore.Job job, Map<String, Object> report, String marker) {
-        var result = new StringBuilder(marker).append("\n## Automated POC review\n\nAnalyzed commit `").append(job.headSha())
+        return summary(job.headSha(), report, marker);
+    }
+    public static String summary(String headSha, Map<String, Object> report, String marker) {
+        var result = new StringBuilder(marker).append("\n## Automated POC review\n\nAnalyzed commit `").append(headSha)
                 .append("`. Static analysis only; human review is still required.\n\n")
                 .append("Coverage status: **").append(escape(String.valueOf(report.get("status")))).append("**; files enumerated: ")
                 .append(report.get("enumeratedFiles")).append(".\n\n");
@@ -86,7 +89,7 @@ public final class ReviewPublisher {
         return result.toString();
     }
     private static String escape(String value) {
-        return value.replace("@", "@\u200b").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        return value.replace('\r', ' ').replace('\n', ' ').replace("@", "@\u200b").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 .replace("\\", "\\\\").replace("`", "\\`").replace("[", "\\[").replace("]", "\\]")
                 .replace("(", "\\(").replace(")", "\\)").replace("*", "\\*").replace("_", "\\_").replace("!", "\\!");
     }

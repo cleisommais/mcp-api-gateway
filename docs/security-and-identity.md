@@ -1,5 +1,7 @@
 # Security and identity
 
+**F5 update:** GitLab.com retrieval uses a separate `read_api` token forwarded only to the registered read-only GitLab child process. The model/review container receives neither GitLab credential. An explicitly invoked publisher receives a separate `api` token, writes only top-level MR notes, verifies the current SHA/branch/state and note author ID, and reconciles a marker with a local attempt journal. GitHub and GitLab jobs with the same repository name cannot cross platform scope. GitLab quick actions and mentions in finding text are neutralized. These are implemented/tested controls; GitLab webhook admission and durable automation are not implemented. See the [F5 guide](f5-gitlab-platform.md) for the single-publisher assumption and credential limits.
+
 [Index](../README.md) · [Architecture](architecture.md) · [Requirements](requirements.md).
 
 Requested direction: least privilege, per-call authorization, and identity isolation. Concrete mechanisms below are **P** unless explicitly required. F7 expands evaluation; protections needed by a feature must be present when that feature is delivered.

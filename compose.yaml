@@ -58,12 +58,13 @@ services:
     command: ["${OLLAMA_MODEL:-gpt-oss:20b}"]
 
   gateway:
-    image: mcp-api-gateway:f4
+    image: mcp-api-gateway:f5
     build: .
     profiles: [review, automation]
     environment:
       GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Run scripts/Initialize-LocalEnvironment.ps1 first}
       GATEWAY_CONFIG: /config/gateway.json
+      GITLAB_READ_TOKEN: ${GITLAB_READ_TOKEN:-}
       GITHUB_APP_ID: ${GITHUB_APP_ID:-}
       GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:-0}
       GITHUB_PRIVATE_KEY_PATH: /run/secrets/github-app.pem
@@ -78,7 +79,7 @@ services:
       retries: 6
 
   review:
-    image: mcp-api-gateway:f4
+    image: mcp-api-gateway:f5
     build: .
     profiles: [review]
     environment:
@@ -103,7 +104,7 @@ services:
     entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f2.ManualReview]
 
   edge:
-    image: mcp-api-gateway:f4
+    image: mcp-api-gateway:f5
     build: .
     profiles: [automation, tunnel]
     environment:
@@ -121,6 +122,16 @@ services:
         condition: service_healthy
     entrypoint: [java, "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f4.WebhookEdge]
 
+  gitlab-publish:
+    image: mcp-api-gateway:f5
+    build: .
+    profiles: [gitlab-publish]
+    environment:
+      GITLAB_PUBLISH_TOKEN: ${GITLAB_PUBLISH_TOKEN:-}
+    volumes:
+      - ./reports:/reports
+    entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f5.PublishGitLabReport]
+
   tunnel:
     image: cloudflare/cloudflared:2026.11.0
     profiles: [tunnel]
@@ -129,7 +140,7 @@ services:
       - edge
 
   worker:
-    image: mcp-api-gateway:f4
+    image: mcp-api-gateway:f5
     build: .
     profiles: [automation]
     environment:

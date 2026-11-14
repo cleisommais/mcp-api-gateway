@@ -1,0 +1,29 @@
+{
+  "phase": "F5",
+  "executedOn": "2026-11-14",
+  "offering": "GitLab.com REST v4",
+  "tests": {"discovered": 80, "passed": 77, "failed": 0, "errors": 0, "skippedDatabaseTests": 3, "addedF5Tests": 18},
+  "live": {
+    "repository": "cleisommais/pr-test-repo",
+    "projectId": 88936485,
+    "number": 1,
+    "baseSha": "879f61bc5ffd8ea53558c005942255e42cbcd578",
+    "headSha": "4143f7bd0bf4cd801c11e42ffac574dd91eeb462",
+    "retrieval": "agent -> authenticated MCP HTTP gateway -> read-only GitLab stdio adapter -> GitLab API",
+    "model": "gpt-oss:20b",
+    "thinking": "medium",
+    "coverageStatus": "complete",
+    "enumeratedFiles": 1,
+    "acceptedFindings": 1,
+    "expectedDiagnosisMatched": true,
+    "expectedSeverity": "MEDIUM",
+    "publicationInvocationsSucceeded": 2,
+    "summaryCountAfterRepeat": 1,
+    "summaryNoteId": 4235283597,
+    "mrStateAfterPublication": "opened",
+    "defaultBranchChanged": false
+  },
+  "unsupported": ["GitLab webhook and durable queue automation", "inline comments and positions", "GitLab Self-Managed", "Bitbucket"],
+  "liveNotValidated": ["fork permissions", "large or omitted diffs", "rate-limit recovery"],
+  "remainingSeparateWork": "F4 real GitHub webhook/publication validation"
+}

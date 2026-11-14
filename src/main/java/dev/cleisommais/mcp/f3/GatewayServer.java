@@ -33,8 +33,9 @@ public final class GatewayServer implements AutoCloseable {
         if (secret == null || secret.length() < 32) throw new IllegalArgumentException("A generated gateway lab token is required");
         service = new GatewayService(config, factory, audit);
         var transport = HttpServletStreamableServerTransportProvider.builder().mcpEndpoint("/mcp").build();
-        var tools = GatewayCatalog.schemas().entrySet().stream().map(entry -> McpServerFeatures.SyncToolSpecification.builder()
-                .tool(McpSchema.Tool.builder(entry.getKey(), entry.getValue()).description("Scoped read-only GitHub review operation: " + entry.getKey()).build())
+        var tools = GatewayCatalog.schemas(config.servers().stream().map(GatewayConfig.Registration::platform).collect(java.util.stream.Collectors.toSet()))
+                .entrySet().stream().map(entry -> McpServerFeatures.SyncToolSpecification.builder()
+                .tool(McpSchema.Tool.builder(entry.getKey(), entry.getValue()).description("Scoped read-only review operation: " + entry.getKey()).build())
                 .callHandler((exchange, request) -> {
                     try {
                         var result = service.invoke(config.principal(), request.name(), request.arguments());

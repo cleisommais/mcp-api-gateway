@@ -16,5 +16,13 @@
     "protocol": "2025-11-25",
     "repositories": ["cleisommais/pr-test-repo-private"],
     "credentialMode": "app"
+  }, {
+    "id": "private-gitlab",
+    "transport": "stdio",
+    "mainClass": "dev.cleisommais.mcp.f5.GitLabMcpServer",
+    "version": "0.1.0",
+    "protocol": "2025-11-25",
+    "repositories": ["cleisommais/pr-test-repo"],
+    "credentialMode": "token"
   }]
 }

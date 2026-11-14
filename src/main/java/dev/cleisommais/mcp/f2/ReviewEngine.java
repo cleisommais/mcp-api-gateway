@@ -169,6 +169,7 @@ final class ReviewEngine {
         report.put("number", snapshot.number());
         report.put("baseSha", snapshot.baseSha());
         report.put("headSha", snapshot.headSha());
+        report.put("baseBranch", snapshot.baseBranch());
         report.put("model", model.name());
         report.put("qualityStatus", "requires-human-review");
         report.put("validationScope", "schema, pinned added-line location, and matching evidence; reasoning is not automatically verified");

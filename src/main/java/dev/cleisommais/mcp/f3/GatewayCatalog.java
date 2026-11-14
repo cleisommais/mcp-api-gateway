@@ -33,14 +33,21 @@ public final class GatewayCatalog {
     }
 
     public static Map<String, Map<String, Object>> schemas() {
+        return schemas(Set.of("github", "gitlab"));
+    }
+    public static Map<String, Map<String, Object>> schemas(Set<String> platforms) {
         var identity = Map.<String, Object>of("jobId", Map.of("type", "string", "format", "uuid"),
                 "repository", Map.of("type", "string", "minLength", 3), "number", Map.of("type", "integer", "minimum", 1));
         var result = new LinkedHashMap<String, Map<String, Object>>();
-        for (String tool : List.of("github.get_change_snapshot", "github.get_file_at_commit", "github.get_change_state", "github.close_review")) {
-            var properties = new LinkedHashMap<>(identity);
-            if (!tool.endsWith("get_change_snapshot")) properties.put("sha", FILE_PROPERTIES_SHA());
-            if (tool.endsWith("get_file_at_commit")) properties.put("path", Map.of("type", "string", "minLength", 1));
-            result.put(tool, Map.of("type", "object", "properties", properties, "required", List.copyOf(properties.keySet()), "additionalProperties", false));
+        for (String platform : platforms) {
+            if (!Set.of("github", "gitlab").contains(platform)) throw new IllegalArgumentException("Unsupported platform");
+            for (String operation : List.of("get_change_snapshot", "get_file_at_commit", "get_change_state", "close_review")) {
+                String tool = platform + "." + operation;
+                var properties = new LinkedHashMap<>(identity);
+                if (!tool.endsWith("get_change_snapshot")) properties.put("sha", FILE_PROPERTIES_SHA());
+                if (tool.endsWith("get_file_at_commit")) properties.put("path", Map.of("type", "string", "minLength", 1));
+                result.put(tool, Map.of("type", "object", "properties", properties, "required", List.copyOf(properties.keySet()), "additionalProperties", false));
+            }
         }
         return Map.copyOf(result);
     }

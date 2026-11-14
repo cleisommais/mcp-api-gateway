@@ -20,7 +20,7 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 
 ## Proposed phases
 
-**F1, F2 mechanics, and F3 gateway are implemented**, as described in the [F1 guide](docs/f1-mcp-stdio.md), [F2 guide](docs/f2-local-pr-review.md), and [F3 guide](docs/f3-governed-gateway.md). F2's initial model quality did not meet all expected scenarios; the [F3 evaluation](docs/f3-model-evaluation.md) preserves failures and investigates model/prompt/inference causes. F4–F8 remain planned. Necessary security, validation, and honest coverage reporting accompany the first feature that needs them; F7 expands robustness rather than postponing those protections.
+**F1, F2 mechanics, F3 gateway, F4 local automation, and F5 manual GitLab review/publication are implemented**, as described in the phase guides below. F2's initial model quality did not meet all expected scenarios; the [F3 evaluation](docs/f3-model-evaluation.md) preserves failures and investigates model/prompt/inference causes. F4's real webhook/publication checks remain separate pending work; F6–F8 remain planned. Necessary security, validation, and honest coverage reporting accompany the first feature that needs them; F7 expands robustness rather than postponing those protections.
 
 ### F1 — MCP fundamentals, without a model
 
@@ -68,6 +68,8 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 
 ### F5 — Second server or platform
 
+**Implemented and live-validated on 2026-11-14 on `codex/f5-gitlab-adapter`:** GitLab.com REST v4 through a second repository-bound MCP adapter and platform-scoped gateway routing. The same Java analysis rules produced a correct MEDIUM finding on private synthetic [MR !1](https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/1); controlled publication and a repeat update produced exactly one summary note. Eighteen new tests cover platform contracts, pagination, omissions, renames, fork reads, permissions, current state and publication recovery. See the [F5 guide](docs/f5-gitlab-platform.md) and [evidence](docs/evaluation/f5/README.md). GitLab webhook/queue automation, inline positions, Self-Managed and Bitbucket remain unsupported.
+
 - **Learn:** what MCP standardizes and what requires semantic translation.
 - **Deliver:** a second server or adapter, preferably for another platform, passing the same contract checks. Replacing only the GitHub server does not validate GitLab/Bitbucket.
 - **Dependencies:** F3/F4; selected offering (cloud or self-hosted version), an approved server, and compatible credentials.
@@ -114,4 +116,4 @@ Read the [F1 guide](docs/f1-mcp-stdio.md) to run it without AI and follow each c
 
 ## Current scope
 
-The user authorized F4, private fixture tests/PRs, and access-control improvements appropriate to this phase. Local webhook/queue/worker checks are complete; live App/private/publication validation awaits the user's installation, for which a step-by-step guide is delivered at the end. Optional two-model verification is planned in F6, disabled by default. Project-owned Ollama/PostgreSQL and the public/private fixture repositories remain the learning environment. Other projects' infrastructure is preserved and completed project changes are committed.
+The user authorized F5 and supplied the private GitLab.com test project and separate read/publication credentials in ignored `.env`. The synthetic branches/MR, gateway-mediated local-model review, and single-summary create/update are verified. F4's remaining real GitHub webhook/publication validation is still separate pending work. Optional two-model verification remains planned in F6, disabled by default. Project-owned Ollama/PostgreSQL and the fixture repositories remain the learning environment. Credentials and local publication journals remain outside Git; other projects' infrastructure is preserved.

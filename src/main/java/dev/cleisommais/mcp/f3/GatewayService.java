@@ -35,11 +35,16 @@ public final class GatewayService implements AutoCloseable {
             if (registration.credentialMode().equals("app")) {
                 environment.putAll(dev.cleisommais.mcp.f4.GitHubAccess.appEnvironment(System.getenv()));
             }
-            var source = new McpReviewSource(repository, number, environment);
+            if (registration.credentialMode().equals("token")) {
+                String token = System.getenv("GITLAB_READ_TOKEN");
+                if (token == null || token.isBlank()) throw new IllegalArgumentException("GITLAB_READ_TOKEN is required for this connection");
+                environment.put("GITLAB_READ_TOKEN", token);
+            }
+            var source = new McpReviewSource(registration.platform(), repository, number, environment);
             return new Backend() {
                 @Override public void verifyCatalog() {
                     var initialized = source.initialized();
-                    if (!"github-review".equals(initialized.serverInfo().name()) || !registration.version().equals(initialized.serverInfo().version())
+                    if (!(registration.platform() + "-review").equals(initialized.serverInfo().name()) || !registration.version().equals(initialized.serverInfo().version())
                             || !registration.protocol().equals(initialized.protocolVersion())) {
                         throw new SecurityException("Downstream version/protocol changed");
                     }
@@ -68,17 +73,19 @@ public final class GatewayService implements AutoCloseable {
             if (!(rawNumber instanceof Integer || rawNumber instanceof Long) || ((Number) rawNumber).longValue() < 1
                     || ((Number) rawNumber).longValue() > Integer.MAX_VALUE) throw new SecurityException("Invalid PR number");
             int number = ((Number) rawNumber).intValue();
-            var registration = config.route(repository);
+            String platform = tool.substring(0, tool.indexOf('.'));
+            String operation = tool.substring(tool.indexOf('.') + 1);
+            var registration = config.route(platform, repository);
             serverId = registration.id();
             var job = jobs.get(jobId);
             if (job == null) {
-                if (!tool.equals("github.get_change_snapshot")) throw new SecurityException("Unknown or closed job");
+                if (!operation.equals("get_change_snapshot")) throw new SecurityException("Unknown or closed job");
                 if (jobs.size() >= config.maxOpenJobs()) throw new IllegalStateException("Open review limit reached; close an existing review");
                 var backend = factory.open(registration, repository, number);
                 try {
                     backend.verifyCatalog();
                     var snapshot = backend.snapshot();
-                    if (!repository.equals(snapshot.repository()) || number != snapshot.number() || !"github".equals(snapshot.platform())
+                    if (!repository.equals(snapshot.repository()) || number != snapshot.number() || !platform.equals(snapshot.platform())
                             || !snapshot.headSha().matches("[a-f0-9]{40}") || !snapshot.baseSha().matches("[a-f0-9]{40}")) {
                         throw new SecurityException("Downstream returned a different resource");
                     }
@@ -91,24 +98,24 @@ public final class GatewayService implements AutoCloseable {
                 throw new SecurityException("Job resource scope mismatch");
             }
             sha = job.snapshot().headSha();
-            if (!tool.equals("github.get_change_snapshot") && !sha.equals(Json.text(arguments, "sha"))) {
+            if (!operation.equals("get_change_snapshot") && !sha.equals(Json.text(arguments, "sha"))) {
                 throw new SecurityException("Commit is outside the pinned job scope");
             }
             Object result;
-            if (tool.equals("github.close_review")) {
+            if (operation.equals("close_review")) {
                 jobs.remove(jobId);
                 job.backend().close();
                 result = Map.of("closed", true);
             } else {
                 job.backend().verifyCatalog();
-                result = switch (tool) {
-                    case "github.get_change_snapshot" -> {
+                result = switch (operation) {
+                    case "get_change_snapshot" -> {
                         var snapshot = new java.util.LinkedHashMap<>(Json.object(Json.write(job.snapshot())));
                         snapshot.put("_gateway", Map.of("server", job.server().id(), "credentialMode", job.server().credentialMode()));
                         yield snapshot;
                     }
-                    case "github.get_change_state" -> Map.of("current", job.backend().isCurrent(job.snapshot()));
-                    case "github.get_file_at_commit" -> {
+                    case "get_change_state" -> Map.of("current", job.backend().isCurrent(job.snapshot()));
+                    case "get_file_at_commit" -> {
                         String path = Json.text(arguments, "path");
                         validatePath(path);
                         yield Map.of("content", job.backend().fileAtCommit(sha, path));
