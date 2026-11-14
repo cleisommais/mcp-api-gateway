@@ -32,7 +32,8 @@ class OllamaModelTest {
 
     @Test void rejectsTruncatedGeneration() throws Exception {
         var model = start(new AtomicReference<>(), 200, "length");
-        assertThrows(java.io.IOException.class, () -> model.generate("policy", "data", ReviewEngine.SCHEMA));
+        var error = assertThrows(OllamaModel.IncompleteGeneration.class, () -> model.generate("policy", "data", ReviewEngine.SCHEMA));
+        assertEquals(12, error.promptTokens); assertEquals(4096, error.outputTokens);
     }
 
     @Test void surfacesUnavailableModelWithoutFallback() throws Exception {
@@ -78,7 +79,8 @@ class OllamaModelTest {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/api/chat", exchange -> {
             captured.set(Json.object(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8)));
-            byte[] response = Json.write(Map.of("done", true, "done_reason", reason, "message", Map.of("content", "{}")))
+            byte[] response = Json.write(Map.of("done", true, "done_reason", reason, "message", Map.of("content", "{}"),
+                    "prompt_eval_count", 12, "eval_count", 4096))
                     .getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(status, response.length);
             try (var output = exchange.getResponseBody()) { output.write(response); }

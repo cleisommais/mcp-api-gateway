@@ -26,12 +26,18 @@ final class ReviewSession implements AutoCloseable {
     private final int maxCalls, context, output;
     private final ReviewData.Model model;
     private VerifiedModel verified;
+    private final dev.cleisommais.mcp.f7.CallGate inferenceGate;
 
     ReviewSession(Map<String, String> env, String platform, String repository) throws Exception {
         this(env, platform, repository, null);
     }
     ReviewSession(Map<String, String> env, String platform, String repository, ReviewData.Model frozenPrimary) throws Exception {
+        this(env, platform, repository, frozenPrimary, dev.cleisommais.mcp.f7.CallGate.inference(env));
+    }
+    ReviewSession(Map<String, String> env, String platform, String repository, ReviewData.Model frozenPrimary,
+                  dev.cleisommais.mcp.f7.CallGate inferenceGate) throws Exception {
         this.env = env; this.platform = platform; this.repository = repository;
+        this.inferenceGate = inferenceGate;
         mode = value("REVIEW_MODE", "single");
         if (!List.of("single", "verified").contains(mode)) throw new IllegalArgumentException("REVIEW_MODE must be single or verified");
         maxCalls = integer("REVIEW_MAX_MODEL_CALLS", 8, 1, 100);
@@ -94,16 +100,29 @@ final class ReviewSession implements AutoCloseable {
                 long remaining = deadline - System.nanoTime();
                 if (calls >= maxCalls || remaining <= 0) throw new IOException("Review model-call or duration budget exhausted; no further call was sent");
                 calls++;
-                var attempt = new LinkedHashMap<String, Object>(); attempts.add(attempt);
+                Map<String, Object> attempt = new java.util.concurrent.ConcurrentHashMap<>(); attempts.add(attempt);
                 attempt.put("role", role); attempt.put("provider", provider); attempt.put("model", delegate.name());
+                attempt.put("inputBytes", input.getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
+                attempt.put("systemBytes", system.getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
+                attempt.put("schemaBytes", Json.write(schema).getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
                 long started = System.nanoTime();
-                var future = execution.submit(() -> delegate.generate(system, input, schema));
+                var future = execution.submit(() -> {
+                    try (var permit = inferenceGate.acquire()) {
+                        attempt.put("admissionWaitMillis", permit.waitMillis());
+                        return delegate.generate(system, input, schema);
+                    }
+                });
                 try {
                     var result = future.get(remaining, TimeUnit.NANOSECONDS);
                     attempt.put("status", "completed"); attempt.put("promptTokens", result.promptTokens()); attempt.put("outputTokens", result.outputTokens());
+                    attempt.put("reportedRuntimeMillis", result.durationMillis());
                     return result;
                 } catch (java.util.concurrent.ExecutionException error) {
                     attempt.put("status", "failed");
+                    if (error.getCause() instanceof OllamaModel.IncompleteGeneration incomplete) {
+                        attempt.put("promptTokens", incomplete.promptTokens); attempt.put("outputTokens", incomplete.outputTokens);
+                        attempt.put("reportedRuntimeMillis", incomplete.durationMillis);
+                    }
                     if (error.getCause() instanceof Exception cause) throw cause;
                     throw new IOException("Model call failed");
                 } catch (Exception error) {
@@ -119,6 +138,15 @@ final class ReviewSession implements AutoCloseable {
         if (verified != null) verified.annotate(report);
         report.put("reviewMode", mode);
         report.put("inference", Map.of("providers", providers, "attempts", attempts, "maxCalls", maxCalls, "automaticFallback", false));
+        report.put("inferenceAdmission", inferenceGate.metrics());
+        var usage = new LinkedHashMap<>(Json.map(report.get("usage")));
+        for (String field : List.of("promptTokens", "outputTokens", "reportedRuntimeMillis")) {
+            long total = attempts.stream().filter(attempt -> attempt.get(field) instanceof Number)
+                    .mapToLong(attempt -> ((Number) attempt.get(field)).longValue()).sum();
+            usage.put(field.equals("reportedRuntimeMillis") ? "inferenceMillis" : field, total);
+        }
+        usage.put("unknownUsageAttempts", attempts.stream().filter(attempt -> !attempt.containsKey("promptTokens")).count());
+        report.put("usage", usage);
         return report;
     }
     private String value(String key, String fallback) { return env.getOrDefault(key, fallback); }

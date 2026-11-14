@@ -20,12 +20,13 @@ class ReviewSessionTest {
         };
     }
     @Test void bothRolesShareACallBudgetAndExhaustionIsPartial() throws Exception {
-        exercise(false);
+        exercise(false, false);
     }
     @Test void reviewDeadlineCancelsAnInFlightCallWithoutFallback() throws Exception {
-        exercise(true);
+        exercise(true, false);
     }
-    private void exercise(boolean slow) throws Exception {
+    @Test void incompleteGenerationsRetainObservedTokensInThePartialReport() throws Exception { exercise(false, true); }
+    private void exercise(boolean slow, boolean truncated) throws Exception {
         var count = new AtomicInteger(); var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/", exchange -> {
             Object response;
@@ -38,7 +39,8 @@ class ReviewSessionTest {
                     if (slow) try { Thread.sleep(2200); } catch (InterruptedException error) { Thread.currentThread().interrupt(); }
                     String result = Json.write(Map.of("summary", "Bug", "findings", List.of(Map.of("file", "A.java", "line", 1,
                             "evidence", "broken();", "severity", "HIGH", "explanation", "Concrete failure"))));
-                    response = Map.of("done", true, "message", Map.of("content", result));
+                    response = Map.of("done", true, "done_reason", truncated ? "length" : "stop", "message", Map.of("content", result),
+                            "prompt_eval_count", 12, "eval_count", 4096);
                 }
                 default -> throw new AssertionError("Unexpected endpoint");
             }
@@ -57,6 +59,11 @@ class ReviewSessionTest {
                 if (slow) assertTrue(report.get("errors").toString().contains("TimeoutException"));
                 else assertEquals("incomplete-or-disputed", Json.map(report.get("verification")).get("status"));
                 assertEquals(false, Json.map(report.get("inference")).get("automaticFallback"));
+                if (truncated) {
+                    assertEquals(12L, Json.map(report.get("usage")).get("promptTokens"));
+                    assertEquals(4096L, Json.map(report.get("usage")).get("outputTokens"));
+                    assertEquals(0L, Json.map(report.get("usage")).get("unknownUsageAttempts"));
+                }
             }
         } finally { server.stop(0); }
     }

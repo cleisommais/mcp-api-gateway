@@ -1,0 +1,13 @@
+{
+    "durationMillis":  0,
+    "jobId":  "58b65437-132a-47a2-970a-fe0b0855687e",
+    "server":  "unresolved",
+    "decision":  "denied",
+    "at":  "2026-11-14T21:02:07.484629461Z",
+    "principal":  "poc-worker",
+    "sha":  "unpinned",
+    "tool":  "github.get_change_snapshot",
+    "repository":  "cleisommais/not-authorized",
+    "reason":  "Repository is not registered",
+    "admissionWaitMillis":  0
+}

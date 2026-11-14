@@ -17,6 +17,9 @@ x-review-model: &review-model
   REVIEW_PROMPT_PROFILE: ${REVIEW_PROMPT_PROFILE:-calibrated}
   OLLAMA_THINK: ${OLLAMA_THINK:-medium}
   REVIEW_OUTPUT_TOKENS: ${REVIEW_OUTPUT_TOKENS:-4096}
+  INFERENCE_MAX_CONCURRENT: ${INFERENCE_MAX_CONCURRENT:-1}
+  INFERENCE_MAX_WAITING: ${INFERENCE_MAX_WAITING:-4}
+  INFERENCE_WAIT_SECONDS: ${INFERENCE_WAIT_SECONDS:-180}
 
 x-external-model: &external-model
   EXTERNAL_INFERENCE_ENABLED: ${EXTERNAL_INFERENCE_ENABLED:-false}
@@ -86,12 +89,15 @@ services:
     command: ["${OLLAMA_MODEL:-gpt-oss:20b}"]
 
   gateway:
-    image: mcp-api-gateway:f6
+    image: mcp-api-gateway:f7
     build: .
-    profiles: [review, automation, external-review]
+    profiles: [review, automation, external-review, f7]
     environment:
       GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Run scripts/Initialize-LocalEnvironment.ps1 first}
       GATEWAY_CONFIG: /config/gateway.json
+      PLATFORM_MAX_CONCURRENT: ${PLATFORM_MAX_CONCURRENT:-1}
+      PLATFORM_MAX_WAITING: ${PLATFORM_MAX_WAITING:-8}
+      PLATFORM_WAIT_SECONDS: ${PLATFORM_WAIT_SECONDS:-30}
       GITLAB_READ_TOKEN: ${GITLAB_READ_TOKEN:-}
       GITHUB_APP_ID: ${GITHUB_APP_ID:-}
       GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:-0}
@@ -107,7 +113,7 @@ services:
       retries: 6
 
   review: &review-cli
-    image: mcp-api-gateway:f6
+    image: mcp-api-gateway:f7
     build: .
     profiles: [review]
     environment: &review-environment
@@ -143,7 +149,7 @@ services:
           create_host_path: false
 
   f6-evaluate: &f6-evaluation
-    image: mcp-api-gateway:f6
+    image: mcp-api-gateway:f7
     build: .
     profiles: [evaluation]
     environment:
@@ -177,7 +183,7 @@ services:
           create_host_path: false
 
   edge:
-    image: mcp-api-gateway:f6
+    image: mcp-api-gateway:f7
     build: .
     profiles: [automation, tunnel]
     environment:
@@ -196,7 +202,7 @@ services:
     entrypoint: [java, "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f4.WebhookEdge]
 
   gitlab-publish:
-    image: mcp-api-gateway:f6
+    image: mcp-api-gateway:f7
     build: .
     profiles: [gitlab-publish]
     environment:
@@ -213,12 +219,16 @@ services:
       - edge
 
   worker:
-    image: mcp-api-gateway:f6
+    image: mcp-api-gateway:f7
     build: .
     profiles: [automation]
     environment:
       <<: *review-model
       DATABASE_URL: jdbc:postgresql://postgres:5432/mcp_review
+      DATABASE_SCHEMA: ${DATABASE_SCHEMA:-review}
+      WORKER_MAX_JOBS: ${WORKER_MAX_JOBS:-1}
+      WORKER_MAX_JOBS_PER_REPOSITORY: ${WORKER_MAX_JOBS_PER_REPOSITORY:-1}
+      WORKER_LEASE_SECONDS: ${WORKER_LEASE_SECONDS:-90}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Initialize the local environment first}
       GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Initialize the local environment first}
       MCP_GATEWAY_URL: http://gateway:8080
@@ -238,6 +248,26 @@ services:
       ollama:
         condition: service_healthy
     entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f2.AutomationWorker]
+
+  f7-lab:
+    image: mcp-api-gateway:f7
+    build: .
+    profiles: [f7]
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/mcp_review
+      DATABASE_SCHEMA: ${DATABASE_SCHEMA:-f7_lab_concurrency}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Initialize the local environment first}
+      GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Initialize the local environment first}
+      GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:-0}
+      MCP_GATEWAY_URL: http://gateway:8080
+    volumes:
+      - ./reports:/reports
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f2.F7Lab]
 
   checks:
     image: mcp-api-gateway:checks

@@ -13,6 +13,13 @@ import static dev.cleisommais.mcp.f2.ReviewData.*;
 
 /** Direct native inference API; MCP is used separately for repository tools. */
 final class OllamaModel implements Model {
+    static final class IncompleteGeneration extends IOException {
+        final long durationMillis, promptTokens, outputTokens;
+        IncompleteGeneration(long durationMillis, long promptTokens, long outputTokens) {
+            super("Incomplete model generation");
+            this.durationMillis = durationMillis; this.promptTokens = promptTokens; this.outputTokens = outputTokens;
+        }
+    }
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private final URI base;
     private final String model;
@@ -63,7 +70,8 @@ final class OllamaModel implements Model {
                 "messages", List.of(Map.of("role", "system", "content", system), Map.of("role", "user", "content", input)),
                 "format", schema, "options", Map.of("temperature", 0, "num_ctx", context, "num_predict", outputTokens)));
         if (!Boolean.TRUE.equals(response.get("done")) || "length".equals(response.get("done_reason"))) {
-            throw new IOException("Incomplete model generation");
+            throw new IncompleteGeneration(number(response, "total_duration") / 1_000_000,
+                    number(response, "prompt_eval_count"), number(response, "eval_count"));
         }
         return new Generation(Json.text(Json.map(response.get("message")), "content"),
                 number(response, "total_duration") / 1_000_000, number(response, "prompt_eval_count"), number(response, "eval_count"));

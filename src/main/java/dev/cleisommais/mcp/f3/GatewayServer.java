@@ -31,7 +31,11 @@ public final class GatewayServer implements AutoCloseable {
     public GatewayServer(GatewayConfig config, String secret, int port, GatewayService.Factory factory,
                          Consumer<Map<String, Object>> audit) throws Exception {
         if (secret == null || secret.length() < 32) throw new IllegalArgumentException("A generated gateway lab token is required");
-        service = new GatewayService(config, factory, audit);
+        var env = System.getenv();
+        service = new GatewayService(config, factory, audit,
+                dev.cleisommais.mcp.f7.CallGate.setting(env, "PLATFORM_MAX_CONCURRENT", 1, 1, 16),
+                dev.cleisommais.mcp.f7.CallGate.setting(env, "PLATFORM_MAX_WAITING", 8, 0, 128),
+                java.time.Duration.ofSeconds(dev.cleisommais.mcp.f7.CallGate.setting(env, "PLATFORM_WAIT_SECONDS", 30, 1, 180)));
         var transport = HttpServletStreamableServerTransportProvider.builder().mcpEndpoint("/mcp").build();
         var tools = GatewayCatalog.schemas(config.servers().stream().map(GatewayConfig.Registration::platform).collect(java.util.stream.Collectors.toSet()))
                 .entrySet().stream().map(entry -> McpServerFeatures.SyncToolSpecification.builder()

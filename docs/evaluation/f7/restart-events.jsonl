@@ -1,0 +1,2 @@
+{"At":"2026-11-14T21:00:14.9239148Z","Schema":"f7_lab_restart_actual","Action":"SIGKILL isolated worker","Before":"running|1|true"}
+{"At":"2026-11-14T21:00:26.8446822Z","Schema":"f7_lab_restart_actual","Action":"Restart same container after lease expiry"}

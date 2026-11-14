@@ -63,4 +63,29 @@ class JobStoreIntegrationTest {
         var newId = store.enqueue(next).jobId();
         assertEquals("superseded", store.find(oldId).state()); assertEquals(newId, store.claim("worker", 90).id());
     }
+    private WebhookPolicy.Event event(long repository, int number) throws Exception {
+        var base = WebhookPolicyTest.event();
+        return new WebhookPolicy.Event(UUID.randomUUID().toString(), "a".repeat(64), "pull_request", "opened", repository,
+                "owner/repo" + repository, number, base.installationId(), base.baseSha(), base.headSha(), "main", base.updatedAt(), true, "accepted");
+    }
+    @Test void activeAndRepositoryLimitsAreIndependentAndConfigurable() throws Exception {
+        store.enqueue(event(1, 1)); store.enqueue(event(1, 2)); store.enqueue(event(2, 1));
+        var first = store.claim("one", 90, 1, 1); assertNotNull(first);
+        assertNull(store.claim("two", 90, 1, 1));
+        var second = store.claim("two", 90, 2, 1); assertNotNull(second);
+        assertNotEquals(first.repositoryId(), second.repositoryId());
+        assertNull(store.claim("three", 90, 2, 1));
+        store.finish(first.id(), "one", "analyzed", null, null);
+        var third = store.claim("three", 90, 2, 1); assertNotNull(third); assertEquals(first.repositoryId(), third.repositoryId());
+    }
+    @Test void competingClaimsCannotOversubscribeGlobalOrRepositoryLimits() throws Exception {
+        for (int number = 1; number <= 5; number++) { store.enqueue(event(1, number)); store.enqueue(event(2, number)); }
+        try (var threads = java.util.concurrent.Executors.newFixedThreadPool(8)) {
+            var futures = new java.util.ArrayList<java.util.concurrent.Future<JobStore.Job>>();
+            for (int i = 0; i < 8; i++) { String owner = "owner-" + i; futures.add(threads.submit(() -> fresh().claim(owner, 90, 2, 1))); }
+            var claimed = new java.util.ArrayList<JobStore.Job>();
+            for (var future : futures) { var job = future.get(); if (job != null) claimed.add(job); }
+            assertEquals(2, claimed.size()); assertNotEquals(claimed.get(0).repositoryId(), claimed.get(1).repositoryId());
+        }
+    }
 }

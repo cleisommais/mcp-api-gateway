@@ -24,7 +24,9 @@ final class VerifiedModel implements ReviewData.Model {
     }
     @Override public String name() { return primary.name(); }
     @Override public ReviewData.Generation generate(String system, String context, Map<String, Object> schema) throws Exception {
-        var generated = primary.generate(system, context, schema);
+        ReviewData.Generation generated;
+        try { generated = primary.generate(system, context, schema); }
+        catch (Exception failure) { incomplete = true; throw failure; }
         Map<String, Object> output;
         try { output = Json.object(generated.content()); ReviewEngine.validateRoot(output); }
         catch (Exception invalid) { incomplete = true; throw invalid; }

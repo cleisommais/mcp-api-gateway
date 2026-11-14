@@ -8,6 +8,8 @@
 
 **F6 increment:** the [review session](f6-model-providers.md) selects a local Ollama or explicitly authorized OpenAI Responses model behind the same findings contract. Optional candidate verification runs sequentially and preserves disagreements; it is disabled by default. Model calls still bypass MCP: the gateway governs repository tools, not inference APIs. External inference has a separate key mount, approved destination/repository scope and persistent campaign reservations. A local failure cannot enable it. GPT-6 Luna is the evaluated initial external demonstration choice; cloud worker/deployment configuration remains F8.
 
+**F7 increment:** [configured concurrency](f7-concurrency-and-recovery.md) separates durable active-job/repository limits from a shared per-worker inference gate and per-platform gateway read gates. Independent jobs can overlap; each downstream client remains sequential. Queues/waits are bounded, reported separately and validated with two repositories plus real lease recovery. The lab uses local inference and no publication; it does not add cross-container inference coordination or GitLab automation.
+
 ## Where a review starts
 
 The primary flow is automatic: **a developer pushes commits and opens or updates a PR; the Git platform sends a webhook to our Java application's endpoint; the agent analyzes the change and the application publishes the result on the PR**. Developers use their normal GitHub/GitLab/Bitbucket access; they do not need a second login to our application for each review.

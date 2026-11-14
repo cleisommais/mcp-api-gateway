@@ -93,13 +93,32 @@ public final class JobStore {
     }
 
     public Job claim(String owner, int leaseSeconds) throws Exception {
-        try (var connection = connection(); var statement = connection.prepareStatement("""
-                WITH candidate AS (SELECT id FROM jobs WHERE state='queued' ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1)
+        return claim(owner, leaseSeconds, Integer.MAX_VALUE, Integer.MAX_VALUE);
+    }
+    public Job claim(String owner, int leaseSeconds, int maxActive, int perRepository) throws Exception {
+        if (leaseSeconds < 1 || maxActive < 1 || perRepository < 1) throw new IllegalArgumentException("Invalid job claim limits");
+        try (var connection = connection()) {
+            connection.setAutoCommit(false);
+            // Count and claim atomically in this schema; network/model work is outside this transaction.
+            try (var lock = connection.prepareStatement("SELECT pg_advisory_xact_lock(?)")) {
+                lock.setLong(1, 0x4637430000000000L ^ Integer.toUnsignedLong(schema.hashCode())); lock.execute();
+            }
+            try (var statement = connection.prepareStatement("""
+                WITH candidate AS (
+                  SELECT q.id FROM jobs q WHERE q.state='queued'
+                    AND (SELECT count(*) FROM jobs a WHERE a.state IN ('running','publishing') AND a.lease_until>now()) < ?
+                    AND (SELECT count(*) FROM jobs r WHERE r.repository_id=q.repository_id
+                         AND r.state IN ('running','publishing') AND r.lease_until>now()) < ?
+                  ORDER BY q.created_at FOR UPDATE OF q SKIP LOCKED LIMIT 1)
                 UPDATE jobs SET state='running',attempts=attempts+1,run_owner=?,lease_until=now()+(? * interval '1 second'),updated_at=now()
                 FROM candidate WHERE jobs.id=candidate.id RETURNING jobs.*
                 """)) {
-            statement.setString(1, owner); statement.setInt(2, leaseSeconds);
-            try (var rows = statement.executeQuery()) { return rows.next() ? read(rows) : null; }
+                statement.setInt(1, maxActive); statement.setInt(2, perRepository);
+                statement.setString(3, owner); statement.setInt(4, leaseSeconds);
+                Job job;
+                try (var rows = statement.executeQuery()) { job = rows.next() ? read(rows) : null; }
+                connection.commit(); return job;
+            }
         }
     }
     public int recoverExpired() throws Exception {
@@ -137,6 +156,14 @@ public final class JobStore {
         try (var connection = connection(); var statement = connection.prepareStatement("SELECT * FROM jobs WHERE id=?")) {
             statement.setObject(1, id); try (var rows = statement.executeQuery()) { return rows.next() ? read(rows) : null; }
         }
+    }
+    public java.util.List<Job> list() throws Exception {
+        var jobs = new java.util.ArrayList<Job>();
+        try (var connection = connection(); var statement = connection.createStatement();
+             var rows = statement.executeQuery("SELECT * FROM jobs ORDER BY created_at,id")) {
+            while (rows.next()) jobs.add(read(rows));
+        }
+        return jobs;
     }
     @FunctionalInterface public interface Operation<T> { T run() throws Exception; }
     public <T> T publicationLock(Job job, Operation<T> operation) throws Exception {

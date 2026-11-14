@@ -20,7 +20,7 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 
 ## Proposed phases
 
-**F1, F2 mechanics, F3 gateway, F4 local automation, and F5 manual GitLab review/publication are implemented**, as described in the phase guides below. F2's initial model quality did not meet all expected scenarios; the [F3 evaluation](docs/f3-model-evaluation.md) preserves failures and investigates model/prompt/inference causes. F4's real webhook/publication checks remain separate pending work; F6 is implemented/evaluated and F7–F8 remain planned. Necessary security, validation, and honest coverage reporting accompany the first feature that needs them; F7 expands robustness rather than postponing those protections.
+**F1, F2 mechanics, F3 gateway, F4 local automation, and F5 manual GitLab review/publication are implemented**, as described in the phase guides below. F2's initial model quality did not meet all expected scenarios; the [F3 evaluation](docs/f3-model-evaluation.md) preserves failures and investigates model/prompt/inference causes. F4's real webhook/publication checks remain separate pending work; F6 and F7 are implemented/evaluated; F8 remains planned. Necessary security, validation, and honest coverage reporting accompany the first feature that needs them; F7 expands robustness rather than postponing those protections.
 
 ### F1 — MCP fundamentals, without a model
 
@@ -90,6 +90,8 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 
 ### F7 — Concurrency, failure, and security experiments
 
+**Completed on 2026-11-14 on `codex/f7-concurrency-and-recovery`:** independent configured job/repository, shared inference and platform-read limits; actual public/private repository jobs; bounded queues; real worker SIGKILL/lease/restart recovery; model-unavailable, HTTP-timeout, output-limit, batch-limit and scope-denial checks. The final suite passes all 104 tests with zero skips, including five PostgreSQL cases. A live truncation exposed missing token accounting, now fixed and verified with a real 128-token generation. The wide PR still produced false positives/partial coverage and the injection case got severity wrong; these limitations are preserved rather than claimed resolved. [F7 guide and evidence](docs/f7-concurrency-and-recovery.md).
+
 - **Learn:** actual GPU limits, concurrency, coverage, and failure handling.
 - **Deliver:** an example involving two repositories, separate job/inference controls, a PR larger than context, and targeted failure/injection checks. Advanced fair scheduling is optional.
 - **Dependencies:** a working basic flow; choose one experiment at a time based on learning needs, without pending production targets to approve.
@@ -116,4 +118,4 @@ Read the [F1 guide](docs/f1-mcp-stdio.md) to run it without AI and follow each c
 
 ## Current scope
 
-F5 is committed as `0043bcf`, including the manual-versus-agent GitLab comparison. The user corrected the next phase to F6 and reverted the initial F7 edits. F6's configurable providers, experimental candidate verification and approved public external comparison are complete; GPT-6 Luna is selected for the initial cloud demonstration. Single-model local review remains default, with external inference disabled unless explicitly selected/authorized. F7 remains planned. F4's remaining real GitHub webhook/publication validation is separate pending work. Project-owned Ollama/PostgreSQL and the fixture repositories remain the learning environment. Credentials and local publication journals remain outside Git; other projects' infrastructure is preserved.
+F5 is committed as `0043bcf`, including the manual-versus-agent GitLab comparison. F6 is committed as `78b6297`; its approved public trial selects GPT-6 Luna for the initial external demonstration. F7 now completes independent concurrency controls, real recovery/fault/coverage experiments and a full 104-test run with zero skips. Known model-quality failures remain documented. Single-model local review stays default, with external inference disabled unless explicitly selected and authorized. F8's temporary deployment is next; F4's real GitHub webhook/publication and remaining private-PR reviews are separate pending checks. Project-owned Ollama/PostgreSQL and the fixture repositories remain the learning environment. Credentials and local publication journals stay outside Git; other projects' infrastructure is preserved.

@@ -38,6 +38,7 @@ final class ReviewEngine {
                                     "explanation", Map.of("type", "string"), "evidence", Map.of("type", "string"))))));
     private static final Pattern HUNK = Pattern.compile("^@@ -\\d+(?:,\\d+)? \\+(\\d+)(?:,\\d+)? @@.*");
     private final int byteBudget;
+    private final int requestedContext;
     private final int maxBatches;
     private final String promptVersion;
     private final String system;
@@ -55,6 +56,7 @@ final class ReviewEngine {
         // One UTF-8 byte per token is deliberately conservative for this English/Java exercise.
         int reserve = outputTokens <= 1536 ? 2500 : outputTokens + 1000;
         byteBudget = contextTokens - reserve;
+        requestedContext = contextTokens;
         if (outputTokens < 128 || outputTokens > 4096 || byteBudget < 512) throw new IllegalArgumentException("Output budget leaves insufficient input context");
         this.maxBatches = maxBatches;
         if (!List.of("original", "calibrated").contains(profile)) throw new IllegalArgumentException("Unknown prompt profile");
@@ -187,6 +189,8 @@ final class ReviewEngine {
         report.put("errors", errors);
         report.put("usage", Map.of("batches", batches, "promptTokens", promptTokens, "outputTokens", outputTokens,
                 "inferenceMillis", inferenceMillis, "elapsedMillis", (System.nanoTime() - started) / 1_000_000));
+        report.put("contextBudget", Map.of("requestedTokens", requestedContext, "inputByteBudget", byteBudget,
+                "estimate", "conservative one UTF-8 byte per token for change context; system/schema/output reserved separately"));
         return report;
     }
 

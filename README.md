@@ -6,7 +6,9 @@ A PR/MR review POC with a Java agent, MCP Gateway, and adapters for GitHub, GitL
 
 **Project language: English.** Documentation, diagrams, code comments, tool descriptions, application messages, and future commit messages use English.
 
-**F6 is implemented and evaluated:** configurable providers, optional candidate verification, shared call/deadline limits and external campaign reservations. The approved GPT-6 Luna trial matched all four public cases at an estimated USD 0.001092175 across six API calls; it is selected for the initial external demonstration. Local single-model GPT-OSS stays default. The [F6 guide](docs/f6-model-providers.md) preserves verifier failures and explains why agreement is not proof of correctness. F7 remains planned.
+**F6 is implemented and evaluated:** configurable providers, optional candidate verification, shared call/deadline limits and external campaign reservations. The approved GPT-6 Luna trial matched all four public cases at an estimated USD 0.001092175 across six API calls; it is selected for the initial external demonstration. Local single-model GPT-OSS stays default. The [F6 guide](docs/f6-model-providers.md) preserves verifier failures and explains why agreement is not proof of correctness.
+
+**F7 is implemented and exercised:** independent job/repository/inference/platform-read limits, two-repository execution, a killed-worker recovery and explicit partial/failure reporting. The complete suite passes **104 tests with zero skips**, including all five PostgreSQL tests. Live experiments also preserve wide-PR false positives and an injection-case severity error; these are quality failures, not claimed successes. [F7 guide](docs/f7-concurrency-and-recovery.md).
 
 This project owns its Ollama and PostgreSQL containers, network, and named volumes. Its measured F3 default is `gpt-oss:20b` with medium reasoning on the local NVIDIA GPU; the Qwen candidates remain installed for comparison. To demonstrate independence from the personal computer, the plan includes a temporary VPS using an external model API, initially without a cloud GPU or Ollama on the VPS. The Java harness coordinates the review; Ollama serves the local model; the gateway governs tools.
 
@@ -25,6 +27,7 @@ This is not intended to become a commercial service or a permanently available i
 | [F4: install the GitHub App](docs/f4-github-app-setup.md) | Step-by-step registration, key, selected repositories, local settings, tunnel, and first live review |
 | [F5: second platform, GitLab.com](docs/f5-gitlab-platform.md) | Shared contracts, semantic translation, credentials, manual review/publication, live evidence and unsupported capabilities |
 | [F6: model providers and verification](docs/f6-model-providers.md) | Configurable local/external provider, optional verifier, call/deadline/campaign limits, and controlled comparisons |
+| [F7: concurrency and recovery](docs/f7-concurrency-and-recovery.md) | Independent limits, all database tests, two repositories, restart/fault/coverage experiments and honest quality results |
 | [Requirements](docs/requirements.md) | Functional/nonfunctional requirement IDs, acceptance, measurement, and phase |
 | [Architecture](docs/architecture.md) | Components, contracts, flows, and coverage |
 | [Security and identity](docs/security-and-identity.md) | Credentials, authorization, and threats |
@@ -51,6 +54,16 @@ Reports appear in `reports/`. Ollama uses host loopback port 11435 and PostgreSQ
 For the second platform, configure `GITLAB_READ_TOKEN` in `.env`, then run `docker compose --profile review run --rm review gitlab cleisommais/pr-test-repo 1`. The [F5 guide](docs/f5-gitlab-platform.md) explains the separate publication token and explicit `gitlab-publish` command. The model/review container receives neither GitLab credential.
 
 The [F4 guide](docs/f4-webhook-jobs.md) explains the current boundaries and the [private fixture PRs](https://github.com/cleisommais/pr-test-repo-private/pulls). A signed local fixture exercised the real queue, gateway, and model with publication disabled. Enable bot comments only after following the App guide. `complete` still describes mechanical coverage/validation, and quality requires human review. [F6](docs/f6-model-providers.md) implements optional candidate verification, disabled by default; two models agreeing does not establish correctness.
+
+## Run all tests
+
+Run the complete suite with the project test database (including database tests):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Test-Project.ps1
+```
+
+The image build alone intentionally skips database-only tests; the command above supplies PostgreSQL and runs all 104 with zero skips.
 
 ## Run F1
 

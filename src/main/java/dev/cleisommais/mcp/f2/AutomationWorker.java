@@ -13,18 +13,30 @@ import java.util.concurrent.TimeUnit;
 /** Worker has no public endpoint: it claims PostgreSQL jobs and authenticates to MCP Gateway. */
 public final class AutomationWorker {
     private AutomationWorker() {}
+    private record Limits(int jobs, int perRepository, int leaseSeconds) {
+        static Limits environment() {
+            var env = System.getenv();
+            return new Limits(dev.cleisommais.mcp.f7.CallGate.setting(env, "WORKER_MAX_JOBS", 1, 1, 16),
+                    dev.cleisommais.mcp.f7.CallGate.setting(env, "WORKER_MAX_JOBS_PER_REPOSITORY", 1, 1, 16),
+                    dev.cleisommais.mcp.f7.CallGate.setting(env, "WORKER_LEASE_SECONDS", 90, 6, 600));
+        }
+    }
     public static boolean once(JobStore store, boolean publish) throws Exception {
+        return once(store, publish, Limits.environment(), dev.cleisommais.mcp.f7.CallGate.inference(System.getenv()));
+    }
+    private static boolean once(JobStore store, boolean publish, Limits limits, dev.cleisommais.mcp.f7.CallGate inference) throws Exception {
         store.recoverExpired();
         String owner = UUID.randomUUID().toString();
-        var job = store.claim(owner, 90); if (job == null) return false;
+        var job = store.claim(owner, limits.leaseSeconds(), limits.jobs(), limits.perRepository()); if (job == null) return false;
+        System.out.println("Job " + job.id() + " started; repository=" + job.repository() + "; attempt=" + job.attempts());
         var heartbeat = Executors.newSingleThreadScheduledExecutor();
         var ownsLease = new java.util.concurrent.atomic.AtomicBoolean(true);
         var wroteThisAttempt = new java.util.concurrent.atomic.AtomicBoolean(false);
         String stage = "snapshot";
         heartbeat.scheduleAtFixedRate(() -> {
-            try { if (!store.heartbeat(job.id(), owner, 90)) ownsLease.set(false); }
+            try { if (!store.heartbeat(job.id(), owner, limits.leaseSeconds())) ownsLease.set(false); }
             catch (Exception error) { ownsLease.set(false); }
-        }, 15, 15, TimeUnit.SECONDS);
+        }, Math.min(15, limits.leaseSeconds() / 3), Math.min(15, limits.leaseSeconds() / 3), TimeUnit.SECONDS);
         try {
             if (job.installationId() != Long.parseLong(env("GITHUB_INSTALLATION_ID", "0"))) throw new SecurityException("Job installation mismatch");
             Map<String, Object> report;
@@ -40,7 +52,7 @@ public final class AutomationWorker {
             else {
                 stage = "model-availability";
                 // F4 requires the gateway even if the historical manual F2 mode is configured elsewhere.
-                try (var session = new ReviewSession(System.getenv(), "github", job.repository());
+                try (var session = new ReviewSession(System.getenv(), "github", job.repository(), null, inference);
                      var source = new GatewayReviewSource(URI.create(env("MCP_GATEWAY_URL", "http://gateway:8080")), System.getenv("GATEWAY_TOKEN"), job.repository(), job.number(), job.id())) {
                     stage = "snapshot";
                     var snapshot = source.snapshot();
@@ -101,9 +113,22 @@ public final class AutomationWorker {
     public static void main(String[] args) throws Exception {
         var store = JobStore.environment(); boolean publish = Boolean.parseBoolean(env("PUBLISH_REVIEWS", "false"));
         if (args.length == 1 && "--once".equals(args[0])) { once(store, publish); return; }
+        var limits = Limits.environment(); var inference = dev.cleisommais.mcp.f7.CallGate.inference(System.getenv());
         var stopped = new java.util.concurrent.atomic.AtomicBoolean();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> stopped.set(true)));
-        while (!stopped.get()) { if (!once(store, publish)) Thread.sleep(2000); }
+        var threads = Executors.newFixedThreadPool(limits.jobs());
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> { stopped.set(true); threads.shutdownNow(); }));
+        for (int i = 0; i < limits.jobs(); i++) threads.submit(() -> {
+            while (!stopped.get() && !Thread.currentThread().isInterrupted()) {
+                try { if (!once(store, publish, limits, inference)) Thread.sleep(1000); }
+                catch (InterruptedException error) { Thread.currentThread().interrupt(); }
+                catch (Exception error) {
+                    System.err.println("Worker poll failed: " + error.getClass().getSimpleName());
+                    try { Thread.sleep(1000); } catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
+                }
+            }
+        });
+        threads.shutdown();
+        while (!threads.awaitTermination(1, TimeUnit.DAYS)) { /* Keep the local worker process alive. */ }
     }
     private static String env(String key, String fallback) { return System.getenv().getOrDefault(key, fallback); }
 }
