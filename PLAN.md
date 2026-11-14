@@ -20,7 +20,7 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 
 ## Proposed phases
 
-**F1, F2 mechanics, F3 gateway, F4 local automation, and F5 manual GitLab review/publication are implemented**, as described in the phase guides below. F2's initial model quality did not meet all expected scenarios; the [F3 evaluation](docs/f3-model-evaluation.md) preserves failures and investigates model/prompt/inference causes. F4's real webhook/publication checks remain separate pending work; F6–F8 remain planned. Necessary security, validation, and honest coverage reporting accompany the first feature that needs them; F7 expands robustness rather than postponing those protections.
+**F1, F2 mechanics, F3 gateway, F4 local automation, and F5 manual GitLab review/publication are implemented**, as described in the phase guides below. F2's initial model quality did not meet all expected scenarios; the [F3 evaluation](docs/f3-model-evaluation.md) preserves failures and investigates model/prompt/inference causes. F4's real webhook/publication checks remain separate pending work; F6 is implemented/evaluated and F7–F8 remain planned. Necessary security, validation, and honest coverage reporting accompany the first feature that needs them; F7 expands robustness rather than postponing those protections.
 
 ### F1 — MCP fundamentals, without a model
 
@@ -57,7 +57,7 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 
 ### F4 — Automation, persistence, and publication
 
-**Implemented locally on `codex/f4-webhook-jobs-private-repos`:** signed edge admission, PostgreSQL jobs/deduplication/leases, a private worker, GitHub App token support, controlled summary publication/reconciliation, and four private fixture PRs with Java checks. The local signed-fixture → database → real MCP/model worker flow passed with publication disabled. Live private App reads, real GitHub webhook delivery, and bot publication remain pending the user's [App installation steps](docs/f4-github-app-setup.md); they are not claimed as validated. See the [F4 guide](docs/f4-webhook-jobs.md).
+**Implemented locally on `codex/f4-webhook-jobs-private-repos`:** signed edge admission, PostgreSQL jobs/deduplication/leases, a private worker, GitHub App token support, controlled summary publication/reconciliation, and four private fixture PRs with Java checks. The local signed-fixture → database → real MCP/model worker flow passed with publication disabled. Live private App access and PR #1 manual review were subsequently verified; real GitHub webhook delivery and bot publication remain pending the [App installation steps](docs/f4-github-app-setup.md). See the [F4 guide](docs/f4-webhook-jobs.md).
 
 - **Learn:** authenticated webhooks, app installation, durable jobs, recovery, and external effects.
 - **Deliver:** GitHub first; a separate edge validates the signed webhook, commits a pending review, and confirms receipt. A private worker uses the same Java image, appropriate credentials, branch/draft/contributor/fork policy, and controlled publication. PostgreSQL is the implemented queue, without another broker. Internal worker/gateway authentication remains enforced; see [architecture.md](docs/architecture.md).
@@ -79,7 +79,7 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 
 ### F6 — Second model or provider
 
-**Optional two-model experiment:** retain single-model review by default. Proposed `REVIEW_MODE=verified` adds a second model that checks the primary findings against the same immutable context, with explicit verifier model and extra-call/time/cost limits. Disagreements remain visible and evidence is validated in Java; never blindly union findings or assume agreement proves correctness. Run models sequentially on the 16 GB GPU and compare the known cases before adoption. These settings are planned, not implemented or silently enabled by F4.
+**Completed on 2026-11-14 on `codex/f6-model-provider-comparison`:** shared provider/session layer, OpenAI Responses adapter, per-review call/deadline bounds, durable external campaign reservations, and optional `REVIEW_MODE=verified`. Local comparisons preserve verifier injection/severity failures rather than claiming automatic improvement. The approved USD 0.10 public-fixture external trial made six calls and matched all four expected diagnoses/severities, with USD 0.001092175 estimated usage cost and USD 0.01639775 retained reservations. `gpt-6-luna`/medium is selected for the initial F8 demonstration. Local GPT-OSS/single remains default; persistent external inference stays disabled. See the [F6 guide](docs/f6-model-providers.md).
 
 - **Learn:** compare quality, cost, context, tool use, and latency without coupling the harness to one provider.
 - **Deliver:** compare installed local models and run a small external-candidate trial on known PRs with an explicit budget. Select only one initial external provider for the demonstration, recording quality and total cost per review. Local inference already starts in F2.
@@ -116,4 +116,4 @@ Read the [F1 guide](docs/f1-mcp-stdio.md) to run it without AI and follow each c
 
 ## Current scope
 
-The user authorized F5 and supplied the private GitLab.com test project and separate read/publication credentials in ignored `.env`. The synthetic branches/MR, gateway-mediated local-model review, and single-summary create/update are verified. F4's remaining real GitHub webhook/publication validation is still separate pending work. Optional two-model verification remains planned in F6, disabled by default. Project-owned Ollama/PostgreSQL and the fixture repositories remain the learning environment. Credentials and local publication journals remain outside Git; other projects' infrastructure is preserved.
+F5 is committed as `0043bcf`, including the manual-versus-agent GitLab comparison. The user corrected the next phase to F6 and reverted the initial F7 edits. F6's configurable providers, experimental candidate verification and approved public external comparison are complete; GPT-6 Luna is selected for the initial cloud demonstration. Single-model local review remains default, with external inference disabled unless explicitly selected/authorized. F7 remains planned. F4's remaining real GitHub webhook/publication validation is separate pending work. Project-owned Ollama/PostgreSQL and the fixture repositories remain the learning environment. Credentials and local publication journals remain outside Git; other projects' infrastructure is preserved.

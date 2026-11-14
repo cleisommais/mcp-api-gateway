@@ -106,7 +106,10 @@ public final class CompareModels {
         static FrozenSource fromCapture(Path path) throws Exception {
             var record = Json.object(Files.readString(path));
             var result = new FrozenSource(null);
-            result.snapshot = Json.read(Json.write(record.get("snapshot")), new io.modelcontextprotocol.json.TypeRef<Snapshot>() {});
+            var snapshot = new LinkedHashMap<>(Json.map(record.get("snapshot")));
+            // F3 captures predate F4's draft/target-branch fields; replay never establishes current state.
+            snapshot.putIfAbsent("draft", false); snapshot.putIfAbsent("baseBranch", "");
+            result.snapshot = Json.read(Json.write(snapshot), new io.modelcontextprotocol.json.TypeRef<Snapshot>() {});
             Json.map(record.get("contents")).forEach((key, value) -> result.contents.put(key, (String) value));
             Json.map(record.get("contextErrors")).forEach((key, value) -> result.errors.put(key, (String) value));
             result.frozen = true;

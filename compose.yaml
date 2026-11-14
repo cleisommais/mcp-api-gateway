@@ -1,5 +1,33 @@
 name: mcp-api-gateway
 
+x-review-model: &review-model
+  MODEL_PROVIDER: ${MODEL_PROVIDER:-ollama}
+  REVIEW_MODE: ${REVIEW_MODE:-single}
+  VERIFIER_PROVIDER: ${VERIFIER_PROVIDER:-ollama}
+  VERIFIER_MODEL: ${VERIFIER_MODEL:-qwen3:14b}
+  VERIFIER_THINK: ${VERIFIER_THINK:-false}
+  VERIFIER_OUTPUT_TOKENS: ${VERIFIER_OUTPUT_TOKENS:-1536}
+  OLLAMA_BASE_URL: http://ollama:11434
+  OLLAMA_MODEL: ${OLLAMA_MODEL:-gpt-oss:20b}
+  OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-8192}
+  REVIEW_TIMEOUT_SECONDS: ${REVIEW_TIMEOUT_SECONDS:-180}
+  REVIEW_TOTAL_SECONDS: ${REVIEW_TOTAL_SECONDS:-360}
+  REVIEW_MAX_MODEL_CALLS: ${REVIEW_MAX_MODEL_CALLS:-8}
+  REVIEW_MAX_BATCHES: ${REVIEW_MAX_BATCHES:-4}
+  REVIEW_PROMPT_PROFILE: ${REVIEW_PROMPT_PROFILE:-calibrated}
+  OLLAMA_THINK: ${OLLAMA_THINK:-medium}
+  REVIEW_OUTPUT_TOKENS: ${REVIEW_OUTPUT_TOKENS:-4096}
+
+x-external-model: &external-model
+  EXTERNAL_INFERENCE_ENABLED: ${EXTERNAL_INFERENCE_ENABLED:-false}
+  EXTERNAL_ALLOWED_REPOSITORIES: ${EXTERNAL_ALLOWED_REPOSITORIES:-github:cleisommais/pr-test-repo}
+  EXTERNAL_MAX_COST_USD: ${EXTERNAL_MAX_COST_USD:-0}
+  EXTERNAL_BUDGET_JOURNAL: /reports/external-campaign.json
+  OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1/}
+  OPENAI_MODEL: ${OPENAI_MODEL:-gpt-6-luna}
+  OPENAI_REASONING: ${OPENAI_REASONING:-medium}
+  OPENAI_API_KEY_FILE: /run/secrets/openai-api-key
+
 services:
   postgres:
     image: postgres:17.6-alpine
@@ -58,9 +86,9 @@ services:
     command: ["${OLLAMA_MODEL:-gpt-oss:20b}"]
 
   gateway:
-    image: mcp-api-gateway:f5
+    image: mcp-api-gateway:f6
     build: .
-    profiles: [review, automation]
+    profiles: [review, automation, external-review]
     environment:
       GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Run scripts/Initialize-LocalEnvironment.ps1 first}
       GATEWAY_CONFIG: /config/gateway.json
@@ -78,19 +106,12 @@ services:
       timeout: 5s
       retries: 6
 
-  review:
-    image: mcp-api-gateway:f5
+  review: &review-cli
+    image: mcp-api-gateway:f6
     build: .
     profiles: [review]
-    environment:
-      OLLAMA_BASE_URL: http://ollama:11434
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-gpt-oss:20b}
-      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-8192}
-      REVIEW_TIMEOUT_SECONDS: "180"
-      REVIEW_MAX_BATCHES: "4"
-      REVIEW_PROMPT_PROFILE: ${REVIEW_PROMPT_PROFILE:-calibrated}
-      OLLAMA_THINK: ${OLLAMA_THINK:-medium}
-      REVIEW_OUTPUT_TOKENS: ${REVIEW_OUTPUT_TOKENS:-4096}
+    environment: &review-environment
+      <<: *review-model
       MCP_SOURCE: gateway
       MCP_GATEWAY_URL: http://gateway:8080
       GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Run scripts/Initialize-LocalEnvironment.ps1 first}
@@ -103,8 +124,60 @@ services:
       - ./reports:/reports
     entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f2.ManualReview]
 
+  external-review:
+    <<: *review-cli
+    profiles: [external-review]
+    environment:
+      <<: [*review-environment, *external-model]
+      MODEL_PROVIDER: openai
+    depends_on:
+      gateway:
+        condition: service_healthy
+    volumes:
+      - ./reports:/reports
+      - type: bind
+        source: ${OPENAI_KEY_FILE_ON_HOST:-./model-secrets/openai-api-key}
+        target: /run/secrets/openai-api-key
+        read_only: true
+        bind:
+          create_host_path: false
+
+  f6-evaluate: &f6-evaluation
+    image: mcp-api-gateway:f6
+    build: .
+    profiles: [evaluation]
+    environment:
+      <<: *review-model
+      REPORT_DIR: /reports/f6-local
+    depends_on:
+      ollama:
+        condition: service_healthy
+    volumes:
+      - ./reports:/reports
+      - ./docs/evaluation/f3/comparison:/fixtures:ro
+    entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f2.F6Evaluation]
+    command: [single]
+
+  f6-evaluate-external:
+    <<: *f6-evaluation
+    profiles: [external-evaluation]
+    environment:
+      <<: [*review-model, *external-model]
+      MODEL_PROVIDER: openai
+      REPORT_DIR: /reports/f6-external
+    depends_on: {}
+    volumes:
+      - ./reports:/reports
+      - ./docs/evaluation/f3/comparison:/fixtures:ro
+      - type: bind
+        source: ${OPENAI_KEY_FILE_ON_HOST:-./model-secrets/openai-api-key}
+        target: /run/secrets/openai-api-key
+        read_only: true
+        bind:
+          create_host_path: false
+
   edge:
-    image: mcp-api-gateway:f5
+    image: mcp-api-gateway:f6
     build: .
     profiles: [automation, tunnel]
     environment:
@@ -123,7 +196,7 @@ services:
     entrypoint: [java, "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f4.WebhookEdge]
 
   gitlab-publish:
-    image: mcp-api-gateway:f5
+    image: mcp-api-gateway:f6
     build: .
     profiles: [gitlab-publish]
     environment:
@@ -140,10 +213,11 @@ services:
       - edge
 
   worker:
-    image: mcp-api-gateway:f5
+    image: mcp-api-gateway:f6
     build: .
     profiles: [automation]
     environment:
+      <<: *review-model
       DATABASE_URL: jdbc:postgresql://postgres:5432/mcp_review
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Initialize the local environment first}
       GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Initialize the local environment first}
@@ -152,12 +226,6 @@ services:
       GITHUB_APP_ID: ${GITHUB_APP_ID:-}
       GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:-0}
       GITHUB_PRIVATE_KEY_PATH: /run/secrets/github-app.pem
-      OLLAMA_BASE_URL: http://ollama:11434
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-gpt-oss:20b}
-      OLLAMA_THINK: ${OLLAMA_THINK:-medium}
-      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-8192}
-      REVIEW_OUTPUT_TOKENS: ${REVIEW_OUTPUT_TOKENS:-4096}
-      REVIEW_PROMPT_PROFILE: ${REVIEW_PROMPT_PROFILE:-calibrated}
       PUBLISH_REVIEWS: ${PUBLISH_REVIEWS:-false}
     volumes:
       - ./secrets:/run/secrets:ro

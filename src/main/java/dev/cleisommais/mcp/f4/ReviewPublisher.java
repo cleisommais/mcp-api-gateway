@@ -73,6 +73,11 @@ public final class ReviewPublisher {
                 .append("`. Static analysis only; human review is still required.\n\n")
                 .append("Coverage status: **").append(escape(String.valueOf(report.get("status")))).append("**; files enumerated: ")
                 .append(report.get("enumeratedFiles")).append(".\n\n");
+        if (report.get("verification") instanceof Map<?, ?> verification) {
+            result.append("Review mode: **verified**; candidate-check status: **")
+                    .append(escape(String.valueOf(verification.get("status")))).append("**. ")
+                    .append("This checks primary candidates only, not missed defects. Inspect the saved report for preserved primary findings and disagreements.\n\n");
+        }
         var findings = Json.list(report.get("findings"));
         if (findings.isEmpty()) result.append("No validated findings were produced. This is not an approval or a guarantee that the change is correct.\n");
         for (Object item : findings) {

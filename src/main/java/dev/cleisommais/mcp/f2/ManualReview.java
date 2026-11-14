@@ -10,11 +10,12 @@ public final class ManualReview {
 
     public static void main(String[] args) {
         try {
-            var model = new OllamaModel(URI.create(env("OLLAMA_BASE_URL", "http://localhost:11435/")),
-                    env("OLLAMA_MODEL", "gpt-oss:20b"), Integer.parseInt(env("OLLAMA_CONTEXT_LENGTH", "8192")),
-                    Duration.ofSeconds(Integer.parseInt(env("REVIEW_TIMEOUT_SECONDS", "180"))),
-                    OllamaModel.parseThinking(env("OLLAMA_THINK", "medium")), Integer.parseInt(env("REVIEW_OUTPUT_TOKENS", "4096")));
             if (args.length == 1 && "--probe-tools".equals(args[0])) {
+                if (!env("MODEL_PROVIDER", "ollama").equals("ollama")) throw new IllegalArgumentException("This native-tool probe is Ollama-only");
+                var model = new OllamaModel(URI.create(env("OLLAMA_BASE_URL", "http://localhost:11435/")),
+                        env("OLLAMA_MODEL", "gpt-oss:20b"), Integer.parseInt(env("OLLAMA_CONTEXT_LENGTH", "8192")),
+                        Duration.ofSeconds(Integer.parseInt(env("REVIEW_TIMEOUT_SECONDS", "180"))),
+                        OllamaModel.parseThinking(env("OLLAMA_THINK", "medium")), Integer.parseInt(env("REVIEW_OUTPUT_TOKENS", "4096")));
                 System.out.println(Json.write(model.metadata()));
                 boolean valid = model.probeTools();
                 System.out.println("Validated native tool-call request: " + valid + "; no tool was executed by this probe.");
@@ -25,12 +26,9 @@ public final class ManualReview {
                 throw new IllegalArgumentException("Usage: github|gitlab namespace/repository CHANGE_NUMBER | --probe-tools");
             }
             dev.cleisommais.mcp.f5.GitLabAccess.validateRepository(args[1]);
-            var metadata = model.metadata();
-            try (var source = source(args[0], args[1], Integer.parseInt(args[2]))) {
-                var report = new ReviewEngine(Integer.parseInt(env("OLLAMA_CONTEXT_LENGTH", "8192")),
-                        Integer.parseInt(env("REVIEW_MAX_BATCHES", "4")), env("REVIEW_PROMPT_PROFILE", "calibrated"),
-                        Integer.parseInt(env("REVIEW_OUTPUT_TOKENS", "4096"))).review(source, model);
-                report.put("inference", metadata);
+            try (var session = new ReviewSession(System.getenv(), args[0], args[1]);
+                 var source = source(args[0], args[1], Integer.parseInt(args[2]))) {
+                var report = session.review(source);
                 report.put("retrieval", source instanceof GatewayReviewSource gateway ? gateway.trace() : java.util.Map.of("mode", "direct-stdio"));
                 var directory = Path.of(env("REPORT_DIR", Files.isDirectory(Path.of("/reports")) ? "/reports" : "reports"));
                 Files.createDirectories(directory);

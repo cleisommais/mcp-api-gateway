@@ -6,6 +6,8 @@
 
 **F5 increment:** [GitLab.com](f5-gitlab-platform.md) now implements the same snapshot/file/current-state contract through a second read-only MCP subprocess, with routing scoped by platform and repository. Manual GitLab review and a separate controlled summary publisher are live-validated. F4's edge, queue and worker remain GitHub-specific; GitLab webhook automation and inline positions are not implemented. GitHub App reads/private review were subsequently validated, while real GitHub webhook/publication checks remain pending.
 
+**F6 increment:** the [review session](f6-model-providers.md) selects a local Ollama or explicitly authorized OpenAI Responses model behind the same findings contract. Optional candidate verification runs sequentially and preserves disagreements; it is disabled by default. Model calls still bypass MCP: the gateway governs repository tools, not inference APIs. External inference has a separate key mount, approved destination/repository scope and persistent campaign reservations. A local failure cannot enable it. GPT-6 Luna is the evaluated initial external demonstration choice; cloud worker/deployment configuration remains F8.
+
 ## Where a review starts
 
 The primary flow is automatic: **a developer pushes commits and opens or updates a PR; the Git platform sends a webhook to our Java application's endpoint; the agent analyzes the change and the application publishes the result on the PR**. Developers use their normal GitHub/GitLab/Bitbucket access; they do not need a second login to our application for each review.

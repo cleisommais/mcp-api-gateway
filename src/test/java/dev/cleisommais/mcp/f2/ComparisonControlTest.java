@@ -18,6 +18,13 @@ class ComparisonControlTest {
             assertEquals("captured", source.fileAtCommit(snapshot.headSha(), "File.java"));
             assertFalse(source.isCurrent(snapshot));
         }
+        var legacy = Json.object(java.nio.file.Files.readString(path));
+        var fields = Json.map(legacy.get("snapshot")); fields.remove("draft"); fields.remove("baseBranch");
+        java.nio.file.Files.writeString(path, Json.write(legacy));
+        try (var source = CompareModels.FrozenSource.fromCapture(path)) {
+            assertFalse(source.snapshot().draft()); assertEquals("", source.snapshot().baseBranch());
+            assertFalse(source.isCurrent(source.snapshot()));
+        }
     }
 
     @Test void reusesExactInputsAndRejectsChangedContext() throws Exception {

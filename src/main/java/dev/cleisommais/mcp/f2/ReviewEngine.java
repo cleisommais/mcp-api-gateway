@@ -200,7 +200,7 @@ final class ReviewEngine {
     private static String clip(String text, int length) { return text.length() <= length ? text : text.substring(0, length) + " [prose truncated]"; }
     private static int bytes(String text) { return text.getBytes(StandardCharsets.UTF_8).length; }
 
-    private static void validateRoot(Map<String, Object> output) {
+    static void validateRoot(Map<String, Object> output) {
         if (!output.keySet().equals(Set.of("summary", "findings")) || Json.text(output, "summary").length() > 4000
                 || Json.list(output.get("findings")).size() > 20) throw new IllegalArgumentException("Invalid review response schema");
     }

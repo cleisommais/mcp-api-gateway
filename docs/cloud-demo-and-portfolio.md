@@ -72,6 +72,8 @@ Endpoint/model and credential reference remain configurable with approved destin
 
 ## Budget and paid window
 
+**F6 selection, executed on 2026-11-14:** OpenAI Responses with `gpt-6-luna`/medium matched the four public synthetic reference cases in six calls. Estimated API usage cost was USD 0.001092175; conservative retained reservations were USD 0.01639775 against the user's approved USD 0.10 trial cap. This selects the first external provider; it neither changes the local single-model default nor authorizes VPS creation, another paid trial, private transmission or an account top-up. Native model tools and cloud capacity were not validated by that run. [Settings, failures, usage and evidence](f6-model-providers.md).
+
 **P, target to validate:** **US$5–10 total** for demonstration infrastructure and inference. Choose the concrete cap before spending; the range is neither an available balance nor purchase authorization. Record gross cost, actually applied credits, and net cash spending separately.
 
 Estimated total = compute for the period + storage/IP/traffic/backups/other extras + all model calls + margin for taxes/exchange rates and delayed metering. Check minimum top-up/prepayment too: upfront cash outlay may exceed test consumption. The US$1.71/48 h example covers compute only.

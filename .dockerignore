@@ -1,6 +1,7 @@
 .git
 reports
 secrets
+model-secrets
 target
 .idea
 .env

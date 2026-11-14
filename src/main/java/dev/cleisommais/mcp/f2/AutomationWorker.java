@@ -38,14 +38,11 @@ public final class AutomationWorker {
                 }
             }
             else {
-                var model = new OllamaModel(URI.create(env("OLLAMA_BASE_URL", "http://ollama:11434")), env("OLLAMA_MODEL", "gpt-oss:20b"),
-                        Integer.parseInt(env("OLLAMA_CONTEXT_LENGTH", "8192")), Duration.ofSeconds(Integer.parseInt(env("REVIEW_TIMEOUT_SECONDS", "180"))),
-                        OllamaModel.parseThinking(env("OLLAMA_THINK", "medium")), Integer.parseInt(env("REVIEW_OUTPUT_TOKENS", "4096")));
                 stage = "model-availability";
-                var metadata = model.metadata();
-                stage = "snapshot";
                 // F4 requires the gateway even if the historical manual F2 mode is configured elsewhere.
-                try (var source = new GatewayReviewSource(URI.create(env("MCP_GATEWAY_URL", "http://gateway:8080")), System.getenv("GATEWAY_TOKEN"), job.repository(), job.number(), job.id())) {
+                try (var session = new ReviewSession(System.getenv(), "github", job.repository());
+                     var source = new GatewayReviewSource(URI.create(env("MCP_GATEWAY_URL", "http://gateway:8080")), System.getenv("GATEWAY_TOKEN"), job.repository(), job.number(), job.id())) {
+                    stage = "snapshot";
                     var snapshot = source.snapshot();
                     if (!job.headSha().equals(snapshot.headSha()) || !job.baseSha().equals(snapshot.baseSha()) || snapshot.draft()
                             || !"open".equals(snapshot.state()) || !job.baseBranch().equals(snapshot.baseBranch())) throw new ReviewPublisher.Outdated();
@@ -56,9 +53,8 @@ public final class AutomationWorker {
                         @Override public void close() {}
                     };
                     stage = "analysis";
-                    report = new ReviewEngine(Integer.parseInt(env("OLLAMA_CONTEXT_LENGTH", "8192")), Integer.parseInt(env("REVIEW_MAX_BATCHES", "4")),
-                            env("REVIEW_PROMPT_PROFILE", "calibrated"), Integer.parseInt(env("REVIEW_OUTPUT_TOKENS", "4096"))).review(pinned, model);
-                    report.put("inference", metadata); report.put("retrieval", source.trace()); report.put("automationJobId", job.id().toString());
+                    report = session.review(pinned);
+                    report.put("retrieval", source.trace()); report.put("automationJobId", job.id().toString());
                     report.put("publicationEnabled", publish);
                 }
                 stage = "report-persistence";

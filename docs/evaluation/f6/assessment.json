@@ -1,0 +1,302 @@
+{
+    "ExecutedOn":  "2026-11-14",
+    "Scope":  "Four public synthetic frozen snapshots; not current-state/live PR validation",
+    "Tests":  {
+                  "Discovered":  95,
+                  "SkippedDatabaseTests":  3,
+                  "Failures":  0,
+                  "Passed":  92
+              },
+    "SingleModel":  "gpt-oss:20b; medium; output 4096",
+    "ControlledPrimary":  "Same validated single-run proposals replayed; primary inference and tokens not repeated in controlled verifier timings",
+    "InitialComparison":  "Fresh primary; not a causal comparison of verifier effect; verifier output 4096",
+    "ControlledVerifiers":  "qwen3:14b and qwen3.5:9b; thinking false; output 1536",
+    "Rows":  [
+                 {
+                     "Configuration":  "single",
+                     "PR":  1,
+                     "Findings":  1,
+                     "Severities":  [
+                                        "HIGH"
+                                    ],
+                     "Verification":  null,
+                     "ElapsedMillis":  25708,
+                     "PromptTokens":  694,
+                     "OutputTokens":  328,
+                     "ActualCalls":  1
+                 },
+                 {
+                     "Configuration":  "single",
+                     "PR":  2,
+                     "Findings":  0,
+                     "Severities":  [
+
+                                    ],
+                     "Verification":  null,
+                     "ElapsedMillis":  60016,
+                     "PromptTokens":  3243,
+                     "OutputTokens":  4889,
+                     "ActualCalls":  3
+                 },
+                 {
+                     "Configuration":  "single",
+                     "PR":  3,
+                     "Findings":  1,
+                     "Severities":  [
+                                        "HIGH"
+                                    ],
+                     "Verification":  null,
+                     "ElapsedMillis":  8456,
+                     "PromptTokens":  855,
+                     "OutputTokens":  690,
+                     "ActualCalls":  1
+                 },
+                 {
+                     "Configuration":  "single",
+                     "PR":  4,
+                     "Findings":  1,
+                     "Severities":  [
+                                        "HIGH"
+                                    ],
+                     "Verification":  null,
+                     "ElapsedMillis":  7724,
+                     "PromptTokens":  757,
+                     "OutputTokens":  625,
+                     "ActualCalls":  1
+                 },
+                 {
+                     "Configuration":  "controlled-qwen14b",
+                     "PR":  1,
+                     "Findings":  1,
+                     "Severities":  [
+                                        "HIGH"
+                                    ],
+                     "Verification":  "candidate-checks-complete",
+                     "ElapsedMillis":  3135,
+                     "PromptTokens":  611,
+                     "OutputTokens":  103,
+                     "ActualCalls":  1
+                 },
+                 {
+                     "Configuration":  "controlled-qwen14b",
+                     "PR":  2,
+                     "Findings":  0,
+                     "Severities":  [
+
+                                    ],
+                     "Verification":  "candidate-checks-complete",
+                     "ElapsedMillis":  9,
+                     "PromptTokens":  0,
+                     "OutputTokens":  0,
+                     "ActualCalls":  0
+                 },
+                 {
+                     "Configuration":  "controlled-qwen14b",
+                     "PR":  3,
+                     "Findings":  1,
+                     "Severities":  [
+                                        "HIGH"
+                                    ],
+                     "Verification":  "candidate-checks-complete",
+                     "ElapsedMillis":  4730,
+                     "PromptTokens":  792,
+                     "OutputTokens":  171,
+                     "ActualCalls":  1
+                 },
+                 {
+                     "Configuration":  "controlled-qwen14b",
+                     "PR":  4,
+                     "Findings":  1,
+                     "Severities":  [
+                                        "HIGH"
+                                    ],
+                     "Verification":  "candidate-checks-complete",
+                     "ElapsedMillis":  2821,
+                     "PromptTokens":  641,
+                     "OutputTokens":  97,
+                     "ActualCalls":  1
+                 },
+                 {
+                     "Configuration":  "controlled-qwen9b",
+                     "PR":  1,
+                     "Findings":  1,
+                     "Severities":  [
+                                        "HIGH"
+                                    ],
+                     "Verification":  "candidate-checks-complete",
+                     "ElapsedMillis":  12469,
+                     "PromptTokens":  613,
+                     "OutputTokens":  150,
+                     "ActualCalls":  1
+                 },
+                 {
+                     "Configuration":  "controlled-qwen9b",
+                     "PR":  2,
+                     "Findings":  0,
+                     "Severities":  [
+
+                                    ],
+                     "Verification":  "candidate-checks-complete",
+                     "ElapsedMillis":  6,
+                     "PromptTokens":  0,
+                     "OutputTokens":  0,
+                     "ActualCalls":  0
+                 },
+                 {
+                     "Configuration":  "controlled-qwen9b",
+                     "PR":  3,
+                     "Findings":  0,
+                     "Severities":  [
+
+                                    ],
+                     "Verification":  "incomplete-or-disputed",
+                     "ElapsedMillis":  9699,
+                     "PromptTokens":  794,
+                     "OutputTokens":  569,
+                     "ActualCalls":  1
+                 },
+                 {
+                     "Configuration":  "controlled-qwen9b",
+                     "PR":  4,
+                     "Findings":  1,
+                     "Severities":  [
+                                        "HIGH"
+                                    ],
+                     "Verification":  "candidate-checks-complete",
+                     "ElapsedMillis":  1897,
+                     "PromptTokens":  643,
+                     "OutputTokens":  89,
+                     "ActualCalls":  1
+                 },
+                 {
+                     "Configuration":  "initial-fresh-primary",
+                     "PR":  1,
+                     "Findings":  1,
+                     "Severities":  [
+                                        "HIGH"
+                                    ],
+                     "Verification":  "candidate-checks-complete",
+                     "ElapsedMillis":  26477,
+                     "PromptTokens":  1336,
+                     "OutputTokens":  684,
+                     "ActualCalls":  2
+                 },
+                 {
+                     "Configuration":  "initial-fresh-primary",
+                     "PR":  2,
+                     "Findings":  1,
+                     "Severities":  [
+                                        "HIGH"
+                                    ],
+                     "Verification":  "incomplete-or-disputed",
+                     "ElapsedMillis":  61969,
+                     "PromptTokens":  3243,
+                     "OutputTokens":  4461,
+                     "ActualCalls":  3
+                 },
+                 {
+                     "Configuration":  "initial-fresh-primary",
+                     "PR":  3,
+                     "Findings":  1,
+                     "Severities":  [
+                                        "MEDIUM"
+                                    ],
+                     "Verification":  "candidate-checks-complete",
+                     "ElapsedMillis":  17769,
+                     "PromptTokens":  1628,
+                     "OutputTokens":  859,
+                     "ActualCalls":  2
+                 },
+                 {
+                     "Configuration":  "initial-fresh-primary",
+                     "PR":  4,
+                     "Findings":  0,
+                     "Severities":  [
+
+                                    ],
+                     "Verification":  "incomplete-or-disputed",
+                     "ElapsedMillis":  24195,
+                     "PromptTokens":  1404,
+                     "OutputTokens":  874,
+                     "ActualCalls":  2
+                 }
+             ],
+    "ExternalTrial":  {
+                          "Scope":  "Four public fixtures only; no private code or retries",
+                          "Status":  "Completed: expected diagnosis and severity on all four public cases",
+                          "CallsSent":  6,
+                          "ApprovedReservationUsd":  "0.10",
+                          "Usage":  {
+                                        "Calls":  6,
+                                        "InputTokens":  5693,
+                                        "CachedInputTokens":  0,
+                                        "CacheWriteTokens":  2615,
+                                        "OutputTokens":  915,
+                                        "ReasoningTokens":  470,
+                                        "EstimatedUsd":  0.0010921750,
+                                        "ReservedUsd":  0.0163977500,
+                                        "ElapsedMillis":  18720
+                                    },
+                          "Rows":  [
+                                       {
+                                           "PR":  1,
+                                           "Findings":  1,
+                                           "Severity":  [
+                                                            "HIGH"
+                                                        ],
+                                           "Errors":  0,
+                                           "Rejected":  0,
+                                           "AllAnalyzed":  true,
+                                           "ElapsedMillis":  4140,
+                                           "EstimatedUsd":  0.0001588000
+                                       },
+                                       {
+                                           "PR":  2,
+                                           "Findings":  0,
+                                           "Severity":  [
+
+                                                        ],
+                                           "Errors":  0,
+                                           "Rejected":  0,
+                                           "AllAnalyzed":  true,
+                                           "ElapsedMillis":  8096,
+                                           "EstimatedUsd":  0.0005433750
+                                       },
+                                       {
+                                           "PR":  3,
+                                           "Findings":  1,
+                                           "Severity":  [
+                                                            "MEDIUM"
+                                                        ],
+                                           "Errors":  0,
+                                           "Rejected":  0,
+                                           "AllAnalyzed":  true,
+                                           "ElapsedMillis":  3478,
+                                           "EstimatedUsd":  0.0002054000
+                                       },
+                                       {
+                                           "PR":  4,
+                                           "Findings":  1,
+                                           "Severity":  [
+                                                            "HIGH"
+                                                        ],
+                                           "Errors":  0,
+                                           "Rejected":  0,
+                                           "AllAnalyzed":  true,
+                                           "ElapsedMillis":  3006,
+                                           "EstimatedUsd":  0.0001846000
+                                       }
+                                   ]
+                      },
+    "Conclusion":  "Keep single-model default; no demonstrated automatic quality improvement from tested verifier modes",
+    "Limitations":  [
+                        "Tiny synthetic suite",
+                        "Primary output varies across runs",
+                        "Both models can agree on incorrect severity",
+                        "Verifier followed injection in an initial run",
+                        "Verifier cannot discover bugs absent from primary candidates",
+                        "Qwen 9B disputed severity but introduced a false floating-point example"
+                    ],
+    "SelectedExternalProvider":  "OpenAI Responses API, gpt-6-luna, medium; selected for the initial F8 demonstration, not enabled as automatic fallback",
+    "ExternalDisabledCliCheck":  "Network-disabled real CLI rejected external selection with policy error before any provider request"
+}
