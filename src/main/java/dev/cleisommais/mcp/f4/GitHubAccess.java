@@ -23,6 +23,7 @@ import java.util.Set;
 public final class GitHubAccess {
     public static final class ConfigurationException extends IllegalStateException {
         public ConfigurationException() { super("Configure the GitHub App ID, installation ID and readable PEM file for this connection"); }
+        public ConfigurationException(String message) { super(message); }
     }
     public static final class RequestException extends IOException {
         private final int status;
@@ -41,15 +42,43 @@ public final class GitHubAccess {
 
     public GitHubAccess(URI base, Credential credential) { this.base = base; this.credential = credential; }
     public static GitHubAccess anonymous(URI base) { return new GitHubAccess(base, repository -> ""); }
+    public static Map<String, String> appEnvironment(Map<String, String> environment) {
+        var result = new java.util.HashMap<String, String>();
+        result.put("GITHUB_AUTH_MODE", "app");
+        for (String name : java.util.List.of("GITHUB_APP_ID", "GITHUB_INSTALLATION_ID", "GITHUB_PRIVATE_KEY_PATH")) {
+            String value = environment.get(name);
+            if (value == null || value.isBlank()) {
+                throw new ConfigurationException(name + " is missing; configure it in .env and recreate the gateway/worker containers");
+            }
+            result.put(name, value);
+        }
+        if (!result.get("GITHUB_APP_ID").matches("[1-9][0-9]*")) {
+            throw new ConfigurationException("GITHUB_APP_ID must be the positive numeric App ID from the App settings");
+        }
+        try {
+            String installation = result.get("GITHUB_INSTALLATION_ID");
+            if (!installation.matches("[1-9][0-9]*") || Long.parseLong(installation) < 1) throw new NumberFormatException();
+        } catch (NumberFormatException error) {
+            throw new ConfigurationException("GITHUB_INSTALLATION_ID must be the positive installation ID from the installation URL; 0 is unconfigured");
+        }
+        try {
+            Path key = Path.of(result.get("GITHUB_PRIVATE_KEY_PATH"));
+            if (!Files.isRegularFile(key) || !Files.isReadable(key)) throw new IllegalArgumentException();
+        } catch (IllegalArgumentException error) {
+            throw new ConfigurationException("GITHUB_PRIVATE_KEY_PATH must point to a readable PEM file; check the secrets/github-app.pem mount");
+        }
+        return Map.copyOf(result);
+    }
     public static GitHubAccess environment(String repository, boolean publishing) {
         String mode = System.getenv().getOrDefault("GITHUB_AUTH_MODE", "anonymous");
         if (mode.equals("anonymous") && !publishing) return anonymous(URI.create("https://api.github.com/"));
         if (!mode.equals("app")) throw new IllegalArgumentException("GitHub App configuration is required");
+        var environment = appEnvironment(System.getenv());
         try {
             return new GitHubAccess(URI.create("https://api.github.com/"), new AppCredential(
-                    URI.create("https://api.github.com/"), System.getenv("GITHUB_APP_ID"),
-                    Long.parseLong(System.getenv("GITHUB_INSTALLATION_ID")),
-                    Path.of(System.getenv("GITHUB_PRIVATE_KEY_PATH")), repository, publishing, Clock.systemUTC()));
+                    URI.create("https://api.github.com/"), environment.get("GITHUB_APP_ID"),
+                    Long.parseLong(environment.get("GITHUB_INSTALLATION_ID")),
+                    Path.of(environment.get("GITHUB_PRIVATE_KEY_PATH")), repository, publishing, Clock.systemUTC()));
         } catch (Exception error) { throw new ConfigurationException(); }
     }
 

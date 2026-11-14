@@ -2,7 +2,7 @@
 
 [F4 implementation](f4-webhook-jobs.md) · [Setup reference](../config/github-app-setup.json).
 
-The connector created the private fixtures, but the Java containers need their own App identity. Live App authentication, bot publication, and an actual GitHub callback remain pending until these steps are completed. All commands below run from `D:\projects\mcp-api-gateway` in PowerShell. Private-key contents and the webhook secret stay out of chat and Git.
+The connector created the private fixtures, but the Java containers need their own App identity. Live App authentication and the private PR #1 manual review have now been verified; bot publication and an actual GitHub callback remain pending. All commands below run from `D:\projects\mcp-api-gateway` in PowerShell. Private-key contents and the webhook secret stay out of chat and Git.
 
 ## 1. Prepare local files
 
@@ -44,6 +44,8 @@ PUBLISH_REVIEWS=false
 
 Preserve `POSTGRES_PASSWORD`, `GATEWAY_TOKEN`, and `WEBHOOK_SECRET`. Compose mounts the PEM at `/run/secrets/github-app.pem` inside the gateway/worker; no private-key text goes into `.env`. The worker and read-only MCP subprocess request separate repository-scoped installation tokens with the permissions they need. Tokens are refreshed before expiry.
 
+Registering and installing the App on GitHub does not populate this local file. An older `.env` may have neither ID entry; the initializer generates secrets but cannot discover your App or installation IDs. `GITHUB_INSTALLATION_ID=0` is an unconfigured placeholder.
+
 ## 6. Check private access before enabling publication
 
 ```powershell
@@ -53,6 +55,18 @@ docker compose --profile review run --rm review github cleisommais/pr-test-repo-
 ```
 
 Inspect the resulting local report. It should enumerate the private PR's changed file and find the seeded boundary defect. If access fails, verify the App's installation selection, permissions, IDs, and PEM file; a masked 404 can indicate missing private-repository access. This command does not publish a comment.
+
+### Troubleshooting local App configuration
+
+A message naming a missing `GITHUB_APP_ID`, an invalid `GITHUB_INSTALLATION_ID`, or an unreadable `GITHUB_PRIVATE_KEY_PATH` comes from local validation before GitHub is contacted. Older builds show the combined message `Configure the GitHub App ID, installation ID and readable PEM file for this connection`. Check step 5 first, even if the key has already been downloaded and the App installed.
+
+After changing `.env`, recreate the services that consume these settings:
+
+```powershell
+docker compose --profile automation up -d gateway edge
+```
+
+If the worker is already enabled, include `worker` in that command. `docker compose restart` keeps the old container environment; `up -d` applies changed configuration. Then rerun the private-access command above. Avoid sharing full Compose configuration or container environments, since they include credentials.
 
 ## 7. Enable the worker and temporary HTTPS entry point
 

@@ -2,7 +2,7 @@
 
 A PR/MR review POC with a Java agent, MCP Gateway, and adapters for GitHub, GitLab, and Bitbucket. Its purpose is hands-on learning and an interview portfolio demonstrating MCP Client, MCP Servers, authorization, and auditing.
 
-**Status as of 2026-11-13:** F1–F3 are implemented, and **F4's local webhook/queue/worker implementation is verified** on `codex/f4-webhook-jobs-private-repos`. Private fixture PRs and GitHub App support are ready. Live App authentication, bot publication, and real GitHub delivery await the [installation steps](docs/f4-github-app-setup.md). F2's initial quality claim was corrected; the [model investigation](docs/f3-model-evaluation.md) separates reasoning quality from valid JSON.
+**Status as of 2026-11-13:** F1–F3 are implemented, and **F4's local webhook/queue/worker implementation is verified** on `codex/f4-webhook-jobs-private-repos`. Live GitHub App authentication and a private PR #1 review are verified. Bot publication and real GitHub delivery still await the remaining [installation steps](docs/f4-github-app-setup.md). F2's initial quality claim was corrected; the [model investigation](docs/f3-model-evaluation.md) separates reasoning quality from valid JSON.
 
 **Project language: English.** Documentation, diagrams, code comments, tool descriptions, application messages, and future commit messages use English.
 

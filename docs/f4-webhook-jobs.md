@@ -2,7 +2,7 @@
 
 [Index](../README.md) · [App installation steps](f4-github-app-setup.md) · [Architecture](architecture.md).
 
-Implemented on `codex/f4-webhook-jobs-private-repos`, starting from F3 commit `5752a40`. The local edge/queue/worker flow and deterministic authentication/publication tests are verified. **Live GitHub App installation authentication, private review through that installation, bot publication, and real GitHub webhook delivery remain pending the user's setup.** A local signed fixture is not evidence of a live GitHub delivery. This guide preserves that distinction.
+Implemented on `codex/f4-webhook-jobs-private-repos`, starting from F3 commit `5752a40`. The local edge/queue/worker flow and deterministic authentication/publication tests are verified. **Live GitHub App installation authentication and a private PR #1 manual review are also verified. Bot publication and real GitHub webhook delivery remain pending.** A local signed fixture is not evidence of a live GitHub delivery. This guide preserves that distinction.
 
 ## Flow and security boundaries
 
@@ -85,7 +85,9 @@ The registry preserves an anonymous public connection and adds `private-github-a
 
 The gateway passes only App ID, installation ID, authentication mode, and the mounted PEM path to its controlled stdio process. The parent environment is cleared first, so worker/gateway/database credentials are not inherited. Tokens are minted inside the adapter and refreshed before expiry. A 401 GET can refresh once; writes are not blindly retried. Revocation/denial/rate-limit responses fail visibly. Installation token requests are restricted to the job repository. Private-fork supplemental context outside that scope is denied rather than broadening the credential.
 
-The real unauthenticated MCP path to private PR #1 returned GitHub HTTP 404, as expected for masked private access. Deterministic HTTP tests verify denied reads without a credential and successful reads with a scoped credential, plus absence of that token in the snapshot. **Positive live installation access has not been verified yet.** Follow the [installation guide](f4-github-app-setup.md), then run all four private scenarios.
+The real unauthenticated MCP path to private PR #1 returned GitHub HTTP 404, as expected for masked private access. Deterministic HTTP tests verify denied reads without a credential and successful reads with a scoped credential, plus absence of that token in the snapshot. **Positive live installation access is now verified for private PR #1:** the gateway selected `private-github-app`, retrieved the pinned snapshot/file, and `gpt-oss:20b` completed the review with one HIGH finding identifying the seeded array-boundary defect. The report was current with no errors or warnings; publication was disabled. Private PRs #2–#4 still need live model reviews.
+
+The initial App check failed before contacting GitHub because the existing `.env` lacked both IDs: the running App ID was empty and the installation ID defaulted to `0`. Adding the IDs and recreating the gateway resolved it; the mounted PEM was already readable. Preflight errors now identify the missing or invalid setting without exposing its value. See [troubleshooting](f4-github-app-setup.md#troubleshooting-local-app-configuration).
 
 ## Publication
 
@@ -110,7 +112,7 @@ The original private README was preserved and a synthetic Java baseline plus dep
 
 The newly authored synthetic fixture sources were compiled/tested in a network-disabled container, outside the review agent. This validates seeded examples; it does not add execution of PR code to the agent. Private source/report contents remain outside committed public evidence.
 
-Verification: **58 non-database tests pass** in the Docker build; the three real PostgreSQL tests are deliberately skipped there and **pass separately** in the Compose checks service. The 61 unique checks cover earlier phases plus signatures/admission, raw HTTP acknowledgment behavior, authenticated private reads, scoped JWT/token refresh with PKCS#1/PKCS#8 keys, wrong-scope access, publication ambiguity, spoofed markers, stale-state publication, durable deduplication, concurrent claims, restart/lease recovery, and persisted publication IDs.
+Verification: **59 non-database tests pass** in the latest Docker build, including the added App-configuration diagnostic test. The three real PostgreSQL tests are deliberately skipped there and passed separately in the original F4 Compose checks run; they were not rerun for this configuration-only fix. The 62 unique checks cover earlier phases plus signatures/admission, raw HTTP acknowledgment behavior, authenticated private reads, scoped JWT/token refresh with PKCS#1/PKCS#8 keys, wrong-scope access, publication ambiguity, spoofed markers, stale-state publication, durable deduplication, concurrent claims, restart/lease recovery, and persisted publication IDs.
 
 An additional local end-to-end fixture returned HTTP 202, then HTTP 200 with the same job ID on redelivery. The real PostgreSQL database recorded one delivery/job and one attempt. The worker used the actual MCP Gateway and local `gpt-oss:20b`, produced a current report, and finished as `analyzed` with no publication. This used a synthetic installation ID and a locally signed public-PR payload; **it was not an actual GitHub delivery or private-App validation**. [Sanitized evidence](evaluation/f4/).
 

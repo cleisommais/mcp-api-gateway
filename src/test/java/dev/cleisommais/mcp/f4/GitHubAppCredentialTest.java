@@ -15,6 +15,34 @@ import java.util.concurrent.atomic.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GitHubAppCredentialTest {
+    @Test void identifiesMissingAppSettingsWithoutExposingValues(@TempDir Path directory) throws Exception {
+        Path key = Files.writeString(directory.resolve("app.pem"), "synthetic-key-not-read-during-preflight");
+        var valid = Map.of("GITHUB_APP_ID", "123", "GITHUB_INSTALLATION_ID", "42",
+                "GITHUB_PRIVATE_KEY_PATH", key.toString());
+        var environment = new HashMap<>(valid);
+        environment.put("GATEWAY_TOKEN", "unrelated-secret");
+        var forwarded = GitHubAccess.appEnvironment(environment);
+        assertEquals(4, forwarded.size());
+        assertEquals("app", forwarded.get("GITHUB_AUTH_MODE"));
+        assertFalse(forwarded.containsKey("GATEWAY_TOKEN"));
+        for (String setting : valid.keySet()) {
+            var missing = new HashMap<>(valid); missing.remove(setting);
+            var error = assertThrows(GitHubAccess.ConfigurationException.class, () -> GitHubAccess.appEnvironment(missing));
+            assertTrue(error.getMessage().startsWith(setting + " is missing"));
+        }
+        for (String value : List.of("0", "-1", "not-an-installation", "9999999999999999999999999999")) {
+            var invalid = new HashMap<>(valid); invalid.put("GITHUB_INSTALLATION_ID", value);
+            var error = assertThrows(GitHubAccess.ConfigurationException.class, () -> GitHubAccess.appEnvironment(invalid));
+            assertTrue(error.getMessage().startsWith("GITHUB_INSTALLATION_ID must be"));
+        }
+        environment.put("GITHUB_APP_ID", "synthetic-sensitive-value");
+        var error = assertThrows(GitHubAccess.ConfigurationException.class, () -> GitHubAccess.appEnvironment(environment));
+        assertTrue(error.getMessage().startsWith("GITHUB_APP_ID must be"));
+        assertFalse(error.getMessage().contains("synthetic-sensitive-value"));
+        Files.delete(key);
+        error = assertThrows(GitHubAccess.ConfigurationException.class, () -> GitHubAccess.appEnvironment(valid));
+        assertTrue(error.getMessage().startsWith("GITHUB_PRIVATE_KEY_PATH must point to a readable PEM file"));
+    }
     @Test void signsAppJwtScopesAndRefreshesInstallationToken(@TempDir Path directory) throws Exception {
         var generator = KeyPairGenerator.getInstance("RSA"); generator.initialize(2048); var keys = generator.generateKeyPair();
         var keyPath = directory.resolve("app.pem");

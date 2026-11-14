@@ -33,18 +33,7 @@ public final class GatewayService implements AutoCloseable {
         return (registration, repository, number) -> {
             var environment = new HashMap<String, String>();
             if (registration.credentialMode().equals("app")) {
-                environment.put("GITHUB_AUTH_MODE", "app");
-                for (String name : java.util.List.of("GITHUB_APP_ID", "GITHUB_INSTALLATION_ID", "GITHUB_PRIVATE_KEY_PATH")) {
-                    String value = System.getenv(name);
-                    if (value == null || value.isBlank()) throw new dev.cleisommais.mcp.f4.GitHubAccess.ConfigurationException();
-                    environment.put(name, value);
-                }
-                if (!environment.get("GITHUB_APP_ID").matches("[0-9]+")
-                        || !environment.get("GITHUB_INSTALLATION_ID").matches("[1-9][0-9]*")
-                        || !java.nio.file.Files.isRegularFile(java.nio.file.Path.of(environment.get("GITHUB_PRIVATE_KEY_PATH")))
-                        || !java.nio.file.Files.isReadable(java.nio.file.Path.of(environment.get("GITHUB_PRIVATE_KEY_PATH")))) {
-                    throw new dev.cleisommais.mcp.f4.GitHubAccess.ConfigurationException();
-                }
+                environment.putAll(dev.cleisommais.mcp.f4.GitHubAccess.appEnvironment(System.getenv()));
             }
             var source = new McpReviewSource(repository, number, environment);
             return new Backend() {
