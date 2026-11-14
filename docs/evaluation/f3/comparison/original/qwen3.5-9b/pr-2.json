@@ -1,0 +1,179 @@
+{
+  "reportVersion": "f2-v1",
+  "promptVersion": "f2-review-v2",
+  "schemaVersion": "findings-v1",
+  "platform": "github",
+  "repository": "cleisommais/pr-test-repo",
+  "number": 2,
+  "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+  "headSha": "85aa355614728b0d1eed356e19ff2de45c90532d",
+  "model": "qwen3.5:9b",
+  "status": "complete",
+  "current": true,
+  "publicationEnabled": false,
+  "enumerationComplete": true,
+  "expectedFiles": 22,
+  "enumeratedFiles": 22,
+  "coverage": [
+    {
+      "file": "src/demo/ArrayTotals.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker01.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker02.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker03.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker04.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker05.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker06.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker07.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker08.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker09.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker10.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker11.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker12.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker13.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker14.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker15.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker16.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker17.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker18.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker19.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker20.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker21.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    }
+  ],
+  "summaries": [
+    "No correctness bugs found in the introduced changes.",
+    "No correctness bugs found."
+  ],
+  "findings": [],
+  "rejectedFindings": [],
+  "warnings": [
+    "src/demo/ArrayTotals.java: full-file context omitted to preserve the patch budget",
+    "src/demo/markers/Marker02.java: full-file context omitted to preserve the patch budget",
+    "src/demo/markers/Marker03.java: full-file context omitted to preserve the patch budget",
+    "Batch 1: extra full-file reads limited to four; all selected patches are included"
+  ],
+  "errors": [],
+  "usage": {
+    "elapsedMillis": 9940,
+    "inferenceMillis": 6841,
+    "outputTokens": 30,
+    "promptTokens": 2534,
+    "batches": 2
+  },
+  "inference": {
+    "details": {
+      "parent_model": "model.gguf",
+      "format": "gguf",
+      "family": "qwen35",
+      "families": [
+        "qwen35"
+      ],
+      "parameter_size": "9.0B",
+      "quantization_level": "Q4_K_M",
+      "runner": "llamacpp"
+    },
+    "runtime": "0.40.16",
+    "contextRequested": 8192,
+    "model": "qwen3.5:9b",
+    "digest": "56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90",
+    "capabilities": [
+      "completion",
+      "vision",
+      "tools",
+      "thinking"
+    ]
+  },
+  "evaluationOnly": true,
+  "snapshotCapturedAt": "2026-11-14T00:37:20.520603638Z",
+  "inputHashes": [
+    "97ec71ece41715f19f297e514b77ba6524fedd51a5d6a876671de70e6668ba14",
+    "cb5f6f0cd841ebff65009bf03bb5f310d8b499b8129c8766beb34fcab4c965dc"
+  ],
+  "comparisonControl": "Same frozen snapshot, supplemental context, prompt, schema, options and validation; model changes within profile"
+}

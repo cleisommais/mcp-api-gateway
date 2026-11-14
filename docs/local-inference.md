@@ -1,6 +1,6 @@
 # Local inference and isolated infrastructure
 
-[Index](../README.md) · [F2 guide](f2-local-pr-review.md) · [Decisions](decisions.md).
+[Index](../README.md) · [F3 guide](f3-governed-gateway.md) · [Model evaluation](f3-model-evaluation.md) · [Decisions](decisions.md).
 
 ## Current environment — 2026-11-13
 
@@ -12,23 +12,26 @@ The user requested independent Ollama and PostgreSQL for this project (D20), rep
 | Host driver | 576.88; successful inference observed with this version |
 | CPU/RAM | Prior inspection: Ryzen 9 5950X, 16 cores/32 threads, approximately 63.9 GiB physical RAM |
 | Ollama | 0.40.16, `ollama/ollama:0.40.16` |
-| Model | `qwen3.5:9b`, 9.0B, Q4_K_M, qwen35, llamacpp |
-| Model digest | `56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90` |
-| Capabilities returned by `/api/show` | completion, vision, tools, thinking; F2 uses text only |
+| Selected F3 model | `gpt-oss:20b`, 20.9B, MXFP4, gpt-oss, llamacpp |
+| Selected model digest | `f38aa0c53da5f8c49d08c43a99df24ff53167fe68e24664a7777288e7656fdfe` |
+| Capabilities returned by `/api/show` | completion, tools, thinking; named levels low/medium/high; medium selected |
+| Retained comparison models | `qwen3.5:9b` (9.0B/Q4_K_M), `qwen3:14b` (14.8B/Q4_K_M) |
 | Inference context | Requested `num_ctx=8192`; `ollama ps` observed 8192 |
-| Offload | `ollama ps`: **100% GPU**, 5.9 GB allocated model entry |
-| GPU memory at a post-review observation | 8,305 MiB used across the GPU; includes other host usage, not an isolated model measurement |
+| Selected-model offload | `ollama ps`: **100% GPU**, 12 GB model entry |
+| GPU memory during GPT-OSS evaluation | 14,158 MiB used across the GPU; includes other host usage, not an isolated model measurement |
 | Parallelism | One inference, one loaded model, four queued requests; 10-minute keep-alive |
 | PostgreSQL | 17.6-alpine; healthy `mcp_review` database; reserved for F4 |
-| Host ports | Ollama `127.0.0.1:11435`; PostgreSQL `127.0.0.1:15432` |
+| Host ports | Ollama `127.0.0.1:11435`; PostgreSQL `127.0.0.1:15432`; gateway `127.0.0.1:18080` |
 | Java endpoint | `http://ollama:11434` on the project's Compose network |
 | Persistent volumes | `mcp-api-gateway_ollama_data`, `mcp-api-gateway_postgres_data` |
 
-The [model catalog](https://ollama.com/library/qwen3.5:9b) suggested a manageable candidate for 16 GB. Catalog download size, model weights, the `ollama ps` allocation, and total GPU memory are different measurements. The actual GPU call, native tool-call probe, and four reviews support adopting this as the F2 starting point. No comparison with another model was performed in the isolated environment; that remains an F6 experiment if useful. Newness alone does not establish quality.
+The [Qwen catalog](https://ollama.com/library/qwen3.5:9b) suggested the initial F2 candidate for 16 GB. F2 observed 100% GPU, a 5.9 GB model entry, and 8,305 MiB total GPU use, but its review quality was overstated. F3 compared Qwen size/prompt/reasoning settings and then the user-suggested [GPT-OSS candidate](https://ollama.com/library/gpt-oss:20b). GPT-OSS matched diagnosis/severity on all four captured reference cases and the selected configuration also passed a live gateway review of PR #3. The [evaluation](f3-model-evaluation.md) records failures, limits, hashes, and raw evidence. Devstral was not evaluated because another candidate was not needed to move this POC forward.
+
+Catalog download size, model weights, the `ollama ps` entry, and total GPU memory are different measurements. The GPT-OSS allocation above is observed fit for one 8K-context inference, not arbitrary context/parallelism capacity. Size or novelty alone does not establish quality.
 
 ## Setup, maintenance, and separation
 
-Follow the [F2 commands](f2-local-pr-review.md). The initialization script generates a random local database password in ignored `.env`; no GitHub or inference credentials are required for the public fixture exercise. The Java container mounts only the report directory, not either data volume or the Docker socket.
+Follow the [F3 commands](f3-governed-gateway.md). The initialization script generates missing local database/gateway credentials in ignored `.env` and preserves existing values. No GitHub or inference credential is required for the public fixture exercise; GPT-OSS runs locally in Ollama. The agent mounts only the report directory; the gateway mounts only its read-only administrative registration. Neither mounts a database/model volume or Docker socket.
 
 The image was selected from the [Ollama stable release](https://github.com/ollama/ollama/releases/tag/v0.40.16). NVIDIA access uses Docker Compose [GPU reservations](https://docs.docker.com/compose/how-tos/gpu-support/). Version/model queries do not prove GPU inference; the observed `ollama ps` result does. Other projects can still compete for the same physical GPU despite separate containers and volumes.
 
@@ -38,11 +41,11 @@ For a future update, change `OLLAMA_VERSION` deliberately, preserve this project
 
 ## Context and review quality
 
-The JDK HTTP client calls Ollama's [native chat API](https://docs.ollama.com/api/chat), with streaming disabled, temperature zero, thinking disabled, an explicit context, and at most 1,536 output tokens. Ollama's [JSON Schema output](https://docs.ollama.com/capabilities/structured-outputs) is followed by Java field/type/path/line/evidence checks. A separate [native tool-call probe](https://docs.ollama.com/capabilities/tool-calling) returned the requested name and exact argument; it does not execute a tool. The actual review harness retrieves context deterministically through MCP.
+The JDK HTTP client calls Ollama's [native chat API](https://docs.ollama.com/api/chat), with streaming disabled, temperature zero, an explicit context, and bounded output. The current default uses GPT-OSS medium reasoning and 4,096 output tokens. F2's historical settings were Qwen, thinking false, and 1,536 output tokens. Ollama's [JSON Schema output](https://docs.ollama.com/capabilities/structured-outputs) is followed by Java field/type/path/line/evidence checks. F2's separate [native tool-call probe](https://docs.ollama.com/capabilities/tool-calling) returned the requested name and exact argument; it did not execute a tool and does not establish GPT-OSS tool quality. The actual harness retrieves context deterministically through the F3 MCP Gateway.
 
-F2 reserves 2,500 context tokens for policy/schema/output and bounds serialized input to one UTF-8 byte per remaining token, conservatively for the English/Java examples. This is a byte heuristic, not a model tokenizer or proof for arbitrary languages. Whole patches are batched without a file-count cutoff. Oversized/missing/truncated patches and exhausted batch budgets remain explicitly pending. Additional full-file context is read at the immutable SHA, limited to four files per batch, and omitted with a warning if it does not fit. All selected patches remain included.
+The engine bounds serialized input to one UTF-8 byte per available input token, conservatively for the English/Java examples. Historical 1,536-token output reserves 2,500 tokens overall. The 4,096-token default instead reserves output plus 1,000 tokens for policy/schema, leaving 3,096 input bytes at 8K context. This is a byte heuristic, not a model tokenizer or proof for arbitrary languages. Whole patches are batched without a file-count cutoff. Oversized/missing/truncated patches and exhausted batch budgets remain explicitly pending. Additional full-file context is read at the immutable SHA, limited to four files per batch, and omitted with a warning if it does not fit. All selected patches remain included.
 
-The [evaluation](f2-local-pr-review.md#observed-results) records two prompt iterations. The first correctly identified bugs but returned invalid locations in two cases; the validator rejected them. Supplying an added-line mapping fixed the measured examples. Severity was overestimated as CRITICAL, and the cross-file explanation mixed the unit mismatch with decimal truncation. These are recorded model limitations. Four synthetic cases establish a learning baseline, not general accuracy, security, or performance guarantees.
+The [F2 historical evaluation](f2-local-pr-review.md#observed-results) records two prompt iterations: invalid locations were rejected, and an added-line mapping improved location accuracy. Severity and the cross-file explanation still failed. The [F3 investigation](f3-model-evaluation.md) then separated prompt omissions, inference controls, raw model errors, batching effects, and structural validation limits. The chosen GPT-OSS configuration is a better observed starting point; four synthetic cases do not establish general accuracy, security, or performance guarantees. Every report still requires human review.
 
 A timed-out client call may leave inference briefly running on the server. F2 records the failure, closes its MCP subprocess, and performs no retry or service restart. Ollama's bounded queue and single-inference setting are local experiment defaults; multiple manual invocations are not a durable worker queue.
 
@@ -54,4 +57,4 @@ The earlier read-only inspection found Ollama 0.18.0 in `divine-touch-infra`, wi
 
 Local inference avoids external inference charges but still uses disk, electricity, and hardware time; no energy accounting is required for this POC. A desktop-independent demonstration will use an explicitly selected external API on a temporary VPS, following the [cloud plan](cloud-demo-and-portfolio.md). ChatGPT/Codex account access is separate from Java application credentials and is not used as an inference API credential.
 
-F3 adds the governed MCP Gateway. F4 adds webhooks, PostgreSQL jobs, GitHub App identity, and controlled publication. Effective capacity under concurrent workloads, a second model, finer patch splitting, arbitrary-language tokenization, and severity calibration remain later experiments rather than prerequisites for this manual increment.
+F3 implements the governed MCP Gateway and a measured model comparison. F4 adds webhooks, PostgreSQL jobs, GitHub App identity, and controlled publication. Concurrent capacity, finer patch splitting, arbitrary-language tokenization, broader quality cases, and future model comparisons remain later experiments.

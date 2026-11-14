@@ -1,15 +1,20 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $envPath = Join-Path $projectRoot '.env'
-if (Test-Path -LiteralPath $envPath) {
-    Write-Output 'Existing .env preserved.'
-    exit 0
+$content = if (Test-Path -LiteralPath $envPath) { [IO.File]::ReadAllText($envPath) }
+    else { [IO.File]::ReadAllText((Join-Path $projectRoot '.env.example')) }
+$changed = $false
+foreach ($key in @('POSTGRES_PASSWORD', 'GATEWAY_TOKEN')) {
+    $pattern = '(?m)^' + $key + '=([^\r\n]*)'
+    $match = [regex]::Match($content, $pattern)
+    if ($match.Success -and -not [string]::IsNullOrWhiteSpace($match.Groups[1].Value)) { continue }
+    $bytes = New-Object byte[] 32
+    $random = [Security.Cryptography.RandomNumberGenerator]::Create()
+    try { $random.GetBytes($bytes) } finally { $random.Dispose() }
+    $line = $key + '=' + [Convert]::ToBase64String($bytes)
+    if ($match.Success) { $content = [regex]::Replace($content, $pattern, $line) }
+    else { $content = $content.TrimEnd() + "`n" + $line + "`n" }
+    $changed = $true
 }
-$bytes = New-Object byte[] 32
-$random = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-try { $random.GetBytes($bytes) } finally { $random.Dispose() }
-$password = [Convert]::ToBase64String($bytes)
-$example = [System.IO.File]::ReadAllText((Join-Path $projectRoot '.env.example'))
-$content = $example.Replace('POSTGRES_PASSWORD=', 'POSTGRES_PASSWORD=' + $password)
-[System.IO.File]::WriteAllText($envPath, $content, (New-Object System.Text.UTF8Encoding($false)))
-Write-Output 'Created ignored .env with a random local PostgreSQL password.'
+if ($changed) { [IO.File]::WriteAllText($envPath, $content, (New-Object Text.UTF8Encoding($false))) }
+Write-Output 'Local environment ready; existing values preserved and missing credentials generated.'

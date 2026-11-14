@@ -8,34 +8,34 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-final class Json {
+public final class Json {
     private Json() {}
 
-    static String write(Object value) throws IOException {
+    public static String write(Object value) throws IOException {
         return McpJsonDefaults.getMapper().writeValueAsString(value);
     }
 
-    static <T> T read(String value, TypeRef<T> type) throws IOException {
+    public static <T> T read(String value, TypeRef<T> type) throws IOException {
         return McpJsonDefaults.getMapper().readValue(value, type);
     }
 
-    static Map<String, Object> object(String value) throws IOException {
+    public static Map<String, Object> object(String value) throws IOException {
         return read(value, new TypeRef<>() {});
     }
 
     @SuppressWarnings("unchecked")
-    static Map<String, Object> map(Object value) {
+    public static Map<String, Object> map(Object value) {
         if (!(value instanceof Map<?, ?>)) throw new IllegalArgumentException("Expected a JSON object");
         return (Map<String, Object>) value;
     }
 
     @SuppressWarnings("unchecked")
-    static List<Object> list(Object value) {
+    public static List<Object> list(Object value) {
         if (!(value instanceof List<?>)) throw new IllegalArgumentException("Expected a JSON array");
         return (List<Object>) value;
     }
 
-    static String text(Map<String, Object> value, String key) {
+    public static String text(Map<String, Object> value, String key) {
         Object field = value.get(key);
         if (!(field instanceof String text)) throw new IllegalArgumentException("Expected string: " + key);
         return text;

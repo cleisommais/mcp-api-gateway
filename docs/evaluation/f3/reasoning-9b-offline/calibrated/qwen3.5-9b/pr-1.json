@@ -1,0 +1,82 @@
+{
+  "reportVersion": "f2-v1",
+  "promptVersion": "f3-review-v1",
+  "schemaVersion": "findings-v1",
+  "platform": "github",
+  "repository": "cleisommais/pr-test-repo",
+  "number": 1,
+  "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+  "headSha": "246db3687351ff225f81f5a78e7b3bc2f561c293",
+  "model": "qwen3.5:9b",
+  "qualityStatus": "requires-human-review",
+  "validationScope": "schema, pinned added-line location, and matching evidence; reasoning is not automatically verified",
+  "status": "outdated",
+  "current": false,
+  "publicationEnabled": false,
+  "enumerationComplete": true,
+  "expectedFiles": 1,
+  "enumeratedFiles": 1,
+  "coverage": [
+    {
+      "file": "src/demo/ArrayTotals.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    }
+  ],
+  "summaries": [
+    "1 finding"
+  ],
+  "findings": [
+    {
+      "file": "src/demo/ArrayTotals.java",
+      "line": 8,
+      "severity": "HIGH",
+      "explanation": "The loop condition changed from 'i < values.length' to 'i <= values.length', causing an ArrayIndexOutOfBoundsException when accessing values[values.length] which is out of bounds for any array. For example, with a 5-element array (indices 0-4), the loop will attempt to access index 5 on iteration i=5, crashing the program.",
+      "evidence": "        for (int i = 0; i <= values.length; i++) {"
+    }
+  ],
+  "rejectedFindings": [],
+  "warnings": [],
+  "errors": [],
+  "usage": {
+    "batches": 1,
+    "elapsedMillis": 6569,
+    "inferenceMillis": 6551,
+    "outputTokens": 357,
+    "promptTokens": 682
+  },
+  "inference": {
+    "runtime": "0.40.16",
+    "capabilities": [
+      "completion",
+      "vision",
+      "tools",
+      "thinking"
+    ],
+    "digest": "56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90",
+    "details": {
+      "parent_model": "model.gguf",
+      "format": "gguf",
+      "family": "qwen35",
+      "families": [
+        "qwen35"
+      ],
+      "parameter_size": "9.0B",
+      "quantization_level": "Q4_K_M",
+      "runner": "llamacpp"
+    },
+    "thinking": true,
+    "contextRequested": 8192,
+    "outputTokenBudget": 4096,
+    "model": "qwen3.5:9b"
+  },
+  "evaluationOnly": true,
+  "retrieval": "offline-captured-fixture; current PR state not rechecked",
+  "snapshotCapturedAt": "2026-11-14T00:36:33.597728455Z",
+  "inputHashes": [
+    "01ce9236bac78b9f510a059943ab70764546dc149da3f99dbb88beb0f72e2900"
+  ],
+  "comparisonControl": "Same frozen snapshot, supplemental context, prompt, schema, options and validation; model changes within profile",
+  "evaluationStartedAt": "2026-11-14T00:48:55.312552295Z",
+  "artifactNote": "Export corrected the capture-time metadata from the original fixture; model output is unchanged."
+}

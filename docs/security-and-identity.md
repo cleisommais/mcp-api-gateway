@@ -4,6 +4,8 @@
 
 Requested direction: least privilege, per-call authorization, and identity isolation. Concrete mechanisms below are **P** unless explicitly required. F7 expands evaluation; protections needed by a feature must be present when that feature is delivered.
 
+**Implemented F3 lab:** the agent authenticates to the gateway with a generated local worker credential; the gateway authorizes the registered repository and binds a job to its PR/base/head snapshot. Only four upstream read/lifecycle tools are exposed. Server process, downstream catalog, version, protocol, and routing come from reviewed code/read-only configuration, never from model arguments. Each forwarded call revalidates the downstream catalog. The child process receives the SDK's minimal environment rather than the gateway credential. [F3 details](f3-governed-gateway.md) distinguish these implemented controls from the future OAuth/GitHub App design below.
+
 ## Identities and credentials at each boundary
 
 | Boundary | Identity and mechanism to plan | Rule |
@@ -63,7 +65,7 @@ For [GitLab](https://docs.gitlab.com/user/project/integrations/webhooks/) and [B
 
 ## Ollama and transmitted data
 
-The observed endpoint responds locally without authentication and publishes its port on `0.0.0.0` and `[::]`. This does not prove external reachability, since firewall/network access was not tested. Docker execution alone is not protection. Before integration, confirm allowed reachability and restrict firewall/network access; use an authenticated proxy/TLS across an untrusted boundary. None of these infrastructure changes were performed.
+The earlier other-project inventory found all-interface Ollama publication. That observation is historical. This project's Ollama now publishes only `127.0.0.1:11435`; its gateway publishes `127.0.0.1:18080` and requires the local worker credential. The agent calls Ollama over the project network without forwarding the gateway credential. A future deployment across an untrusted boundary needs appropriate TLS/authentication; the local lab makes no claim of native Ollama authentication.
 
 Only the model access layer should contact registered inference destinations. The model, PR, and tool result cannot choose an endpoint. The cloud demonstration uses an explicitly configured external API as its primary destination; this does not enable automatic fallback when local Ollama fails. Define provider, repositories, data classification, retention, budget, and transmission records. Local inference still requires networking for Git platforms and remote MCP Servers.
 

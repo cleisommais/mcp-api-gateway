@@ -1,0 +1,26 @@
+{
+  "model": "qwen3:14b",
+  "profile": "original",
+  "capturedInputHash": "370770321401be6267897fb0fc80f087edb777af7a51cb977952c8b4b7cc7b0f",
+  "thinking": true,
+  "evaluationOnly": true,
+  "maxOutputTokens": 4096,
+  "headSha": "4b2d0cd7e7d25e5d97d72bfd96cb11d3b46d12a8",
+  "response": {
+    "model": "qwen3:14b",
+    "created_at": "2026-11-14T00:41:00.219329362Z",
+    "message": {
+      "role": "assistant",
+      "content": "{\"summary\": \"The change introduces a correctness bug by incorrectly converting dollars to cents without proper scaling.\", \"findings\": [{\"file\": \"src/demo/Checkout.java\", \"evidence\": \"return (int) (PriceCatalog.unitPrice() * quantity);\", \"line\": 10, \"severity\": \"HIGH\", \"explanation\": \"The calculation now returns dollars instead of cents. For example, with quantity=1, it returns 12 instead of 1250. The code is missing a multiplication by 100 to convert dollars to cents.\"}]}"
+    },
+    "done": true,
+    "done_reason": "stop",
+    "total_duration": 33174214800,
+    "load_duration": 1715822,
+    "prompt_eval_count": 703,
+    "prompt_eval_cached_count": 697,
+    "prompt_eval_duration": 39642000,
+    "eval_count": 1305,
+    "eval_duration": 32980898999
+  }
+}

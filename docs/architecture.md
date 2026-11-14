@@ -2,6 +2,8 @@
 
 [Index](../README.md) · [Decisions](decisions.md) · [Security](security-and-identity.md). Initial **P** design aligned with confirmed directions.
 
+**Implemented increment:** [F3](f3-governed-gateway.md) now runs the agent and MCP Gateway in separate containers. The gateway authenticates the lab worker, routes only registered public-repository tools to a controlled stdio subprocess, binds job/PR/SHA scope, checks the downstream contract, and records console audit. The automatic webhook/database/publisher flow below remains planned for F4. Model APIs remain a separate path. [Quality evaluation](f3-model-evaluation.md) is distinct from output/schema validation.
+
 ## Where a review starts
 
 The primary flow is automatic: **a developer pushes commits and opens or updates a PR; the Git platform sends a webhook to our Java application's endpoint; the agent analyzes the change and the application publishes the result on the PR**. Developers use their normal GitHub/GitLab/Bitbucket access; they do not need a second login to our application for each review.

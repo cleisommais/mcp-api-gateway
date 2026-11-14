@@ -20,7 +20,7 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 
 ## Proposed phases
 
-**F1 and F2 are implemented and verified**, as described in the [F1 guide](docs/f1-mcp-stdio.md) and [F2 guide](docs/f2-local-pr-review.md). F3–F8 remain planned. Necessary security, validation, and honest coverage reporting accompany the first feature that needs them; F7 expands robustness rather than postponing those protections.
+**F1, F2 mechanics, and F3 gateway are implemented**, as described in the [F1 guide](docs/f1-mcp-stdio.md), [F2 guide](docs/f2-local-pr-review.md), and [F3 guide](docs/f3-governed-gateway.md). F2's initial model quality did not meet all expected scenarios; the [F3 evaluation](docs/f3-model-evaluation.md) preserves failures and investigates model/prompt/inference causes. F4–F8 remain planned. Necessary security, validation, and honest coverage reporting accompany the first feature that needs them; F7 expands robustness rather than postponing those protections.
 
 ### F1 — MCP fundamentals, without a model
 
@@ -40,11 +40,13 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 - **Learn:** transform a diff into context; distinguish MCP tools from model calls; understand context windows and output validation.
 - **Deliver:** manual input with platform, connection/repository, and PR/MR number; metadata/diff/context retrieval through MCP at a fixed SHA; a structured local report with coverage. Use F1 fixtures before a real repository. Own Ollama and PostgreSQL in this project's Compose setup, following D20.
 - **Dependencies:** F1; a server providing the required operations; endpoint access and an experimental model choice. Public GitHub reads require no application token in F2; private repositories and bot writes remain later work. Perform the simple checks and four examples in [local-inference.md](docs/local-inference.md).
-- **Done when:** a GPU-suitable model produces verifiable findings and accepted JSON. The isolated F2 environment starts with `qwen3.5:9b`; comparing another model remains an F6 experiment if useful. Reject invented files/locations, out-of-scope arguments, and invalid output; paginate files and report partial analysis when a PR exceeds context.
+- **Done when:** a GPU-suitable model produces verifiable findings and accepted JSON, with human checking of diagnosis/severity on the known cases. If results fail, compare another model and inspect the supplied context/prompt/settings before attributing the issue. F3 addresses the comparison omitted in the first F2 delivery. Reject invented files/locations, out-of-scope arguments, and invalid output; paginate files and report partial analysis when a PR exceeds context.
 - **Validate:** four known examples, with more than 20 files in one; check truncated content, timeout, and invalid schema handling. Observe cold/warm loading when useful for learning. Do not publish automatically at this stage.
 - **Later:** automation, inline comments, and optimizations motivated by actual use. Evaluate model tool calling, while allowing deterministic context retrieval by the harness initially.
 
 ### F3 — Minimal governed gateway
+
+**Implemented on `codex/f3-governed-gateway`:** separate Java gateway/agent containers; official MCP Streamable HTTP upstream and stdio downstream; a read-only server/repository registration file; generated lab worker credential; job/repository/PR/SHA checks; independently pinned tool catalog; console audit; bounded in-memory review lifecycle. OAuth, durable jobs, and publication remain later work. The accompanying [quality investigation](docs/f3-model-evaluation.md) compares models on frozen public inputs, prompt profiles, and reasoning settings rather than equating valid JSON with correctness.
 
 - **Learn:** gateway as upstream server and downstream client; routing, identity, and resource authorization.
 - **Deliver:** a separate Java process with administrative server registration, an allowed catalog, tool mapping, per-call validation, and auditing. Move F2's experimental direct access to agent → gateway → server.
@@ -108,4 +110,4 @@ Read the [F1 guide](docs/f1-mcp-stdio.md) to run it without AI and follow each c
 
 ## Current scope
 
-The user authorized F2, project-owned Ollama/PostgreSQL, downloading a suitable local model, creating code/commits/PR fixtures in the public `cleisommais/pr-test-repo`, and committing the project changes. F2 produces local reports; gateway mediation, webhooks, durable jobs, and PR publication remain later phases. Other projects' containers and volumes are preserved.
+The user authorized F3 and model comparisons after the F2 quality gap, including consideration of `gpt-oss:20b` or `devstral:24b`. Project-owned Ollama/PostgreSQL and the public test repository remain the learning environment. F3 produces local reports through the gateway; webhooks, durable jobs, and PR publication remain F4. Other projects' containers and volumes are preserved; completed project changes are committed.

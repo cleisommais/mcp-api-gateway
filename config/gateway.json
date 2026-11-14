@@ -1,0 +1,12 @@
+{
+  "principal": "poc-worker",
+  "maxOpenJobs": 8,
+  "servers": [{
+    "id": "public-github",
+    "transport": "stdio",
+    "mainClass": "dev.cleisommais.mcp.f2.GitHubMcpServer",
+    "version": "0.2.0",
+    "protocol": "2025-11-25",
+    "repositories": ["cleisommais/pr-test-repo"]
+  }]
+}

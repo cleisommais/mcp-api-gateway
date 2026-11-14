@@ -55,20 +55,46 @@ services:
       ollama:
         condition: service_healthy
     entrypoint: [ollama, pull]
-    command: ["${OLLAMA_MODEL:-qwen3.5:9b}"]
+    command: ["${OLLAMA_MODEL:-gpt-oss:20b}"]
+
+  gateway:
+    image: mcp-api-gateway:f3
+    build: .
+    profiles: [review]
+    environment:
+      GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Run scripts/Initialize-LocalEnvironment.ps1 first}
+      GATEWAY_CONFIG: /config/gateway.json
+    ports:
+      - "127.0.0.1:${GATEWAY_HOST_PORT:-18080}:8080"
+    volumes:
+      - ./config/gateway.json:/config/gateway.json:ro
+    entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f3.GatewayServer]
+    healthcheck:
+      test: [CMD, java, "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f3.GatewayServer, --health]
+      interval: 10s
+      timeout: 5s
+      retries: 6
 
   review:
-    image: mcp-api-gateway:f2
+    image: mcp-api-gateway:f3
     build: .
     profiles: [review]
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3.5:9b}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gpt-oss:20b}
       OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-8192}
       REVIEW_TIMEOUT_SECONDS: "180"
       REVIEW_MAX_BATCHES: "4"
+      REVIEW_PROMPT_PROFILE: ${REVIEW_PROMPT_PROFILE:-calibrated}
+      OLLAMA_THINK: ${OLLAMA_THINK:-medium}
+      REVIEW_OUTPUT_TOKENS: ${REVIEW_OUTPUT_TOKENS:-4096}
+      MCP_SOURCE: gateway
+      MCP_GATEWAY_URL: http://gateway:8080
+      GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Run scripts/Initialize-LocalEnvironment.ps1 first}
     depends_on:
       ollama:
+        condition: service_healthy
+      gateway:
         condition: service_healthy
     volumes:
       - ./reports:/reports

@@ -39,12 +39,36 @@ final class ReviewEngine {
     private static final Pattern HUNK = Pattern.compile("^@@ -\\d+(?:,\\d+)? \\+(\\d+)(?:,\\d+)? @@.*");
     private final int byteBudget;
     private final int maxBatches;
+    private final String promptVersion;
+    private final String system;
 
     ReviewEngine(int contextTokens, int maxBatches) {
+        this(contextTokens, maxBatches, "original");
+    }
+
+    ReviewEngine(int contextTokens, int maxBatches, String profile) {
+        this(contextTokens, maxBatches, profile, 1536);
+    }
+
+    ReviewEngine(int contextTokens, int maxBatches, String profile, int outputTokens) {
         if (contextTokens < 4096 || maxBatches < 1 || maxBatches > 100) throw new IllegalArgumentException("Invalid review budget");
         // One UTF-8 byte per token is deliberately conservative for this English/Java exercise.
-        byteBudget = contextTokens - 2500;
+        int reserve = outputTokens <= 1536 ? 2500 : outputTokens + 1000;
+        byteBudget = contextTokens - reserve;
+        if (outputTokens < 128 || outputTokens > 4096 || byteBudget < 512) throw new IllegalArgumentException("Output budget leaves insufficient input context");
         this.maxBatches = maxBatches;
+        if (!List.of("original", "calibrated").contains(profile)) throw new IllegalArgumentException("Unknown prompt profile");
+        promptVersion = "original".equals(profile) ? PROMPT_VERSION : "f3-review-v1";
+        system = SYSTEM + ("original".equals(profile) ? "" : """
+                Severity must reflect demonstrated impact, not the presence of a bug alone:
+                LOW = minor limited impact; MEDIUM = incorrect results in ordinary use;
+                HIGH = repeatable operation failure, crash, or significant data loss;
+                CRITICAL = demonstrated security boundary compromise or widespread catastrophic data loss.
+                Do not assume a security exploit or catastrophic deployment context absent from the input.
+                For numerical bugs, distinguish unit mismatch from representation/rounding, and give one
+                concrete expected-versus-actual example derived from the supplied code. Use precise language
+                runtime semantics; a managed-language exception alone is not memory corruption.
+                """);
     }
 
     Map<String, Object> review(Source source, Model model) throws Exception {
@@ -102,7 +126,7 @@ final class ReviewEngine {
             }
             if (batch.size() > 4) warnings.add("Batch " + batches + ": extra full-file reads limited to four; all selected patches are included");
             try {
-                var generated = model.generate(SYSTEM, context(snapshot, data), SCHEMA);
+                var generated = model.generate(system, context(snapshot, data), SCHEMA);
                 inferenceMillis += generated.durationMillis();
                 promptTokens += generated.promptTokens();
                 outputTokens += generated.outputTokens();
@@ -138,7 +162,7 @@ final class ReviewEngine {
                 .allMatch(item -> Set.of("analyzed", "excluded").contains(item.status()));
         var report = new LinkedHashMap<String, Object>();
         report.put("reportVersion", "f2-v1");
-        report.put("promptVersion", PROMPT_VERSION);
+        report.put("promptVersion", promptVersion);
         report.put("schemaVersion", "findings-v1");
         report.put("platform", snapshot.platform());
         report.put("repository", snapshot.repository());
@@ -146,6 +170,8 @@ final class ReviewEngine {
         report.put("baseSha", snapshot.baseSha());
         report.put("headSha", snapshot.headSha());
         report.put("model", model.name());
+        report.put("qualityStatus", "requires-human-review");
+        report.put("validationScope", "schema, pinned added-line location, and matching evidence; reasoning is not automatically verified");
         report.put("status", !current ? "outdated" : complete ? "complete" : "partial");
         report.put("current", current);
         report.put("publicationEnabled", false);

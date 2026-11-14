@@ -52,6 +52,28 @@ class OllamaModelTest {
         assertThrows(java.net.http.HttpTimeoutException.class, () -> model.generate("policy", "data", ReviewEngine.SCHEMA));
     }
 
+    @Test void sendsExplicitReasoningAndOutputBudget() throws Exception {
+        var captured = new AtomicReference<Map<String, Object>>();
+        start(captured, 200, "stop");
+        var model = new OllamaModel(URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/"), "fake", 8192,
+                Duration.ofSeconds(2), true, 4096);
+        model.generate("policy", "data", ReviewEngine.SCHEMA);
+        assertEquals(true, captured.get().get("think"));
+        assertEquals(4096, Json.map(captured.get().get("options")).get("num_predict"));
+        assertThrows(IllegalArgumentException.class, () -> new OllamaModel(URI.create("http://localhost/"), "fake", 4096,
+                Duration.ofSeconds(2), true, 4096));
+    }
+
+    @Test void supportsNamedReasoningLevelsWithoutSilentlyParsingThemAsFalse() throws Exception {
+        var captured = new AtomicReference<Map<String, Object>>();
+        start(captured, 200, "stop");
+        var model = new OllamaModel(URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/"), "fake", 8192,
+                Duration.ofSeconds(2), OllamaModel.parseThinking("medium"), 4096);
+        model.generate("policy", "data", ReviewEngine.SCHEMA);
+        assertEquals("medium", captured.get().get("think"));
+        assertThrows(IllegalArgumentException.class, () -> OllamaModel.parseThinking("invalid"));
+    }
+
     private OllamaModel start(AtomicReference<Map<String, Object>> captured, int status, String reason) throws Exception {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/api/chat", exchange -> {

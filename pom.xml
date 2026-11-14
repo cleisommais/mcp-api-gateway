@@ -29,6 +29,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>10.1.61</version>
+        </dependency>
+        <dependency>
             <groupId>io.modelcontextprotocol.sdk</groupId>
             <artifactId>mcp</artifactId>
         </dependency>

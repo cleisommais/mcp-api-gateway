@@ -18,35 +18,50 @@ final class OllamaModel implements Model {
     private final String model;
     private final int context;
     private final Duration timeout;
+    private final Object thinking;
+    private final int outputTokens;
 
     OllamaModel(URI base, String model, int context, Duration timeout) {
+        this(base, model, context, timeout, false, 1536);
+    }
+
+    OllamaModel(URI base, String model, int context, Duration timeout, Object thinking, int outputTokens) {
         if (!List.of("http", "https").contains(base.getScheme()) || base.getHost() == null
                 || base.getUserInfo() != null || base.getQuery() != null || base.getFragment() != null) {
             throw new IllegalArgumentException("Expected an Ollama HTTP endpoint without credentials");
         }
         if (context < 4096 || context > 32768) throw new IllegalArgumentException("Context must be 4096..32768");
+        if (outputTokens < 128 || outputTokens > 4096 || outputTokens > context - 1000) throw new IllegalArgumentException("Invalid output budget");
+        if (!(thinking instanceof Boolean) && !(thinking instanceof String level && List.of("low", "medium", "high").contains(level))) {
+            throw new IllegalArgumentException("Thinking must be true, false, low, medium, or high");
+        }
         this.base = base;
         this.model = model;
         this.context = context;
         this.timeout = timeout;
+        this.thinking = thinking;
+        this.outputTokens = outputTokens;
     }
 
     Map<String, Object> metadata() throws Exception {
         var version = request("api/version", null);
         var show = request("api/show", Map.of("model", model));
+        Object supportedThinking = show.getOrDefault("thinking", Map.of());
+        if (thinking instanceof String && supportedThinking instanceof Map<?, ?> values && values.get("values") instanceof List<?> levels
+                && !levels.contains(thinking)) throw new IllegalArgumentException("The model does not support the selected reasoning level");
         var tags = request("api/tags", null);
         String digest = Json.list(tags.get("models")).stream().map(Json::map)
                 .filter(entry -> model.equals(entry.get("name"))).map(entry -> String.valueOf(entry.get("digest")))
                 .findFirst().orElse("unknown");
         return Map.of("runtime", version.get("version"), "model", model, "digest", digest,
-                "details", show.getOrDefault("details", Map.of()), "contextRequested", context,
-                "capabilities", show.getOrDefault("capabilities", List.of()));
+                "details", show.getOrDefault("details", Map.of()), "contextRequested", context, "thinking", thinking, "outputTokenBudget", outputTokens,
+                "capabilities", show.getOrDefault("capabilities", List.of()), "supportedThinking", supportedThinking);
     }
 
     @Override public Generation generate(String system, String input, Map<String, Object> schema) throws Exception {
-        var response = request("api/chat", Map.of("model", model, "stream", false, "think", false,
+        var response = request("api/chat", Map.of("model", model, "stream", false, "think", thinking,
                 "messages", List.of(Map.of("role", "system", "content", system), Map.of("role", "user", "content", input)),
-                "format", schema, "options", Map.of("temperature", 0, "num_ctx", context, "num_predict", 1536)));
+                "format", schema, "options", Map.of("temperature", 0, "num_ctx", context, "num_predict", outputTokens)));
         if (!Boolean.TRUE.equals(response.get("done")) || "length".equals(response.get("done_reason"))) {
             throw new IOException("Incomplete model generation");
         }
@@ -83,4 +98,13 @@ final class OllamaModel implements Model {
     }
 
     @Override public String name() { return model; }
+
+    static Object parseThinking(String value) {
+        return switch (value) {
+            case "true" -> true;
+            case "false" -> false;
+            case "low", "medium", "high" -> value;
+            default -> throw new IllegalArgumentException("Thinking must be true, false, low, medium, or high");
+        };
+    }
 }

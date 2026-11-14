@@ -41,6 +41,7 @@ These choices resolve Q01–Q03 and implement P01 only within F1. They do not ye
 | D18 | C | Update Ollama when needed and consider a newer/GPU-suitable model; existing runtime/models are not permanent constraints |
 | D19 | C | English is the project language for documentation, diagrams, code comments, tool descriptions, application messages, and future commit messages |
 | D20 | C, 2026-11-13 | Own Ollama and PostgreSQL in this repository's Docker Compose, with separate containers/volumes/network; install a GPU-suitable model and use the public `cleisommais/pr-test-repo` for code, commit, and PR exercises. Preserve other projects' infrastructure |
+| D21 | C, 2026-11-13 | Proceed with F3 while correcting the F2 quality gap: compare another/larger model when results are poor and investigate model versus prompt/agent causes; valid JSON is not sufficient evidence of successful scenarios |
 
 Hardware, version, and models were **confirmed by the user** in addition to earlier inspection evidence. The canonical record is [local-inference.md](local-inference.md); custom-model characteristics are not inferred from its name or automatically included in that confirmation.
 
@@ -55,7 +56,7 @@ Hardware, version, and models were **confirmed by the user** in addition to earl
 | P05 | P | GitHub first and GitHub App for automation | PAT/machine-user options need permission, lifecycle, and personal-dependency evaluation |
 | P06 | P | Model receives read tools; application publishes after validation | Model-controlled writes increase prompt injection impact and complicate idempotency |
 | P07 | P | Static MVP without shell, PR execution, merge, or automatic approval | Future execution requires sandboxing and a different risk design |
-| P08 | Implemented candidate in F2 | Start isolated inference with `qwen3.5:9b`, then compare another model in F6 if useful | Four examples support a POC starting point, not a general quality ranking |
+| P08 | Implemented/updated in F3 | F2 started with `qwen3.5:9b`; F3 investigated its failures with 14B Qwen, prompt/reasoning controls, then selected `gpt-oss:20b` at medium reasoning | Four captured cases and one selected-model live check support a POC default, not a general quality ranking; Devstral remains untested |
 | P09 | Implemented in F2; updated by D20 | Java uses `http://ollama:11434` on the project network; host port is loopback-only 11435 | No external network attachment or other-project dependency |
 | P10 | P | External fallback disabled by default, enabled explicitly by repository/policy | Automatic continuity can disclose code and incur unauthorized costs |
 | P11 | P | Separate tool rounds from the final JSON Schema response | Tools and schema in the same call need model/version-specific validation |
@@ -68,6 +69,8 @@ Hardware, version, and models were **confirmed by the user** in addition to earl
 API candidates, dated financial references, comparison, and teardown are centralized in [cloud-demo-and-portfolio.md](cloud-demo-and-portfolio.md). Provider, VPS SKU/region, and final limits remain **Q**.
 
 ## Consulted compatibility
+
+F3 adds embedded Tomcat 10.1.61 for the official SDK's Servlet-based Streamable HTTP transport. It keeps MCP SDK 2.1.0 and verifies protocol 2025-11-25 on both links. The local gateway accepts one generated worker credential, loads a read-only server/repository registration file, and pins the downstream version/tool schemas/descriptions independently of discovery. This is an explicit lab identity, not an OAuth broker or custom IdP. See the [F3 guide](f3-governed-gateway.md) and [model evaluation](f3-model-evaluation.md).
 
 F2 keeps Java 21/MCP SDK 2.1.0 and uses the JDK HTTP client for Ollama, without adding Spring solely for one API call. The narrow public-read MCP adapter avoids requiring a personal token to run the public fixtures; the official server and GitHub App remain candidates for F4. F2 pins Ollama 0.40.16 and PostgreSQL 17.6-alpine. [F2 results](f2-local-pr-review.md) record the tested model digest and limits.
 

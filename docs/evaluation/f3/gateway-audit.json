@@ -1,0 +1,62 @@
+[
+  {
+    "tool": "github.get_change_snapshot",
+    "sha": "4b2d0cd7e7d25e5d97d72bfd96cb11d3b46d12a8",
+    "principal": "poc-worker",
+    "at": "2026-11-14T01:01:32.959135379Z",
+    "decision": "allowed",
+    "server": "public-github",
+    "jobId": "62447c49-1583-4e90-bd9f-dbb368e63a01",
+    "durationMillis": 1859,
+    "reason": "validated",
+    "repository": "cleisommais/pr-test-repo"
+  },
+  {
+    "tool": "github.get_file_at_commit",
+    "sha": "4b2d0cd7e7d25e5d97d72bfd96cb11d3b46d12a8",
+    "principal": "poc-worker",
+    "at": "2026-11-14T01:01:33.146451997Z",
+    "decision": "allowed",
+    "server": "public-github",
+    "jobId": "62447c49-1583-4e90-bd9f-dbb368e63a01",
+    "durationMillis": 150,
+    "reason": "validated",
+    "repository": "cleisommais/pr-test-repo"
+  },
+  {
+    "tool": "github.get_file_at_commit",
+    "sha": "4b2d0cd7e7d25e5d97d72bfd96cb11d3b46d12a8",
+    "principal": "poc-worker",
+    "at": "2026-11-14T01:01:33.309223928Z",
+    "decision": "allowed",
+    "server": "public-github",
+    "jobId": "62447c49-1583-4e90-bd9f-dbb368e63a01",
+    "durationMillis": 155,
+    "reason": "validated",
+    "repository": "cleisommais/pr-test-repo"
+  },
+  {
+    "tool": "github.get_change_state",
+    "sha": "4b2d0cd7e7d25e5d97d72bfd96cb11d3b46d12a8",
+    "principal": "poc-worker",
+    "at": "2026-11-14T01:01:39.330888843Z",
+    "decision": "allowed",
+    "server": "public-github",
+    "jobId": "62447c49-1583-4e90-bd9f-dbb368e63a01",
+    "durationMillis": 87,
+    "reason": "validated",
+    "repository": "cleisommais/pr-test-repo"
+  },
+  {
+    "tool": "github.close_review",
+    "sha": "4b2d0cd7e7d25e5d97d72bfd96cb11d3b46d12a8",
+    "principal": "poc-worker",
+    "at": "2026-11-14T01:01:39.788865098Z",
+    "decision": "allowed",
+    "server": "public-github",
+    "jobId": "62447c49-1583-4e90-bd9f-dbb368e63a01",
+    "durationMillis": 437,
+    "reason": "validated",
+    "repository": "cleisommais/pr-test-repo"
+  }
+]

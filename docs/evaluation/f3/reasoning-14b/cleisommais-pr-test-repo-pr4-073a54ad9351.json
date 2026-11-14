@@ -1,0 +1,77 @@
+{
+  "reportVersion": "f2-v1",
+  "promptVersion": "f3-review-v1",
+  "schemaVersion": "findings-v1",
+  "platform": "github",
+  "repository": "cleisommais/pr-test-repo",
+  "number": 4,
+  "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+  "headSha": "073a54ad93513d1e38abd9eae077ea878f440fc7",
+  "model": "qwen3:14b",
+  "qualityStatus": "requires-human-review",
+  "validationScope": "schema, pinned added-line location, and matching evidence; reasoning is not automatically verified",
+  "status": "complete",
+  "current": true,
+  "publicationEnabled": false,
+  "enumerationComplete": true,
+  "expectedFiles": 1,
+  "enumeratedFiles": 1,
+  "coverage": [
+    {
+      "file": "src/demo/ArrayTotals.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    }
+  ],
+  "summaries": [
+    "The modified loop condition introduces a critical boundary error causing an out-of-bounds array access."
+  ],
+  "findings": [
+    {
+      "file": "src/demo/ArrayTotals.java",
+      "line": 9,
+      "severity": "CRITICAL",
+      "explanation": "The loop now iterates one time too many, accessing values[values.length] which is beyond the array's valid index range (0 to values.length-1). This will throw ArrayIndexOutOfBoundsException for any non-empty array.",
+      "evidence": "for (int i = 0; i <= values.length; i++) {"
+    }
+  ],
+  "rejectedFindings": [],
+  "warnings": [],
+  "errors": [],
+  "usage": {
+    "elapsedMillis": 17746,
+    "batches": 1,
+    "promptTokens": 730,
+    "outputTokens": 600,
+    "inferenceMillis": 15716
+  },
+  "inference": {
+    "outputTokenBudget": 4096,
+    "contextRequested": 8192,
+    "thinking": true,
+    "details": {
+      "parent_model": "",
+      "format": "gguf",
+      "family": "qwen3",
+      "families": [
+        "qwen3"
+      ],
+      "parameter_size": "14.8B",
+      "quantization_level": "Q4_K_M"
+    },
+    "digest": "bdbd181c33f2ed1b31c972991882db3cf4d192569092138a7d29e973cd9debe8",
+    "capabilities": [
+      "completion",
+      "tools",
+      "thinking"
+    ],
+    "runtime": "0.40.16",
+    "model": "qwen3:14b"
+  },
+  "retrieval": {
+    "jobId": "91625393-daad-4030-a7c9-c3b0b69b2ba1",
+    "protocol": "2025-11-25",
+    "mode": "gateway",
+    "server": "public-github"
+  }
+}

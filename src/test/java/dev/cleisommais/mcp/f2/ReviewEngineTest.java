@@ -90,6 +90,18 @@ class ReviewEngineTest {
         assertEquals(false, report.get("current"));
     }
 
+    @Test void reservesContextForReasoningAndExposesQualityAsUnverified() throws Exception {
+        var report = new ReviewEngine(8192, 4, "calibrated", 4096).review(
+                new FakeSource(List.of(file("Example.java", PATCH, true)), true), model((s, c) -> {
+                    assertTrue(s.contains("Severity must reflect demonstrated impact"));
+                    assertTrue(c.getBytes(java.nio.charset.StandardCharsets.UTF_8).length <= 3096);
+                    return "{\"summary\":\"OK\",\"findings\":[]}";
+                }));
+        assertEquals("f3-review-v1", report.get("promptVersion"));
+        assertEquals("requires-human-review", report.get("qualityStatus"));
+        assertThrows(IllegalArgumentException.class, () -> new ReviewEngine(4096, 4, "calibrated", 4096));
+    }
+
     private static Map<String, Object> candidate(String path, int line, String evidence) {
         return Map.of("file", path, "line", line, "severity", "HIGH", "explanation", "Concrete introduced failure", "evidence", evidence);
     }

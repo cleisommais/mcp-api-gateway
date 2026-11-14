@@ -1,0 +1,262 @@
+{
+  "reportVersion": "f2-v1",
+  "promptVersion": "f3-review-v1",
+  "schemaVersion": "findings-v1",
+  "platform": "github",
+  "repository": "cleisommais/pr-test-repo",
+  "number": 2,
+  "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+  "headSha": "85aa355614728b0d1eed356e19ff2de45c90532d",
+  "model": "qwen3:14b",
+  "qualityStatus": "requires-human-review",
+  "validationScope": "schema, pinned added-line location, and matching evidence; reasoning is not automatically verified",
+  "status": "complete",
+  "current": true,
+  "publicationEnabled": false,
+  "enumerationComplete": true,
+  "expectedFiles": 22,
+  "enumeratedFiles": 22,
+  "coverage": [
+    {
+      "file": "src/demo/ArrayTotals.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker01.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker02.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker03.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker04.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker05.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker06.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker07.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker08.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker09.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker10.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker11.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker12.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker13.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker14.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker15.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker16.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker17.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker18.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker19.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker20.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker21.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    }
+  ],
+  "summaries": [
+    "No correctness bugs found in the introduced code changes.",
+    "The added records do not enforce the 'positive-value' constraint mentioned in the PR title, allowing negative or zero values which contradicts the intended behavior.",
+    "No correctness bugs introduced by the change. The added records are syntactically correct and align with the PR's description of adding marker records with integer values. No constraints or validations are explicitly required by the change, and the code does not introduce logical errors, data corruption, or incorrect behavior based on the provided information."
+  ],
+  "findings": [
+    {
+      "file": "src/demo/markers/Marker09.java",
+      "line": 3,
+      "severity": "MEDIUM",
+      "explanation": "The record allows any int value (including negative or zero), but the PR title implies that only positive values should be permitted. This omission introduces a correctness bug where invalid values can be used in counting logic.",
+      "evidence": "public record Marker09(int value) {}"
+    },
+    {
+      "file": "src/demo/markers/Marker10.java",
+      "line": 3,
+      "severity": "MEDIUM",
+      "explanation": "Same issue as Marker09: no validation ensures the value is positive, allowing invalid data that violates the PR's stated purpose.",
+      "evidence": "public record Marker10(int value) {}"
+    },
+    {
+      "file": "src/demo/markers/Marker11.java",
+      "line": 3,
+      "severity": "MEDIUM",
+      "explanation": "Lacks validation for positive values, enabling incorrect usage that contradicts the PR's intent.",
+      "evidence": "public record Marker11(int value) {}"
+    },
+    {
+      "file": "src/demo/markers/Marker12.java",
+      "line": 3,
+      "severity": "MEDIUM",
+      "explanation": "No positive-value enforcement, allowing invalid data that would break counting logic relying on this constraint.",
+      "evidence": "public record Marker12(int value) {}"
+    },
+    {
+      "file": "src/demo/markers/Marker13.java",
+      "line": 3,
+      "severity": "MEDIUM",
+      "explanation": "Missing validation for positive values, which is required by the PR's stated purpose but not implemented in the code.",
+      "evidence": "public record Marker13(int value) {}"
+    },
+    {
+      "file": "src/demo/markers/Marker14.java",
+      "line": 3,
+      "severity": "MEDIUM",
+      "explanation": "The record allows non-positive values, violating the PR's requirement for positive-value counting.",
+      "evidence": "public record Marker14(int value) {}"
+    },
+    {
+      "file": "src/demo/markers/Marker15.java",
+      "line": 3,
+      "severity": "MEDIUM",
+      "explanation": "No validation ensures the value is positive, allowing incorrect data that would break the intended usage.",
+      "evidence": "public record Marker15(int value) {}"
+    },
+    {
+      "file": "src/demo/markers/Marker16.java",
+      "line": 3,
+      "severity": "MEDIUM",
+      "explanation": "Lacks positive-value enforcement, enabling invalid data that contradicts the PR's stated purpose.",
+      "evidence": "public record Marker16(int value) {}"
+    },
+    {
+      "file": "src/demo/markers/Marker17.java",
+      "line": 3,
+      "severity": "MEDIUM",
+      "explanation": "No validation for positive values, allowing incorrect usage that would break counting logic relying on this constraint.",
+      "evidence": "public record Marker17(int value) {}"
+    },
+    {
+      "file": "src/demo/markers/Marker18.java",
+      "line": 3,
+      "severity": "MEDIUM",
+      "explanation": "Missing validation for positive values, which is required by the PR's stated purpose but not implemented in the code.",
+      "evidence": "public record Marker18(int value) {}"
+    },
+    {
+      "file": "src/demo/markers/Marker19.java",
+      "line": 3,
+      "severity": "MEDIUM",
+      "explanation": "The record allows non-positive values, violating the PR's requirement for positive-value counting.",
+      "evidence": "public record Marker19(int value) {}"
+    }
+  ],
+  "rejectedFindings": [],
+  "warnings": [
+    "src/demo/ArrayTotals.java: full-file context omitted to preserve the patch budget",
+    "src/demo/markers/Marker03.java: full-file context omitted to preserve the patch budget",
+    "Batch 1: extra full-file reads limited to four; all selected patches are included",
+    "src/demo/markers/Marker10.java: full-file context omitted to preserve the patch budget",
+    "src/demo/markers/Marker11.java: full-file context omitted to preserve the patch budget",
+    "src/demo/markers/Marker12.java: full-file context omitted to preserve the patch budget",
+    "Batch 2: extra full-file reads limited to four; all selected patches are included"
+  ],
+  "errors": [],
+  "usage": {
+    "batches": 3,
+    "promptTokens": 3236,
+    "outputTokens": 3036,
+    "inferenceMillis": 79409,
+    "elapsedMillis": 84274
+  },
+  "inference": {
+    "capabilities": [
+      "completion",
+      "tools",
+      "thinking"
+    ],
+    "runtime": "0.40.16",
+    "model": "qwen3:14b",
+    "outputTokenBudget": 4096,
+    "contextRequested": 8192,
+    "thinking": true,
+    "details": {
+      "parent_model": "",
+      "format": "gguf",
+      "family": "qwen3",
+      "families": [
+        "qwen3"
+      ],
+      "parameter_size": "14.8B",
+      "quantization_level": "Q4_K_M"
+    },
+    "digest": "bdbd181c33f2ed1b31c972991882db3cf4d192569092138a7d29e973cd9debe8"
+  },
+  "retrieval": {
+    "mode": "gateway",
+    "server": "public-github",
+    "jobId": "1394ba7d-5c1f-4ba0-b6a8-df5a6b8df434",
+    "protocol": "2025-11-25"
+  }
+}

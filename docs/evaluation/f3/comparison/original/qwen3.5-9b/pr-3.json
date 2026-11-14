@@ -1,0 +1,80 @@
+{
+  "reportVersion": "f2-v1",
+  "promptVersion": "f2-review-v2",
+  "schemaVersion": "findings-v1",
+  "platform": "github",
+  "repository": "cleisommais/pr-test-repo",
+  "number": 3,
+  "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+  "headSha": "4b2d0cd7e7d25e5d97d72bfd96cb11d3b46d12a8",
+  "model": "qwen3.5:9b",
+  "status": "complete",
+  "current": true,
+  "publicationEnabled": false,
+  "enumerationComplete": true,
+  "expectedFiles": 2,
+  "enumeratedFiles": 2,
+  "coverage": [
+    {
+      "file": "src/demo/Checkout.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/PriceCatalog.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    }
+  ],
+  "summaries": [
+    "The change introduces a correctness bug by casting the result of a floating-point multiplication to an integer, causing precision loss and incorrect calculations when the quantity is greater than 1."
+  ],
+  "findings": [
+    {
+      "file": "src/demo/Checkout.java",
+      "line": 10,
+      "severity": "CRITICAL",
+      "explanation": "The method `unitPrice()` now returns a `double` (12.50). The calculation `PriceCatalog.unitPrice() * quantity` results in a floating-point value. Casting this result to `(int)` truncates the decimal part, leading to incorrect total prices for any quantity greater than 1 (e.g., 2 items would cost 24 cents instead of 250 cents).",
+      "evidence": "        return (int) (PriceCatalog.unitPrice() * quantity);"
+    }
+  ],
+  "rejectedFindings": [],
+  "warnings": [],
+  "errors": [],
+  "usage": {
+    "elapsedMillis": 13820,
+    "inferenceMillis": 9175,
+    "outputTokens": 202,
+    "promptTokens": 712,
+    "batches": 1
+  },
+  "inference": {
+    "details": {
+      "parent_model": "model.gguf",
+      "format": "gguf",
+      "family": "qwen35",
+      "families": [
+        "qwen35"
+      ],
+      "parameter_size": "9.0B",
+      "quantization_level": "Q4_K_M",
+      "runner": "llamacpp"
+    },
+    "runtime": "0.40.16",
+    "contextRequested": 8192,
+    "model": "qwen3.5:9b",
+    "digest": "56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90",
+    "capabilities": [
+      "completion",
+      "vision",
+      "tools",
+      "thinking"
+    ]
+  },
+  "evaluationOnly": true,
+  "snapshotCapturedAt": "2026-11-14T00:37:53.148639744Z",
+  "inputHashes": [
+    "370770321401be6267897fb0fc80f087edb777af7a51cb977952c8b4b7cc7b0f"
+  ],
+  "comparisonControl": "Same frozen snapshot, supplemental context, prompt, schema, options and validation; model changes within profile"
+}

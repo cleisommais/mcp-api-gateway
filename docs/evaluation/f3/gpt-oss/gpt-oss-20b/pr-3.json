@@ -1,0 +1,94 @@
+{
+  "reportVersion": "f2-v1",
+  "promptVersion": "f3-review-v1",
+  "schemaVersion": "findings-v1",
+  "platform": "github",
+  "repository": "cleisommais/pr-test-repo",
+  "number": 3,
+  "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+  "headSha": "4b2d0cd7e7d25e5d97d72bfd96cb11d3b46d12a8",
+  "model": "gpt-oss:20b",
+  "qualityStatus": "requires-human-review",
+  "validationScope": "schema, pinned added-line location, and matching evidence; reasoning is not automatically verified",
+  "status": "outdated",
+  "current": false,
+  "publicationEnabled": false,
+  "enumerationComplete": true,
+  "expectedFiles": 2,
+  "enumeratedFiles": 2,
+  "coverage": [
+    {
+      "file": "src/demo/Checkout.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/PriceCatalog.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    }
+  ],
+  "summaries": [
+    "The refactor replaces an integer price in cents with a double price in dollars and casts the result to an int, causing incorrect total calculations."
+  ],
+  "findings": [
+    {
+      "file": "src/demo/Checkout.java",
+      "line": 10,
+      "severity": "MEDIUM",
+      "explanation": "Checkout.totalInCents now multiplies a dollar amount (12.50) by the quantity and casts the result to int. For quantity 1 this yields 12 instead of the expected 1250 cents, and for quantity 2 it yields 25 instead of 2500. The cast truncates the decimal part and the scale is wrong, leading to severely incorrect totals.",
+      "evidence": "return (int) (PriceCatalog.unitPrice() * quantity);"
+    }
+  ],
+  "rejectedFindings": [],
+  "warnings": [],
+  "errors": [],
+  "usage": {
+    "batches": 1,
+    "promptTokens": 855,
+    "outputTokens": 469,
+    "inferenceMillis": 5826,
+    "elapsedMillis": 5829
+  },
+  "inference": {
+    "digest": "f38aa0c53da5f8c49d08c43a99df24ff53167fe68e24664a7777288e7656fdfe",
+    "supportedThinking": {
+      "values": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "contextRequested": 8192,
+    "outputTokenBudget": 4096,
+    "runtime": "0.40.16",
+    "details": {
+      "parent_model": "dhiltgen/gpt-oss:20b-llamacpp",
+      "format": "gguf",
+      "family": "gpt-oss",
+      "families": [
+        "gpt-oss"
+      ],
+      "parameter_size": "20.9B",
+      "quantization_level": "MXFP4",
+      "runner": "llamacpp"
+    },
+    "capabilities": [
+      "completion",
+      "tools",
+      "thinking"
+    ],
+    "model": "gpt-oss:20b",
+    "thinking": "medium"
+  },
+  "evaluationOnly": true,
+  "retrieval": "offline-captured-fixture; current PR state not rechecked",
+  "snapshotCapturedAt": "2026-11-14T00:37:53.148639744Z",
+  "inputHashes": [
+    "86d1e7043739649c53715c1052c8c87becfbfa3ebb8c470c0011a43527e97fec"
+  ],
+  "comparisonControl": "Same frozen snapshot, supplemental context, prompt, schema, options and validation; model changes within profile",
+  "evaluationStartedAt": "2026-11-14T00:58:53.174802266Z",
+  "artifactNote": "Export corrected the capture-time metadata from the original fixture; model output is unchanged."
+}

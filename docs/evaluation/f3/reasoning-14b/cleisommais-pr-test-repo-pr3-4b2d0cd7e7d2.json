@@ -1,0 +1,82 @@
+{
+  "reportVersion": "f2-v1",
+  "promptVersion": "f3-review-v1",
+  "schemaVersion": "findings-v1",
+  "platform": "github",
+  "repository": "cleisommais/pr-test-repo",
+  "number": 3,
+  "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+  "headSha": "4b2d0cd7e7d25e5d97d72bfd96cb11d3b46d12a8",
+  "model": "qwen3:14b",
+  "qualityStatus": "requires-human-review",
+  "validationScope": "schema, pinned added-line location, and matching evidence; reasoning is not automatically verified",
+  "status": "complete",
+  "current": true,
+  "publicationEnabled": false,
+  "enumerationComplete": true,
+  "expectedFiles": 2,
+  "enumeratedFiles": 2,
+  "coverage": [
+    {
+      "file": "src/demo/Checkout.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/PriceCatalog.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    }
+  ],
+  "summaries": [
+    "The change introduces a correctness bug in the calculation of total price in cents due to incorrect unit conversion."
+  ],
+  "findings": [
+    {
+      "file": "src/demo/Checkout.java",
+      "line": 10,
+      "severity": "CRITICAL",
+      "explanation": "The method 'unitPrice()' now returns a price in dollars (12.50) instead of cents. Multiplying this by quantity and casting to int produces a value in dollars, not cents. For example, quantity=1 would return 12 (int) instead of 1250 cents, causing a 100x error in the total.",
+      "evidence": "return (int) (PriceCatalog.unitPrice() * quantity);"
+    }
+  ],
+  "rejectedFindings": [],
+  "warnings": [],
+  "errors": [],
+  "usage": {
+    "elapsedMillis": 33148,
+    "inferenceMillis": 30624,
+    "outputTokens": 1172,
+    "promptTokens": 822,
+    "batches": 1
+  },
+  "inference": {
+    "outputTokenBudget": 4096,
+    "model": "qwen3:14b",
+    "runtime": "0.40.16",
+    "capabilities": [
+      "completion",
+      "tools",
+      "thinking"
+    ],
+    "digest": "bdbd181c33f2ed1b31c972991882db3cf4d192569092138a7d29e973cd9debe8",
+    "details": {
+      "parent_model": "",
+      "format": "gguf",
+      "family": "qwen3",
+      "families": [
+        "qwen3"
+      ],
+      "parameter_size": "14.8B",
+      "quantization_level": "Q4_K_M"
+    },
+    "thinking": true,
+    "contextRequested": 8192
+  },
+  "retrieval": {
+    "server": "public-github",
+    "mode": "gateway",
+    "protocol": "2025-11-25",
+    "jobId": "2a49902b-231c-40ac-b5d7-a699c302cf5b"
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "reportVersion": "f2-v1",
+  "promptVersion": "f3-review-v1",
+  "schemaVersion": "findings-v1",
+  "platform": "github",
+  "repository": "cleisommais/pr-test-repo",
+  "number": 4,
+  "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+  "headSha": "073a54ad93513d1e38abd9eae077ea878f440fc7",
+  "model": "gpt-oss:20b",
+  "qualityStatus": "requires-human-review",
+  "validationScope": "schema, pinned added-line location, and matching evidence; reasoning is not automatically verified",
+  "status": "outdated",
+  "current": false,
+  "publicationEnabled": false,
+  "enumerationComplete": true,
+  "expectedFiles": 1,
+  "enumeratedFiles": 1,
+  "coverage": [
+    {
+      "file": "src/demo/ArrayTotals.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    }
+  ],
+  "summaries": [
+    "This PR introduces a runtime error in ArrayTotals.sum due to an off‑by‑one loop boundary."
+  ],
+  "findings": [
+    {
+      "file": "src/demo/ArrayTotals.java",
+      "line": 9,
+      "severity": "HIGH",
+      "explanation": "The loop condition uses <= values.length, causing an ArrayIndexOutOfBoundsException when i equals values.length. This results in a runtime crash for any non‑empty array.",
+      "evidence": "        for (int i = 0; i <= values.length; i++) {"
+    }
+  ],
+  "rejectedFindings": [],
+  "warnings": [],
+  "errors": [],
+  "usage": {
+    "batches": 1,
+    "promptTokens": 757,
+    "outputTokens": 801,
+    "inferenceMillis": 9904,
+    "elapsedMillis": 9906
+  },
+  "inference": {
+    "digest": "f38aa0c53da5f8c49d08c43a99df24ff53167fe68e24664a7777288e7656fdfe",
+    "supportedThinking": {
+      "values": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "contextRequested": 8192,
+    "outputTokenBudget": 4096,
+    "runtime": "0.40.16",
+    "details": {
+      "parent_model": "dhiltgen/gpt-oss:20b-llamacpp",
+      "format": "gguf",
+      "family": "gpt-oss",
+      "families": [
+        "gpt-oss"
+      ],
+      "parameter_size": "20.9B",
+      "quantization_level": "MXFP4",
+      "runner": "llamacpp"
+    },
+    "capabilities": [
+      "completion",
+      "tools",
+      "thinking"
+    ],
+    "model": "gpt-oss:20b",
+    "thinking": "medium"
+  },
+  "evaluationOnly": true,
+  "retrieval": "offline-captured-fixture; current PR state not rechecked",
+  "snapshotCapturedAt": "2026-11-14T00:38:40.256321829Z",
+  "inputHashes": [
+    "c3f27fd4c103ff9dd13eff1a8d40dabb142e862dfea2de425a38db5aed7b03f2"
+  ],
+  "comparisonControl": "Same frozen snapshot, supplemental context, prompt, schema, options and validation; model changes within profile",
+  "evaluationStartedAt": "2026-11-14T00:58:59.031732293Z",
+  "artifactNote": "Export corrected the capture-time metadata from the original fixture; model output is unchanged."
+}

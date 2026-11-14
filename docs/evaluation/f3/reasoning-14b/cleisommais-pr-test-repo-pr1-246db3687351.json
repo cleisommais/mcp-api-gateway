@@ -1,0 +1,77 @@
+{
+  "reportVersion": "f2-v1",
+  "promptVersion": "f3-review-v1",
+  "schemaVersion": "findings-v1",
+  "platform": "github",
+  "repository": "cleisommais/pr-test-repo",
+  "number": 1,
+  "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+  "headSha": "246db3687351ff225f81f5a78e7b3bc2f561c293",
+  "model": "qwen3:14b",
+  "qualityStatus": "requires-human-review",
+  "validationScope": "schema, pinned added-line location, and matching evidence; reasoning is not automatically verified",
+  "status": "complete",
+  "current": true,
+  "publicationEnabled": false,
+  "enumerationComplete": true,
+  "expectedFiles": 1,
+  "enumeratedFiles": 1,
+  "coverage": [
+    {
+      "file": "src/demo/ArrayTotals.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    }
+  ],
+  "summaries": [
+    "The loop condition in the sum method has been incorrectly modified to include an out-of-bounds index, leading to an ArrayIndexOutOfBoundsException."
+  ],
+  "findings": [
+    {
+      "file": "src/demo/ArrayTotals.java",
+      "line": 8,
+      "severity": "HIGH",
+      "explanation": "The loop now iterates one step beyond the valid indices of the array (0 to values.length - 1). Accessing values[values.length] will throw an ArrayIndexOutOfBoundsException, causing the method to crash during execution.",
+      "evidence": "        for (int i = 0; i <= values.length; i++) {"
+    }
+  ],
+  "rejectedFindings": [],
+  "warnings": [],
+  "errors": [],
+  "usage": {
+    "inferenceMillis": 12872,
+    "outputTokens": 488,
+    "promptTokens": 669,
+    "batches": 1,
+    "elapsedMillis": 15364
+  },
+  "inference": {
+    "model": "qwen3:14b",
+    "runtime": "0.40.16",
+    "capabilities": [
+      "completion",
+      "tools",
+      "thinking"
+    ],
+    "digest": "bdbd181c33f2ed1b31c972991882db3cf4d192569092138a7d29e973cd9debe8",
+    "details": {
+      "parent_model": "",
+      "format": "gguf",
+      "family": "qwen3",
+      "families": [
+        "qwen3"
+      ],
+      "parameter_size": "14.8B",
+      "quantization_level": "Q4_K_M"
+    },
+    "thinking": true,
+    "contextRequested": 8192,
+    "outputTokenBudget": 4096
+  },
+  "retrieval": {
+    "server": "public-github",
+    "mode": "gateway",
+    "protocol": "2025-11-25",
+    "jobId": "ccb50647-3fd4-45e8-9cd7-9c3aca6e86cc"
+  }
+}

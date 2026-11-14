@@ -1,0 +1,199 @@
+{
+  "reportVersion": "f2-v1",
+  "promptVersion": "f3-review-v1",
+  "schemaVersion": "findings-v1",
+  "platform": "github",
+  "repository": "cleisommais/pr-test-repo",
+  "number": 2,
+  "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+  "headSha": "85aa355614728b0d1eed356e19ff2de45c90532d",
+  "model": "gpt-oss:20b",
+  "qualityStatus": "requires-human-review",
+  "validationScope": "schema, pinned added-line location, and matching evidence; reasoning is not automatically verified",
+  "status": "outdated",
+  "current": false,
+  "publicationEnabled": false,
+  "enumerationComplete": true,
+  "expectedFiles": 22,
+  "enumeratedFiles": 22,
+  "coverage": [
+    {
+      "file": "src/demo/ArrayTotals.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker01.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker02.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker03.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker04.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker05.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker06.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker07.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker08.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker09.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker10.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker11.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker12.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker13.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker14.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker15.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker16.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker17.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker18.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker19.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker20.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    },
+    {
+      "file": "src/demo/markers/Marker21.java",
+      "status": "analyzed",
+      "reason": "Complete patch supplied; output validated"
+    }
+  ],
+  "summaries": [
+    "No correctness bugs detected in the supplied changes.",
+    "No correctness bugs detected in the added files.",
+    "No correctness bugs detected in the added files."
+  ],
+  "findings": [],
+  "rejectedFindings": [],
+  "warnings": [
+    "src/demo/ArrayTotals.java: full-file context omitted to preserve the patch budget",
+    "src/demo/markers/Marker03.java: full-file context omitted to preserve the patch budget",
+    "Batch 1: extra full-file reads limited to four; all selected patches are included",
+    "src/demo/markers/Marker09.java: extra context unavailable; review uses the patch only",
+    "src/demo/markers/Marker10.java: extra context unavailable; review uses the patch only",
+    "src/demo/markers/Marker11.java: extra context unavailable; review uses the patch only",
+    "src/demo/markers/Marker12.java: extra context unavailable; review uses the patch only",
+    "Batch 2: extra full-file reads limited to four; all selected patches are included"
+  ],
+  "errors": [],
+  "usage": {
+    "batches": 3,
+    "promptTokens": 3241,
+    "outputTokens": 1411,
+    "inferenceMillis": 17693,
+    "elapsedMillis": 17715
+  },
+  "inference": {
+    "digest": "f38aa0c53da5f8c49d08c43a99df24ff53167fe68e24664a7777288e7656fdfe",
+    "supportedThinking": {
+      "values": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "contextRequested": 8192,
+    "outputTokenBudget": 4096,
+    "runtime": "0.40.16",
+    "details": {
+      "parent_model": "dhiltgen/gpt-oss:20b-llamacpp",
+      "format": "gguf",
+      "family": "gpt-oss",
+      "families": [
+        "gpt-oss"
+      ],
+      "parameter_size": "20.9B",
+      "quantization_level": "MXFP4",
+      "runner": "llamacpp"
+    },
+    "capabilities": [
+      "completion",
+      "tools",
+      "thinking"
+    ],
+    "model": "gpt-oss:20b",
+    "thinking": "medium"
+  },
+  "evaluationOnly": true,
+  "retrieval": "offline-captured-fixture; current PR state not rechecked",
+  "snapshotCapturedAt": "2026-11-14T00:37:20.520603638Z",
+  "inputHashes": [
+    "a516a0251aef4e8f32f4b28d282c7ad83351e74b1d03fa5f51388d37a7eca9bf",
+    "331884247050cfe2a401c9d7312db36d0bb6c67199298151e99a041088cdec38",
+    "2b0250d6c9b36d7860d110dabd4bdc25328add489cff594d31cd811e2956aae3"
+  ],
+  "comparisonControl": "Same frozen snapshot, supplemental context, prompt, schema, options and validation; model changes within profile",
+  "evaluationStartedAt": "2026-11-14T00:58:35.429085159Z",
+  "artifactNote": "Export corrected the capture-time metadata from the original fixture; model output is unchanged."
+}

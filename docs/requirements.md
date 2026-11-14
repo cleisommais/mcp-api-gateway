@@ -2,7 +2,7 @@
 
 [Index](../README.md) · [Phases F1–F8](../PLAN.md) · [C/P/Q/F classification](decisions.md).
 
-Criteria describe planned checks, not evidence that every capability is delivered. **C** identifies explicitly requested scope; proposed implementation choices are marked **P** in the criterion. **F** denotes future work. Phase indicates first delivery and later hardening where needed. Implemented subsets and verified results are documented in the [F1 guide](f1-mcp-stdio.md) and [F2 guide](f2-local-pr-review.md); later-phase requirements remain planned. Existing RF/RNF identifiers are retained for traceability.
+Criteria describe planned checks, not evidence that every capability is delivered. **C** identifies explicitly requested scope; proposed implementation choices are marked **P** in the criterion. **F** denotes future work. Phase indicates first delivery and later hardening where needed. Implemented subsets and verified results are documented in the [F1 guide](f1-mcp-stdio.md), [F2 guide](f2-local-pr-review.md), and [F3 guide](f3-governed-gateway.md). Review quality is assessed separately in the [model evaluation](f3-model-evaluation.md); later-phase requirements remain planned. Existing RF/RNF identifiers are retained for traceability.
 
 ## Functional requirements
 
@@ -58,7 +58,7 @@ Existing identifiers are preserved, but criteria are sized for **learning and de
 | RNF11 | Budget and cost | C; limits Q | F2/F6/F8 | Count all attempts, resent context, extra calls, cache, and billed reasoning without double counting; separate local cost, gross cloud cost, credits, and cash spending; stop with a partial indication on token/call/cost limits |
 | RNF12 | Reproducible configuration | C | F1/F4 | Record dependencies, images, protocol, model, and parameters with instructions and secret placeholders so another person can repeat the example |
 | RNF13 | Used MCP compatibility | C | F1/F3/F5 | Demonstrate discovery, call, and error for the chosen profile, including authorization with the gateway; no certification or all-version matrix required |
-| RNF14 | Quality on known examples | C | F2/F6/F7 | Evaluate four initial cases and record valid findings, false positives, and failures; no minimum precision/recall or statistical approval gate |
+| RNF14 | Quality on known examples | C | F2/F3/F6/F7 | Evaluate four initial cases and record diagnosis, severity, concrete examples, false positives/negatives, and failures separately from mechanical validation. If quality fails, compare another model with identical input, then vary prompt/reasoning settings to investigate causes; no statistical approval gate |
 | RNF15 | Local GPU use | C | F2/F7 | Observe GPU/VRAM and time during a short call with the chosen model/context; reduce context or change model if memory is insufficient, without continuous capacity testing |
 | RNF16 | Bounded inference queue | C; policy P | F2/F7 | Bound application concurrency and `Q_max`; a busy service does not create an infinite queue; jobs remain observable; one initial inference call is P and does not limit global jobs |
 | RNF17 | Local endpoint protection | C | F2/F3 | Use only approved application destinations; check network/firewall reachability and no planned public exposure; add authentication/proxy if necessary without inventing native protection |

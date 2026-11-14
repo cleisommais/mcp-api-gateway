@@ -17,18 +17,27 @@ import java.util.stream.Collectors;
 
 import static dev.cleisommais.mcp.f2.ReviewData.*;
 
-final class McpReviewSource implements Source {
+public final class McpReviewSource implements Source {
     private final McpSyncClient client;
+    private final McpSchema.InitializeResult initialized;
 
-    McpReviewSource(String repository, int number) {
+    public McpReviewSource(String repository, int number) {
         String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
         var parameters = ServerParameters.builder(java).args("-Dorg.slf4j.simpleLogger.defaultLogLevel=off",
-                "-cp", System.getProperty("java.class.path"), GitHubMcpServer.class.getName(),
+                "-cp", System.getProperty("surefire.test.class.path", System.getProperty("java.class.path")), GitHubMcpServer.class.getName(),
                 repository, Integer.toString(number)).build();
-        client = McpClient.sync(new StdioClientTransport(parameters, McpJsonDefaults.getMapper()))
+        var transport = new StdioClientTransport(parameters, McpJsonDefaults.getMapper()) {
+            @Override protected ProcessBuilder getProcessBuilder() {
+                var builder = super.getProcessBuilder();
+                // ServerParameters restores only the SDK's small platform environment allowlist.
+                builder.environment().clear();
+                return builder;
+            }
+        };
+        client = McpClient.sync(transport)
                 .initializationTimeout(Duration.ofSeconds(15)).requestTimeout(Duration.ofMinutes(3)).build();
         try {
-            client.initialize();
+            initialized = client.initialize();
             var names = client.listTools().tools().stream().map(McpSchema.Tool::name).collect(Collectors.toSet());
             if (!names.equals(Set.of("get_change_snapshot", "get_file_at_commit", "get_change_state"))) {
                 throw new IllegalStateException("Unexpected MCP catalog");
@@ -38,6 +47,9 @@ final class McpReviewSource implements Source {
             throw error;
         }
     }
+
+    public McpSchema.InitializeResult initialized() { return initialized; }
+    public java.util.List<McpSchema.Tool> catalog() { return client.listTools().tools(); }
 
     @Override public Snapshot snapshot() throws Exception {
         return Json.read(Json.write(call("get_change_snapshot", Map.of())), new TypeRef<>() {});

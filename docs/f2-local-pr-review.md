@@ -102,11 +102,13 @@ Reports are `reports/<owner>-<repo>-pr<number>-<head-prefix>.json`. They include
 
 ## Observed results
 
+**Correction after review of this delivery:** the results below established transport, coverage, and output-validation behavior, not successful review quality across all scenarios. Severity was wrong and the price diagnosis was incomplete. Calling the phase's scenarios successful without comparing another model was premature. The [F3 evaluation](f3-model-evaluation.md) now separates these judgments, compares a larger model on identical captured input, and checks reasoning settings directly against Ollama. Existing F2 JSON evidence is preserved unchanged.
+
 The test repository's original README was preserved. Baseline commit [`9a33851`](https://github.com/cleisommais/pr-test-repo/commit/9a33851d0401f29d79fd1042cfc973a89f87f805) added three small Java classes. Four branches then changed that baseline through commits and open PRs. Expected answers are documented here, outside the model's input.
 
 Runtime: Ollama **0.40.16**, `qwen3.5:9b`, Q4_K_M, digest `56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90`, `num_ctx=8192`, temperature 0, thinking false. `ollama ps` reported **100% GPU**, context 8192, and a 5.9 GB model entry. A separate observation showed 8,305 MiB total GPU usage. The native tool probe returned the requested tool name and exact path argument. No external inference API was called.
 
-Final run uses prompt **`f2-review-v2`**, schema **`findings-v1`**. Every report was current, complete, and had zero rejected findings. Durations are single warm observations, not benchmarks; they exclude container startup.
+The historical run uses prompt **`f2-review-v2`**, schema **`findings-v1`**. Every report was current, mechanically complete, and had zero rejected findings. This did not establish that the explanations/severities were correct. Durations are single warm observations, not benchmarks; they exclude container startup.
 
 | Case | Expected behavior | Observed result | Files / batches | Elapsed / inference | Input / output tokens | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -123,6 +125,6 @@ Quality limits: the model marked all three findings CRITICAL, which overstates t
 
 The Docker build runs **25 tests**: F1's seven real stdio integration cases, seven orchestration/evidence/coverage cases, seven GitHub HTTP-adapter cases, and four Ollama HTTP-adapter cases. They exercise 101-file pagination, repeated pages, rate-limit failure, truncated patches, immutable SHA/fork reads, path traversal, decoded content limits, new-commit invalidation, invalid schema/locations/evidence/severity, large-context limits, HTTP timeout, truncated generation, and unavailable-model behavior. Test stubs do not contact GitHub or Ollama. The four live PR runs separately exercise real MCP subprocesses, public API reads, and local GPU inference.
 
-The next increment is **F3: insert the governed MCP Gateway** while retaining the model API as a separate path. F4 adds webhook ingress, durable PostgreSQL jobs, a worker, GitHub App authentication, and validated publication. No production availability, corporate policy, or extra infrastructure is required to complete this exercise.
+F3 adds the [governed MCP Gateway](f3-governed-gateway.md) while retaining the model API as a separate path, plus the missing [model/prompt evaluation](f3-model-evaluation.md). F4 adds webhook ingress, durable PostgreSQL jobs, a worker, GitHub App authentication, and validated publication. No production availability, corporate policy, or extra infrastructure is required to complete this exercise.
 
 Protocol/API references: [MCP SDK](https://java.sdk.modelcontextprotocol.io/latest/), [GitHub PR files](https://docs.github.com/en/rest/pulls/pulls#list-pull-requests-files), [Ollama chat](https://docs.ollama.com/api/chat), [structured output](https://docs.ollama.com/capabilities/structured-outputs), [tool calling](https://docs.ollama.com/capabilities/tool-calling).

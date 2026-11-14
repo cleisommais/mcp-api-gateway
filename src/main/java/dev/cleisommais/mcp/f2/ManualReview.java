@@ -11,8 +11,9 @@ public final class ManualReview {
     public static void main(String[] args) {
         try {
             var model = new OllamaModel(URI.create(env("OLLAMA_BASE_URL", "http://localhost:11435/")),
-                    env("OLLAMA_MODEL", "qwen3.5:9b"), Integer.parseInt(env("OLLAMA_CONTEXT_LENGTH", "8192")),
-                    Duration.ofSeconds(Integer.parseInt(env("REVIEW_TIMEOUT_SECONDS", "180"))));
+                    env("OLLAMA_MODEL", "gpt-oss:20b"), Integer.parseInt(env("OLLAMA_CONTEXT_LENGTH", "8192")),
+                    Duration.ofSeconds(Integer.parseInt(env("REVIEW_TIMEOUT_SECONDS", "180"))),
+                    OllamaModel.parseThinking(env("OLLAMA_THINK", "medium")), Integer.parseInt(env("REVIEW_OUTPUT_TOKENS", "4096")));
             if (args.length == 1 && "--probe-tools".equals(args[0])) {
                 System.out.println(Json.write(model.metadata()));
                 boolean valid = model.probeTools();
@@ -24,10 +25,12 @@ public final class ManualReview {
                 throw new IllegalArgumentException("Usage: github owner/repository PR_NUMBER | --probe-tools");
             }
             var metadata = model.metadata();
-            try (var source = new McpReviewSource(args[1], Integer.parseInt(args[2]))) {
+            try (var source = source(args[1], Integer.parseInt(args[2]))) {
                 var report = new ReviewEngine(Integer.parseInt(env("OLLAMA_CONTEXT_LENGTH", "8192")),
-                        Integer.parseInt(env("REVIEW_MAX_BATCHES", "4"))).review(source, model);
+                        Integer.parseInt(env("REVIEW_MAX_BATCHES", "4")), env("REVIEW_PROMPT_PROFILE", "calibrated"),
+                        Integer.parseInt(env("REVIEW_OUTPUT_TOKENS", "4096"))).review(source, model);
                 report.put("inference", metadata);
+                report.put("retrieval", source instanceof GatewayReviewSource gateway ? gateway.trace() : java.util.Map.of("mode", "direct-stdio"));
                 var directory = Path.of(env("REPORT_DIR", Files.isDirectory(Path.of("/reports")) ? "/reports" : "reports"));
                 Files.createDirectories(directory);
                 String name = args[1].replace('/', '-') + "-pr" + args[2] + "-" + report.get("headSha").toString().substring(0, 12) + ".json";
@@ -41,6 +44,15 @@ public final class ManualReview {
             System.err.println("Review failed: " + error.getClass().getSimpleName() + ": " + error.getMessage());
             System.exit(1);
         }
+    }
+
+    static ReviewData.Source source(String repository, int number) {
+        return switch (env("MCP_SOURCE", "gateway")) {
+            case "gateway" -> new GatewayReviewSource(URI.create(env("MCP_GATEWAY_URL", "http://gateway:8080")),
+                    System.getenv("GATEWAY_TOKEN"), repository, number);
+            case "direct" -> new McpReviewSource(repository, number);
+            default -> throw new IllegalArgumentException("MCP_SOURCE must be gateway or direct");
+        };
     }
 
     private static String env(String name, String fallback) { return System.getenv().getOrDefault(name, fallback); }
