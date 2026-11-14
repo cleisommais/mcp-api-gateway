@@ -22,10 +22,14 @@ public final class McpReviewSource implements Source {
     private final McpSchema.InitializeResult initialized;
 
     public McpReviewSource(String repository, int number) {
+        this(repository, number, Map.of());
+    }
+
+    public McpReviewSource(String repository, int number, Map<String, String> environment) {
         String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
         var parameters = ServerParameters.builder(java).args("-Dorg.slf4j.simpleLogger.defaultLogLevel=off",
                 "-cp", System.getProperty("surefire.test.class.path", System.getProperty("java.class.path")), GitHubMcpServer.class.getName(),
-                repository, Integer.toString(number)).build();
+                repository, Integer.toString(number)).env(environment).build();
         var transport = new StdioClientTransport(parameters, McpJsonDefaults.getMapper()) {
             @Override protected ProcessBuilder getProcessBuilder() {
                 var builder = super.getProcessBuilder();

@@ -31,11 +31,26 @@ public final class GatewayService implements AutoCloseable {
 
     public static Factory stdioFactory() {
         return (registration, repository, number) -> {
-            var source = new McpReviewSource(repository, number);
+            var environment = new HashMap<String, String>();
+            if (registration.credentialMode().equals("app")) {
+                environment.put("GITHUB_AUTH_MODE", "app");
+                for (String name : java.util.List.of("GITHUB_APP_ID", "GITHUB_INSTALLATION_ID", "GITHUB_PRIVATE_KEY_PATH")) {
+                    String value = System.getenv(name);
+                    if (value == null || value.isBlank()) throw new dev.cleisommais.mcp.f4.GitHubAccess.ConfigurationException();
+                    environment.put(name, value);
+                }
+                if (!environment.get("GITHUB_APP_ID").matches("[0-9]+")
+                        || !environment.get("GITHUB_INSTALLATION_ID").matches("[1-9][0-9]*")
+                        || !java.nio.file.Files.isRegularFile(java.nio.file.Path.of(environment.get("GITHUB_PRIVATE_KEY_PATH")))
+                        || !java.nio.file.Files.isReadable(java.nio.file.Path.of(environment.get("GITHUB_PRIVATE_KEY_PATH")))) {
+                    throw new dev.cleisommais.mcp.f4.GitHubAccess.ConfigurationException();
+                }
+            }
+            var source = new McpReviewSource(repository, number, environment);
             return new Backend() {
                 @Override public void verifyCatalog() {
                     var initialized = source.initialized();
-                    if (!registration.version().equals(initialized.serverInfo().version())
+                    if (!"github-review".equals(initialized.serverInfo().name()) || !registration.version().equals(initialized.serverInfo().version())
                             || !registration.protocol().equals(initialized.protocolVersion())) {
                         throw new SecurityException("Downstream version/protocol changed");
                     }
@@ -98,7 +113,11 @@ public final class GatewayService implements AutoCloseable {
             } else {
                 job.backend().verifyCatalog();
                 result = switch (tool) {
-                    case "github.get_change_snapshot" -> job.snapshot();
+                    case "github.get_change_snapshot" -> {
+                        var snapshot = new java.util.LinkedHashMap<>(Json.object(Json.write(job.snapshot())));
+                        snapshot.put("_gateway", Map.of("server", job.server().id(), "credentialMode", job.server().credentialMode()));
+                        yield snapshot;
+                    }
                     case "github.get_change_state" -> Map.of("current", job.backend().isCurrent(job.snapshot()));
                     case "github.get_file_at_commit" -> {
                         String path = Json.text(arguments, "path");

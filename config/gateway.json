@@ -8,5 +8,13 @@
     "version": "0.2.0",
     "protocol": "2025-11-25",
     "repositories": ["cleisommais/pr-test-repo"]
+  }, {
+    "id": "private-github-app",
+    "transport": "stdio",
+    "mainClass": "dev.cleisommais.mcp.f2.GitHubMcpServer",
+    "version": "0.2.0",
+    "protocol": "2025-11-25",
+    "repositories": ["cleisommais/pr-test-repo-private"],
+    "credentialMode": "app"
   }]
 }

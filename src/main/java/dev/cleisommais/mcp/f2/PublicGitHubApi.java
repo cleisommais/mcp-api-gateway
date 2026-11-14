@@ -3,11 +3,7 @@ package dev.cleisommais.mcp.f2;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
@@ -16,28 +12,31 @@ import java.util.Map;
 
 import static dev.cleisommais.mcp.f2.ReviewData.*;
 
-/** Narrow public-repository adapter. No GitHub write endpoint or personal token is exposed. */
+/** Read-only adapter; its legacy name predates optional installation authentication. */
 final class PublicGitHubApi {
-    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10))
-            .followRedirects(HttpClient.Redirect.NEVER).build();
-    private final URI base;
     private final String repository;
     private final int number;
     private Snapshot pinned;
+    private final dev.cleisommais.mcp.f4.GitHubAccess access;
 
     PublicGitHubApi(String repository, int number) {
-        this(URI.create("https://api.github.com/"), repository, number);
+        this(URI.create("https://api.github.com/"), repository, number,
+                dev.cleisommais.mcp.f4.GitHubAccess.environment(repository, false));
     }
 
     // The alternate base is only injected by local HTTP integration tests.
     PublicGitHubApi(URI base, String repository, int number) {
+        this(base, repository, number, dev.cleisommais.mcp.f4.GitHubAccess.anonymous(base));
+    }
+
+    PublicGitHubApi(URI base, String repository, int number, dev.cleisommais.mcp.f4.GitHubAccess access) {
         if (!repository.matches("[A-Za-z0-9_-]+/[A-Za-z0-9_.-]+") || repository.endsWith("/..")
                 || repository.endsWith("/.") || number < 1) {
             throw new IllegalArgumentException("Expected owner/repository and a positive PR number");
         }
-        this.base = base;
         this.repository = repository;
         this.number = number;
+        this.access = access;
     }
 
     Snapshot snapshot() throws Exception {
@@ -71,12 +70,14 @@ final class PublicGitHubApi {
             if (entries.size() < 100) { reachedEnd = true; break; }
         }
         var after = metadata();
-        if (!head.equals(sha(Json.map(after.get("head")))) || !baseSha.equals(sha(Json.map(after.get("base"))))) {
+        if (!head.equals(sha(Json.map(after.get("head")))) || !baseSha.equals(sha(Json.map(after.get("base"))))
+                || !java.util.Objects.equals(Json.map(metadata.get("base")).get("ref"), Json.map(after.get("base")).get("ref"))) {
             throw new IOException("PR snapshot changed during retrieval; rerun against the new commit");
         }
         pinned = new Snapshot("github", repository, number, Json.text(metadata, "title"),
                 metadata.get("body") instanceof String body ? body : "", baseSha, head, headRepository,
-                Json.text(after, "state"), expected, reachedEnd && files.size() == expected, List.copyOf(files));
+                Json.text(after, "state"), expected, reachedEnd && files.size() == expected, List.copyOf(files),
+                Boolean.TRUE.equals(after.get("draft")), Json.map(after.get("base")).get("ref") instanceof String ref ? ref : "");
         return pinned;
     }
 
@@ -101,7 +102,8 @@ final class PublicGitHubApi {
         var current = metadata();
         return pinned.headSha().equals(sha(Json.map(current.get("head"))))
                 && pinned.baseSha().equals(sha(Json.map(current.get("base"))))
-                && pinned.state().equals(current.get("state"));
+                && pinned.state().equals(current.get("state")) && pinned.draft() == Boolean.TRUE.equals(current.get("draft"))
+                && pinned.baseBranch().equals(Json.map(current.get("base")).getOrDefault("ref", ""));
     }
 
     private Map<String, Object> metadata() throws Exception {
@@ -109,16 +111,8 @@ final class PublicGitHubApi {
     }
 
     private Object get(String path) throws Exception {
-        var request = HttpRequest.newBuilder(base.resolve(path)).timeout(Duration.ofSeconds(25))
-                .header("Accept", "application/vnd.github+json").header("User-Agent", "mcp-api-gateway-poc")
-                .header("X-GitHub-Api-Version", "2022-11-28").GET().build();
-        var response = http.send(request, HttpResponse.BodyHandlers.ofInputStream());
-        String body = Json.boundedBody(response.body(), 2_000_000);
-        if (response.statusCode() != 200) {
-            throw new IOException("GitHub HTTP " + response.statusCode()
-                    + "; check public access and API rate limits before retrying");
-        }
-        return Json.read(body, new io.modelcontextprotocol.json.TypeRef<Object>() {});
+        String target = path.substring("repos/".length()).split("/")[0] + "/" + path.substring("repos/".length()).split("/")[1];
+        return access.request(target, "GET", path, null);
     }
 
     static String encodePath(String path) {

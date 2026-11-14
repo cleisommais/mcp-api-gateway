@@ -1,10 +1,11 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $envPath = Join-Path $projectRoot '.env'
+New-Item -ItemType Directory -Force -Path (Join-Path $projectRoot 'secrets') | Out-Null
 $content = if (Test-Path -LiteralPath $envPath) { [IO.File]::ReadAllText($envPath) }
     else { [IO.File]::ReadAllText((Join-Path $projectRoot '.env.example')) }
 $changed = $false
-foreach ($key in @('POSTGRES_PASSWORD', 'GATEWAY_TOKEN')) {
+foreach ($key in @('POSTGRES_PASSWORD', 'GATEWAY_TOKEN', 'WEBHOOK_SECRET')) {
     $pattern = '(?m)^' + $key + '=([^\r\n]*)'
     $match = [regex]::Match($content, $pattern)
     if ($match.Success -and -not [string]::IsNullOrWhiteSpace($match.Groups[1].Value)) { continue }

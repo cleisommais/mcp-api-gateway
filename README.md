@@ -2,7 +2,7 @@
 
 A PR/MR review POC with a Java agent, MCP Gateway, and adapters for GitHub, GitLab, and Bitbucket. Its purpose is hands-on learning and an interview portfolio demonstrating MCP Client, MCP Servers, authorization, and auditing.
 
-**Status as of 2026-11-13:** F1/F2 mechanics and **F3 MCP Gateway** are implemented on `codex/f3-governed-gateway`. Manual public-GitHub reviews now use a separate authenticated gateway container. F2's initial scenario quality was overstated; the [model investigation](docs/f3-model-evaluation.md) distinguishes correct reasoning from valid JSON. Webhooks, database jobs, and publication remain F4.
+**Status as of 2026-11-13:** F1–F3 are implemented, and **F4's local webhook/queue/worker implementation is verified** on `codex/f4-webhook-jobs-private-repos`. Private fixture PRs and GitHub App support are ready. Live App authentication, bot publication, and real GitHub delivery await the [installation steps](docs/f4-github-app-setup.md). F2's initial quality claim was corrected; the [model investigation](docs/f3-model-evaluation.md) separates reasoning quality from valid JSON.
 
 **Project language: English.** Documentation, diagrams, code comments, tool descriptions, application messages, and future commit messages use English.
 
@@ -19,6 +19,8 @@ This is not intended to become a commercial service or a permanently available i
 | [F2: local PR review](docs/f2-local-pr-review.md) | Compose setup, code walkthrough, manual review, limits, and test results |
 | [F3: governed gateway](docs/f3-governed-gateway.md) | Separate containers, scoped routing, lab identity, contract validation, audit, and tests |
 | [F3: model quality investigation](docs/f3-model-evaluation.md) | Identical-input comparisons, larger models, reasoning settings, failures, and conclusions |
+| [F4: webhook jobs and private access](docs/f4-webhook-jobs.md) | Edge admission, PostgreSQL queue, worker, installation tokens, and publication recovery |
+| [F4: install the GitHub App](docs/f4-github-app-setup.md) | Step-by-step registration, key, selected repositories, local settings, tunnel, and first live review |
 | [Requirements](docs/requirements.md) | Functional/nonfunctional requirement IDs, acceptance, measurement, and phase |
 | [Architecture](docs/architecture.md) | Components, contracts, flows, and coverage |
 | [Security and identity](docs/security-and-identity.md) | Credentials, authorization, and threats |
@@ -40,9 +42,9 @@ docker compose --profile review up -d gateway
 docker compose --profile review run --rm review github cleisommais/pr-test-repo 1
 ```
 
-Reports appear in `reports/`. The model API is at `http://localhost:11435`, PostgreSQL uses `localhost:15432`, and the gateway uses `http://localhost:18080/mcp`. All published ports bind to loopback. The setup script preserves existing values and generates missing local database/gateway credentials in ignored `.env`. PostgreSQL is provisioned for F4 and is not used as a queue yet.
+Reports appear in `reports/`. Ollama uses host loopback port 11435 and PostgreSQL 15432. F4's optional edge uses 18081; the worker and MCP Gateway have no host ports by default. `compose.debug.yaml` explicitly restores a loopback gateway debugging port if needed. The initializer preserves existing values and generates missing database/gateway/webhook secrets in ignored `.env`. PostgreSQL now stores durable review jobs.
 
-The [F3 guide](docs/f3-governed-gateway.md) explains the implemented tool path. The four open [test PRs](https://github.com/cleisommais/pr-test-repo/pulls) and [evaluation evidence](docs/f3-model-evaluation.md) demonstrate both useful findings and model failures. `complete` describes mechanical coverage/validation; quality requires human review. Reviews stay local.
+The [F4 guide](docs/f4-webhook-jobs.md) explains the current boundaries and the [private fixture PRs](https://github.com/cleisommais/pr-test-repo-private/pulls). A signed local fixture exercised the real queue, gateway, and model with publication disabled. Enable bot comments only after following the App guide. `complete` still describes mechanical coverage/validation, and quality requires human review. Optional two-model verification is planned for F6 and remains disabled/unimplemented in F4.
 
 ## Run F1
 

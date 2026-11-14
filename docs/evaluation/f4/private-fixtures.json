@@ -1,0 +1,47 @@
+{
+  "repository": "cleisommais/pr-test-repo-private",
+  "repositoryId": 1457261925,
+  "baseline": "c383d84f95f731d057ccf082537fedad233088bb",
+  "originalReadmePreserved": true,
+  "privateSourceExported": false,
+  "cases": [
+    {
+      "exitCode": 1,
+      "fixtureCheck": "Expected ArrayIndexOutOfBoundsException",
+      "number": 1,
+      "files": 1,
+      "headSha": "638c5c59736fca0e1afa995117d9e475adeef523",
+      "url": "https://github.com/cleisommais/pr-test-repo-private/pull/1"
+    },
+    {
+      "exitCode": 0,
+      "fixtureCheck": "Baseline and positive-counter checks passed",
+      "number": 2,
+      "files": 23,
+      "headSha": "ae86aa2bb8508226355cfc930aa2e376fae4d882",
+      "url": "https://github.com/cleisommais/pr-test-repo-private/pull/2"
+    },
+    {
+      "exitCode": 1,
+      "fixtureCheck": "Expected calculation assertion failure",
+      "number": 3,
+      "files": 2,
+      "headSha": "0912a54a2f34cb97b7bb781a96f92927c3c7c0ce",
+      "url": "https://github.com/cleisommais/pr-test-repo-private/pull/3"
+    },
+    {
+      "exitCode": 1,
+      "fixtureCheck": "Expected ArrayIndexOutOfBoundsException",
+      "number": 4,
+      "files": 1,
+      "headSha": "e972a5b7aead1765c3d72f07d305efe9cdd41bc2",
+      "url": "https://github.com/cleisommais/pr-test-repo-private/pull/4"
+    }
+  ],
+  "baselineCheck": "Passed",
+  "fixtureExecution": "Isolated network-disabled container, newly authored synthetic source copies; not execution by the review agent",
+  "anonymousMcpRead": "Actual GitHub HTTP 404 on private PR1",
+  "appConnectionWithoutCredentials": "Fails closed with App ID/installation/PEM configuration diagnostic",
+  "liveAuthenticatedPrivateRead": "Pending user GitHub App installation",
+  "livePrivateBotPublication": "Pending user GitHub App installation and explicit publication setting"
+}

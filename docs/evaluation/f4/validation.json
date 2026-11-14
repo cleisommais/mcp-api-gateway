@@ -1,0 +1,27 @@
+{
+  "nonDatabaseTestsPassed": 58,
+  "postgresIntegrationTestsPassed": 3,
+  "uniqueTestsVerified": 61,
+  "build": "Success; PostgreSQL-only cases skipped during image build, then run against the real project database",
+  "postgresVersion": "17.6",
+  "jdbcVersion": "42.7.14",
+  "temporaryTestSchemas": "Unique f4_it_ schemas created and dropped by integration tests",
+  "tested": [
+    "Webhook HMAC and admission policy",
+    "Private read denied without a credential and accepted with a synthetic scoped credential",
+    "RS256 JWT and PKCS1/PKCS8 keys",
+    "Token scope, refresh and denied writes",
+    "Deduplication across delivery IDs",
+    "Durable queue and expired lease recovery",
+    "Lost publication response reconciliation",
+    "Copied marker rejection",
+    "Stale PR/draft/branch handling",
+    "Remote comment identifier persistence"
+  ],
+  "stillPending": [
+    "Real GitHub App installation and private-token access",
+    "Live GitHub webhook callback through HTTPS",
+    "Live bot-owned PR summary publication"
+  ],
+  "tunnel": "Optional pinned image/CLI verified, public tunnel not started"
+}

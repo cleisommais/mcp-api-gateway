@@ -21,12 +21,17 @@ import static dev.cleisommais.mcp.f2.ReviewData.*;
 /** Agent-side MCP client. No direct GitHub transport is created in gateway mode. */
 final class GatewayReviewSource implements Source {
     private final McpSyncClient client;
-    private final String jobId = UUID.randomUUID().toString();
+    private final String jobId;
+    private String serverAlias = "unresolved";
     private final String repository;
     private final int number;
     private Snapshot pinned;
 
     GatewayReviewSource(URI endpoint, String secret, String repository, int number) {
+        this(endpoint, secret, repository, number, UUID.randomUUID());
+    }
+    GatewayReviewSource(URI endpoint, String secret, String repository, int number, UUID jobId) {
+        this.jobId = jobId.toString();
         if (!Set.of("http", "https").contains(endpoint.getScheme()) || endpoint.getHost() == null
                 || endpoint.getUserInfo() != null || endpoint.getQuery() != null || endpoint.getFragment() != null
                 || secret == null || secret.length() < 32) throw new IllegalArgumentException("Expected gateway URL and lab credential");
@@ -47,7 +52,11 @@ final class GatewayReviewSource implements Source {
     }
 
     @Override public Snapshot snapshot() throws Exception {
-        if (pinned == null) pinned = Json.read(Json.write(call("github.get_change_snapshot", scope(false))), new TypeRef<>() {});
+        if (pinned == null) {
+            var data = new LinkedHashMap<>(Json.map(call("github.get_change_snapshot", scope(false))));
+            if (data.get("_gateway") instanceof Map<?, ?>) serverAlias = Json.text(Json.map(data.remove("_gateway")), "server");
+            pinned = Json.read(Json.write(data), new TypeRef<>() {});
+        }
         return pinned;
     }
 
@@ -62,7 +71,7 @@ final class GatewayReviewSource implements Source {
         return Boolean.TRUE.equals(Json.map(call("github.get_change_state", scope(true))).get("current"));
     }
 
-    Map<String, Object> trace() { return Map.of("mode", "gateway", "jobId", jobId, "server", "public-github", "protocol", "2025-11-25"); }
+    Map<String, Object> trace() { return Map.of("mode", "gateway", "jobId", jobId, "server", serverAlias, "protocol", "2025-11-25"); }
 
     private LinkedHashMap<String, Object> scope(boolean withSha) {
         var arguments = new LinkedHashMap<String, Object>();

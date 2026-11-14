@@ -42,6 +42,7 @@ These choices resolve Q01–Q03 and implement P01 only within F1. They do not ye
 | D19 | C | English is the project language for documentation, diagrams, code comments, tool descriptions, application messages, and future commit messages |
 | D20 | C, 2026-11-13 | Own Ollama and PostgreSQL in this repository's Docker Compose, with separate containers/volumes/network; install a GPU-suitable model and use the public `cleisommais/pr-test-repo` for code, commit, and PR exercises. Preserve other projects' infrastructure |
 | D21 | C, 2026-11-13 | Proceed with F3 while correcting the F2 quality gap: compare another/larger model when results are poor and investigate model versus prompt/agent causes; valid JSON is not sufficient evidence of successful scenarios |
+| D22 | C, 2026-11-13 | Start F4 and add synthetic tests/PRs in `cleisommais/pr-test-repo-private`; investigate private access. Provide GitHub App installation steps at the end rather than requiring installation during implementation |
 
 Hardware, version, and models were **confirmed by the user** in addition to earlier inspection evidence. The canonical record is [local-inference.md](local-inference.md); custom-model characteristics are not inferred from its name or automatically included in that confirmation.
 
@@ -50,7 +51,7 @@ Hardware, version, and models were **confirmed by the user** in addition to earl
 | ID | Status | Proposal | Alternative and consequence |
 | --- | --- | --- | --- |
 | P01 | P | Java 21, Maven, Spring Boot, Spring Security, and Spring AI, initially imperative | Framework-free MCP SDK/HTTP client reduces abstraction in F1 but needs more manual integration later |
-| P02 | P | One application for ingress, worker, core, and publication; gateway in a separate process | Making every role a microservice increases operations without demonstrated need |
+| P02 | Updated/implemented in F4 | One Java image, with separate edge and private worker entry points; publisher remains in the worker; MCP Gateway is separate | Separating the edge makes access control clear without introducing a platform of independent microservices |
 | P03 | P | Dedicated PostgreSQL for jobs, publication, and auditing; database-backed queue | An in-memory queue does not support recovery; a broker can be reconsidered after measurement |
 | P04 | Implemented locally in F2; updated by D20 | Compose with project-owned PostgreSQL/Ollama and separate named volumes; cloud uses an external API | Uses additional model disk space in exchange for the requested independent lifecycle |
 | P05 | P | GitHub first and GitHub App for automation | PAT/machine-user options need permission, lifecycle, and personal-dependency evaluation |
@@ -65,6 +66,9 @@ Hardware, version, and models were **confirmed by the user** in addition to earl
 | P14 | P | Prefer low-effort free resources/credits, then usage-proportional VPS billing | Oracle Always Free, DigitalOcean, and Hetzner are candidates; no purchase or eligibility confirmed |
 | P15 | P | Initial US$5–10 total demonstration budget for infrastructure and inference | Target to validate; reserve margin for extras, taxes/exchange rates, and metering delay; credits are not guaranteed |
 | P16 | P | Retrieve commit diffs/files through platform MCP tools, initially without requiring a full clone | Clone/fetch can be a tool implementation later; it does not require PR code execution or a model shell |
+| P17 | Implemented in F4 | Signed webhook admission plus installation/repository/PR policy, durable PostgreSQL queue, and retained internal worker-to-MCP authentication | IP allowlists are optional public-edge defense later, not caller identity or a replacement for HMAC |
+| P18 | Implemented/tested locally in F4; live App checks pending | Repository-scoped short-lived installation tokens and bot-owned summary reconciliation; private keys stay in ignored mounted files | A connected developer tool is not the running application's GitHub credential |
+| P19 | Proposed for F6 | Optional primary-plus-verifier model mode, disabled by default, explicit model/call/time/spending settings | A second model can add false positives or agree on an error; evaluate it instead of blindly merging outputs |
 
 API candidates, dated financial references, comparison, and teardown are centralized in [cloud-demo-and-portfolio.md](cloud-demo-and-portfolio.md). Provider, VPS SKU/region, and final limits remain **Q**.
 

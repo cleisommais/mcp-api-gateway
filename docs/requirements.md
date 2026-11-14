@@ -2,7 +2,7 @@
 
 [Index](../README.md) · [Phases F1–F8](../PLAN.md) · [C/P/Q/F classification](decisions.md).
 
-Criteria describe planned checks, not evidence that every capability is delivered. **C** identifies explicitly requested scope; proposed implementation choices are marked **P** in the criterion. **F** denotes future work. Phase indicates first delivery and later hardening where needed. Implemented subsets and verified results are documented in the [F1 guide](f1-mcp-stdio.md), [F2 guide](f2-local-pr-review.md), and [F3 guide](f3-governed-gateway.md). Review quality is assessed separately in the [model evaluation](f3-model-evaluation.md); later-phase requirements remain planned. Existing RF/RNF identifiers are retained for traceability.
+Criteria describe planned checks, not evidence that every capability is delivered. **C** identifies explicitly requested scope; proposed implementation choices are marked **P** in the criterion. **F** denotes future work. Phase indicates first delivery and later hardening where needed. Implemented subsets and verified results are documented in the [F1 guide](f1-mcp-stdio.md), [F2 guide](f2-local-pr-review.md), [F3 guide](f3-governed-gateway.md), and [F4 guide](f4-webhook-jobs.md). F4's local checks passed; live private installation, callback, and publication checks remain pending. Review quality is assessed separately in the [model evaluation](f3-model-evaluation.md). Existing RF/RNF identifiers are retained for traceability.
 
 ## Functional requirements
 

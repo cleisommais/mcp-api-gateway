@@ -45,7 +45,7 @@ class GatewayServiceTest {
         var backend = new FakeBackend();
         var events = new ArrayList<Map<String, Object>>();
         try (var service = new GatewayService(config(8), (server, repo, number) -> backend, events::add)) {
-            assertEquals(SHA, ((ReviewData.Snapshot) service.invoke("poc-worker", "github.get_change_snapshot", scope(false))).headSha());
+            assertEquals(SHA, ((Map<?, ?>) service.invoke("poc-worker", "github.get_change_snapshot", scope(false))).get("headSha"));
             var args = scope(true); args.put("path", "src/Example.java");
             assertEquals(Map.of("content", "public class Example {}"), service.invoke("poc-worker", "github.get_file_at_commit", args));
             assertEquals(Map.of("current", true), service.invoke("poc-worker", "github.get_change_state", scope(true)));
@@ -142,6 +142,7 @@ class GatewayServiceTest {
             changed.set(0, McpSchema.Tool.builder(tool.name(), Map.of("type", "object")).description(tool.description()).build());
             assertThrows(SecurityException.class, () -> GatewayCatalog.validate(changed));
             assertEquals("2025-11-25", source.initialized().protocolVersion());
+            assertEquals("github-review", source.initialized().serverInfo().name());
         }
     }
 

@@ -35,10 +35,13 @@ Existing IDs are preserved. Updating Ollama when necessary is a confirmed direct
 | Q19 | Which budget and credits? | Keep the test inexpensive | Plan up to US$10 total, aiming for US$5; limit reviews/tokens/retries. Count credits only after confirming the balance and minimum API top-up; Plus is not an API balance | Before spending |
 | Q20 | What belongs in the portfolio? | Reproduce the learning | Own demonstration PRs, MIT license as a proposal, README, diagrams, examples, and results. Review files/history and hide personal data in recordings; no other projects' private details | Public-release preparation |
 | Q21 | How to end the demonstration? | Stop billing and endpoint dependency | Run a short session, export results/recording, remove webhook, delete VM/extras, and check billing. A simple checklist suffices; no permanent operational process | End of F8 |
+| Q22 | How should private GitHub access work? | The runtime needs a credential independent of the developer connector | Use a selected-repository GitHub App, read-scoped installation tokens in the MCP connection and write-scoped tokens in the publisher. Private fixtures exist; live App checks await the user's setup | F4 implementation; [steps](f4-github-app-setup.md) |
+| Q23 | Does an edge/private network remove internal authentication? | Prevent unauthorized review requests and tool calls | Keep HMAC/admission policy at the edge and the worker credential plus job/resource scope at MCP Gateway. Worker has no public endpoint. Actions are unnecessary; optional IP filtering belongs at the public F8 edge | Implemented F4 boundary; optional F8 hardening |
+| Q24 | Would a second reviewing model help? | Extra latency and potentially extra cost | Test primary-plus-verifier sequentially as an explicit F6 option, default single. Preserve disagreements and measure false positives/negatives; more calls or consensus are not proof of quality | F6, not enabled in F4 |
 
 ## How to proceed now
 
-**F1/F2 mechanics and F3 gateway are implemented.** Follow [gateway calls](f3-governed-gateway.md) and the [quality investigation](f3-model-evaluation.md). F2's quality limitations remain part of the evidence rather than being erased by later results. No product questionnaire is pending.
+**F4's local implementation and checks are ready.** Follow the [App installation steps](f4-github-app-setup.md) to complete live private-access/webhook/publication validation. The user requested these steps at the end instead of configuring credentials during implementation. Optional peer review belongs to F6; it is not a new prerequisite for this POC.
 
 F2 validated runtime/model support in its own environment. Later comparisons can reuse the four PRs without requiring exhaustive model benchmarking or maintenance of another project's instance.
 

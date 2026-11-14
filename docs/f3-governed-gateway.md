@@ -4,6 +4,8 @@
 
 Implemented on `codex/f3-governed-gateway`, from F2 commit `3dc9c23`. This increment adds the gateway in a separate Java container and corrects the earlier conflation of mechanical output validation with review quality. This is still a local learning POC; it introduces no IdP, cloud service, webhook, or database queue.
 
+**Current checkout:** F4 now adds the [edge/queue/worker](f4-webhook-jobs.md). Its base Compose file keeps the gateway internal. To reproduce F3 host-port debugging, explicitly combine `compose.yaml` with `compose.debug.yaml`; normal container-to-gateway calls are unchanged. The historical F3 results below remain evidence for that increment.
+
 ## Implemented flow
 
 ```mermaid

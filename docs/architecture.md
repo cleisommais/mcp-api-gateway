@@ -2,22 +2,22 @@
 
 [Index](../README.md) · [Decisions](decisions.md) · [Security](security-and-identity.md). Initial **P** design aligned with confirmed directions.
 
-**Implemented increment:** [F3](f3-governed-gateway.md) now runs the agent and MCP Gateway in separate containers. The gateway authenticates the lab worker, routes only registered public-repository tools to a controlled stdio subprocess, binds job/PR/SHA scope, checks the downstream contract, and records console audit. The automatic webhook/database/publisher flow below remains planned for F4. Model APIs remain a separate path. [Quality evaluation](f3-model-evaluation.md) is distinct from output/schema validation.
+**Current increment:** [F4](f4-webhook-jobs.md) implements separate edge, worker, and MCP Gateway containers using one Java application image. The edge validates signed GitHub events and persists PostgreSQL jobs; the private worker polls them and authenticates to the private MCP Gateway. Public anonymous and private GitHub App connections are registered separately. Local queue/worker and authentication/publication tests are verified; live private App reads, bot publication, and real GitHub delivery await the [user's App setup](f4-github-app-setup.md). Model APIs remain a separate path. [Quality evaluation](f3-model-evaluation.md) is distinct from output/schema validation.
 
 ## Where a review starts
 
 The primary flow is automatic: **a developer pushes commits and opens or updates a PR; the Git platform sends a webhook to our Java application's endpoint; the agent analyzes the change and the application publishes the result on the PR**. Developers use their normal GitHub/GitLab/Bitbucket access; they do not need a second login to our application for each review.
 
-The webhook endpoint belongs to the same Java service that runs the agent. It checks that the event came from the expected platform and matches the configured repository/event. This is **input validation**: checking the incoming request, not analyzing code yet.
+The webhook endpoint is the **edge role**, separate from the worker. It authenticates raw request bytes using GitHub's webhook HMAC, then checks installation, repository ID/name, branch, draft state, contributor association, and fork policy. This is **input validation**: checking whether to accept work, not analyzing code yet. The worker has no public HTTP endpoint.
 
-To avoid making the webhook connection wait for the entire analysis, the proposal is:
+The implemented F4 sequence separates receipt from analysis:
 
 1. Receive and validate the PR event.
-2. Save a pending review record in PostgreSQL, identifying the event, repository, and PR. The exact commit is checked and fixed when preparing the analysis.
+2. Commit a pending review in PostgreSQL with delivery identity, installation, repository, PR, and expected base/head SHAs. The worker verifies these against the current platform snapshot before inference.
 3. Return HTTP success to the platform, for example `202 Accepted`. This confirms only that the event was received and recorded; it does not mean the review is complete. This confirmation is an **acknowledgement**, abbreviated **ACK**.
-4. A routine in the same Java application fetches pending reviews from the database and runs the agent. That routine is the **worker**, not a mandatory separate server. The database stores records; it does not invoke or execute the agent.
+4. The **worker container** claims pending reviews and runs the Java agent. It uses the same image as the edge but a different entry point. The database stores records; it does not invoke or execute the agent. The edge does not need to make an internal HTTP call to start a review.
 5. The agent retrieves changed code through MCP tools, queries the model, and organizes findings.
-6. The application validates the findings and publishes a summary on the PR, identifying the analyzed commit.
+6. The worker validates findings and, when publication is enabled, reconciles a bot-owned PR summary identifying the analyzed commit. Model tools cannot publish.
 
 **Harness** refers to the application coordinating the agent: retrieving context, calling tools/the model, and validating results. It is not an additional service. The diagrams below use **Java agent** to make this responsibility clear.
 
@@ -28,7 +28,7 @@ The planned manual trigger supports early exercises and reprocessing: provide an
 | Role | Responsibility |
 | --- | --- |
 | Java agent (host/harness) | Coordinates commit analysis: retrieves context, calls tools/the model, and organizes findings |
-| Worker | Background routine in the same Java application; fetches pending reviews and invokes the agent |
+| Worker | Private queue consumer; claims pending reviews, runs the agent, and controls publication |
 | MCP Client | Maintains a server connection and consumes discovery/tools using the selected protocol profile |
 | MCP Server | Exposes tools and context; does not need to contain an AI model |
 | MCP Gateway | MCP Server for the agent and MCP Client for downstream servers; authorizes and routes calls |
@@ -36,7 +36,7 @@ The planned manual trigger supports early exercises and reprocessing: provide an
 | Ollama | Inference service that runs a model artifact and exposes an API |
 | Model | Weights, quantization, template, and capabilities executed by the service; not the harness |
 | Platform adapter | Translates PR/MR identity, pagination, diffs, permissions, and operations for a specific offering |
-| Webhook endpoint | Receives platform events, verifies authenticity/repository, and records a pending review |
+| Edge/webhook endpoint | Authenticates signed platform requests, enforces admission policy, and commits pending work before HTTP success |
 | Publisher | Checks findings, SHA, and policy, then performs controlled writes to the platform |
 
 OpenAI, Anthropic, and DeepSeek are model providers in this design, not automatically MCP Servers. Ollama does not replace the agent or gateway. MCP standardizes communication, not every tool's name and semantics.
@@ -47,9 +47,12 @@ flowchart LR
   subgraph EXT["External boundary: platform and untrusted content"]
     Git["GitHub / GitLab / Bitbucket"]
   end
-  Git -->|"HTTPS webhook"| In
-  subgraph APP["Java application boundary"]
-    In["Endpoint: receive and validate event"] -->|"save pending review"| DB[("PostgreSQL: jobs and results")]
+  Git -->|"HTTPS signed webhook"| In
+  subgraph EDGE["Edge boundary"]
+    In["Authenticate request and enforce PR policy"]
+  end
+  In -->|"commit pending review"| DB[("Project PostgreSQL: jobs and results")]
+  subgraph APP["Private worker boundary"]
     W["Java agent: background execution"] -->|"fetch pending reviews and update state"| DB
     W --> MC["MCP Client"]
     W --> Models["Model access layer"]
@@ -63,12 +66,12 @@ flowchart LR
   subgraph DOWN["Approved-server boundary"]
     S["MCP Servers and semantic adaptation"]
   end
-  MC ==>|"MCP: discovery and calls"| GW
+  MC ==>|"Authenticated MCP with job and SHA scope"| GW
   GW ==>|"MCP: authorized forwarding"| S
   S -->|"Git API with its own credentials"| Git
   Pub -->|"Publication API"| Git
-  subgraph INF["Shared local inference boundary"]
-    O["Existing Ollama"] --> M["Model on GPU/CPU"]
+  subgraph INF["Project inference boundary"]
+    O["Project Ollama"] --> M["Local model on GPU/CPU"]
   end
   Models -.->|"Inference HTTP; not MCP"| O
   Models -.->|"API: only when enabled"| Cloud["External provider"]
@@ -78,11 +81,11 @@ Thick lines represent MCP; dotted lines represent model calls. Each boundary cro
 
 This diagram shows which components communicate. The next diagram shows their execution order. The **agent → database** arrow is the execution routine querying the database, not the database triggering execution. A dedicated PostgreSQL database means POC data is separate from other projects; it does not require a managed database.
 
-## Initial process layout
+## Current process layout
 
-**P:** one Java container contains the webhook endpoint, background routine, agent, and publisher. These are parts of one program, not four microservices. A separate Java gateway container supports learning MCP connections and authorization at that boundary. PostgreSQL stores jobs, results, and audit records. The active `divine-touch` database will not be reused implicitly.
+F4 uses one application image with distinct **edge**, **worker**, and **MCP Gateway** entry points. The edge is the only role intended for an external webhook URL. The worker and gateway have no published host ports in the default Compose file; the gateway still checks its worker credential and resource scope. Private networking limits reachability and does not replace authentication. `compose.debug.yaml` can explicitly restore a loopback gateway port for local diagnosis. No new gateway product or IdP is required for this learning exercise.
 
-F2 owns Ollama and PostgreSQL in this project's Compose setup, following the user's isolation request (D20). The Java review container starts a read-only GitHub MCP subprocess over stdio and calls `http://ollama:11434` separately for inference. PostgreSQL is provisioned for F4 but does not participate in manual F2 reviews. The [F2 guide](f2-local-pr-review.md) distinguishes the implemented flow from the future automatic design above.
+The project owns Ollama and PostgreSQL, following D20. The MCP Gateway starts a controlled read-only GitHub subprocess; the worker calls `http://ollama:11434` separately for inference. The manual review command remains available, while F4 adds durable jobs. A local HTTP edge becomes GitHub-reachable only when an explicitly enabled HTTPS tunnel/deployment fronts it. IP filtering can be added at that public edge in F8; it does not replace HMAC, and forwarded headers are not treated as trusted caller identity.
 
 Remote MCP Servers do not require local containers. Local HTTP servers may have their own containers. With `stdio`, the client starts and controls a subprocess and its streams: there is no HTTP URL between containers. An educational stdio server can be a child of the client/gateway; do not mount the Docker socket into the gateway to launch arbitrary containers. If an existing server requires stdio, evaluate controlled packaging of its executable with the hosting process before assuming HTTP.
 
@@ -105,26 +108,26 @@ The profile explicitly sets endpoint, model, credential reference, and allowed d
 sequenceDiagram
   actor D as Developer
   participant P as Git platform
-  participant E as Java service endpoint
+  participant E as Webhook edge
   participant B as PostgreSQL
-  participant A as Background Java agent
+  participant A as Private Java worker and agent
   participant G as MCP Gateway
   participant S as MCP Server
   participant M as Selected model service
   participant U as Publisher
   D->>P: Push commits and open or update PR/MR
   P->>E: Webhook identifying event and PR
-  E->>E: Check origin, repository, and event type
+  E->>E: Verify HMAC, installation, repository and PR policy
   E->>B: Save event and pending review without duplication
   B-->>E: Record saved
   E-->>P: HTTP 202: event received and recorded
-  Note over E,A: Endpoint and execution routine belong to the same Java application
+  Note over E,A: Same application image, separate edge and worker containers
   A->>B: Fetch and reserve the next pending review
   B-->>A: Job data
-  A->>G: MCP: query PR and fix the analyzed commit
+  A->>G: Authenticated MCP with persisted job and PR scope
   G->>G: Authorize identity, tool, and resource
   G->>S: MCP: retrieve metadata, diff, and files at that commit
-  S->>P: Read repository and PR data
+  S->>P: Read repository and PR data with connection-specific authentication
   P-->>S: Requested content
   S-->>G: Metadata, diff, files, and limitations
   G-->>A: Analysis data
@@ -132,7 +135,8 @@ sequenceDiagram
   M-->>A: Candidate findings or request for more context
   Note over A,S: Additional context follows the same authorized MCP path
   A->>A: Validate findings, evidence, and coverage
-  A->>U: Hand over results for the analyzed commit
+  A->>B: Save report for the analyzed commit
+  A->>U: Hand over results when publication is enabled
   U->>P: Check whether the PR is still at the same commit
   alt PR still at the analyzed commit
     U->>P: Publish summary on the PR

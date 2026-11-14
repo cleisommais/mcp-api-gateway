@@ -41,7 +41,8 @@ public final class GatewayServer implements AutoCloseable {
                         return McpSchema.CallToolResult.builder().structuredContent(result).addTextContent(Json.write(result)).isError(false).build();
                     } catch (Exception error) {
                         return McpSchema.CallToolResult.builder().isError(true)
-                                .addTextContent(error instanceof SecurityException ? error.getMessage() : "Downstream operation failed; inspect gateway audit").build();
+                                .addTextContent(error instanceof SecurityException || error instanceof dev.cleisommais.mcp.f4.GitHubAccess.ConfigurationException
+                                        ? error.getMessage() : "Downstream operation failed; inspect gateway audit").build();
                     }
                 }).build()).toList();
         server = McpServer.sync(transport).serverInfo("review-mcp-gateway", "0.3.0")

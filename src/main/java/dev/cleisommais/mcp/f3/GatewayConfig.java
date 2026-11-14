@@ -11,7 +11,16 @@ import java.util.List;
 /** Administrative configuration loaded at startup, never from a model/tool argument. */
 public record GatewayConfig(String principal, int maxOpenJobs, List<Registration> servers) {
     public record Registration(String id, String transport, String mainClass, String version,
-                               String protocol, List<String> repositories) {}
+                               String protocol, List<String> repositories, String credentialMode) {
+        public Registration {
+            if (credentialMode == null) credentialMode = "anonymous";
+            if (!List.of("anonymous", "app").contains(credentialMode)) throw new IllegalArgumentException("Unapproved credential mode");
+            repositories = List.copyOf(repositories);
+        }
+        public Registration(String id, String transport, String mainClass, String version, String protocol, List<String> repositories) {
+            this(id, transport, mainClass, version, protocol, repositories, "anonymous");
+        }
+    }
 
     public GatewayConfig {
         if (principal == null || !principal.matches("[a-zA-Z0-9-]{1,64}") || maxOpenJobs < 1 || maxOpenJobs > 32

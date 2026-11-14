@@ -81,6 +81,20 @@ class PublicGitHubApiTest {
         assertEquals("src/My%20File.java", PublicGitHubApi.encodePath("src/My File.java"));
     }
 
+    @Test void draftAndTargetBranchChangesInvalidateTheSnapshot() throws Exception {
+        var draft = new java.util.concurrent.atomic.AtomicBoolean();
+        var branch = new java.util.concurrent.atomic.AtomicReference<>("main");
+        var api = start(path -> {
+            if (path.contains("/files?")) return List.of();
+            var values = new java.util.HashMap<>(metadata("b".repeat(40), 0));
+            values.put("draft", draft.get()); values.put("base", Map.of("sha", "a".repeat(40), "ref", branch.get()));
+            return values;
+        });
+        var snapshot = api.snapshot(); assertFalse(snapshot.draft()); assertEquals("main", snapshot.baseBranch());
+        draft.set(true); assertFalse(api.isCurrent());
+        draft.set(false); branch.set("other"); assertFalse(api.isCurrent());
+    }
+
     @Test void rejectsRepeatedPaginationRatherThanClaimingFullCoverage() throws Exception {
         var repeated = new ArrayList<Map<String, Object>>();
         for (int i = 0; i < 100; i++) repeated.add(Map.of("filename", "File" + i, "status", "modified",

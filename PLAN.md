@@ -57,8 +57,10 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 
 ### F4 — Automation, persistence, and publication
 
+**Implemented locally on `codex/f4-webhook-jobs-private-repos`:** signed edge admission, PostgreSQL jobs/deduplication/leases, a private worker, GitHub App token support, controlled summary publication/reconciliation, and four private fixture PRs with Java checks. The local signed-fixture → database → real MCP/model worker flow passed with publication disabled. Live private App reads, real GitHub webhook delivery, and bot publication remain pending the user's [App installation steps](docs/f4-github-app-setup.md); they are not claimed as validated. See the [F4 guide](docs/f4-webhook-jobs.md).
+
 - **Learn:** authenticated webhooks, app installation, durable jobs, recovery, and external effects.
-- **Deliver:** GitHub as the proposed first integration; the endpoint validates a webhook, saves a pending review, and confirms receipt. A background routine in the same Java application runs the agent, uses appropriate credentials, respects branch/draft rules, and hands the summary to publication. PostgreSQL and a simple database queue are proposals, without an additional broker; see [architecture.md](docs/architecture.md).
+- **Deliver:** GitHub first; a separate edge validates the signed webhook, commits a pending review, and confirms receipt. A private worker uses the same Java image, appropriate credentials, branch/draft/contributor/fork policy, and controlled publication. PostgreSQL is the implemented queue, without another broker. Internal worker/gateway authentication remains enforced; see [architecture.md](docs/architecture.md).
 - **Dependencies:** F3; installed GitHub App and defined permissions; an automation-compatible MCP Server; a dedicated database; an accessible HTTPS endpoint. Consider a tunnel for local webhooks; GitHub cannot directly reach `localhost`.
 - **Done when:** duplicate delivery produces one logical job; restart allows recovery; a new commit invalidates the previous review; publication records SHA and coverage and handles ambiguous results without deliberately duplicating the summary.
 - **Validate:** invalid signature, irrelevant event, draft, filtered branch, revoked installation, token expiration, rate limits, crash after publication, and PR changes during analysis. Distinguish webhook response time from review execution time.
@@ -74,6 +76,8 @@ Do not introduce Kubernetes, Kafka, Redis, multiple specialist agents, or distri
 - **Later:** remaining offerings and inline comments with platform-specific mapping.
 
 ### F6 — Second model or provider
+
+**Optional two-model experiment:** retain single-model review by default. Proposed `REVIEW_MODE=verified` adds a second model that checks the primary findings against the same immutable context, with explicit verifier model and extra-call/time/cost limits. Disagreements remain visible and evidence is validated in Java; never blindly union findings or assume agreement proves correctness. Run models sequentially on the 16 GB GPU and compare the known cases before adoption. These settings are planned, not implemented or silently enabled by F4.
 
 - **Learn:** compare quality, cost, context, tool use, and latency without coupling the harness to one provider.
 - **Deliver:** compare installed local models and run a small external-candidate trial on known PRs with an explicit budget. Select only one initial external provider for the demonstration, recording quality and total cost per review. Local inference already starts in F2.
@@ -110,4 +114,4 @@ Read the [F1 guide](docs/f1-mcp-stdio.md) to run it without AI and follow each c
 
 ## Current scope
 
-The user authorized F3 and model comparisons after the F2 quality gap, including consideration of `gpt-oss:20b` or `devstral:24b`. Project-owned Ollama/PostgreSQL and the public test repository remain the learning environment. F3 produces local reports through the gateway; webhooks, durable jobs, and PR publication remain F4. Other projects' containers and volumes are preserved; completed project changes are committed.
+The user authorized F4, private fixture tests/PRs, and access-control improvements appropriate to this phase. Local webhook/queue/worker checks are complete; live App/private/publication validation awaits the user's installation, for which a step-by-step guide is delivered at the end. Optional two-model verification is planned in F6, disabled by default. Project-owned Ollama/PostgreSQL and the public/private fixture repositories remain the learning environment. Other projects' infrastructure is preserved and completed project changes are committed.

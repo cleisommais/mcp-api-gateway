@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-/** Educational public GitHub adapter, bound to one PR for its entire subprocess lifetime. */
+/** Read-only GitHub adapter, bound to one PR and its administrative credential mode. */
 public final class GitHubMcpServer {
     private GitHubMcpServer() {}
 
@@ -23,7 +23,7 @@ public final class GitHubMcpServer {
                 "path", Map.of("type", "string", "minLength", 1)),
                 "required", List.of("sha", "path"), "additionalProperties", false);
         var server = McpServer.sync(new StdioServerTransportProvider(McpJsonDefaults.getMapper()))
-                .serverInfo("public-github-review", "0.2.0")
+                .serverInfo("github-review", "0.2.0")
                 .capabilities(McpSchema.ServerCapabilities.builder().tools(false).build())
                 .tools(tool("get_change_snapshot", "Read metadata and all available file patches, pinning base/head SHAs.",
                                 empty, arguments -> api.snapshot()),

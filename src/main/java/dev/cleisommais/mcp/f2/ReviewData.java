@@ -12,7 +12,16 @@ public final class ReviewData {
 
     public record Snapshot(String platform, String repository, int number, String title, String description,
                            String baseSha, String headSha, String headRepository, String state,
-                           int expectedFiles, boolean enumerationComplete, List<FileChange> files) {}
+                           int expectedFiles, boolean enumerationComplete, List<FileChange> files,
+                           boolean draft, String baseBranch) {
+        public Snapshot { if (baseBranch == null) baseBranch = ""; }
+        public Snapshot(String platform, String repository, int number, String title, String description,
+                        String baseSha, String headSha, String headRepository, String state,
+                        int expectedFiles, boolean enumerationComplete, List<FileChange> files) {
+            this(platform, repository, number, title, description, baseSha, headSha, headRepository, state,
+                    expectedFiles, enumerationComplete, files, false, "");
+        }
+    }
 
     public record Finding(String file, int line, String severity, String explanation, String evidence) {}
     public record Coverage(String file, String status, String reason) {}

@@ -58,16 +58,18 @@ services:
     command: ["${OLLAMA_MODEL:-gpt-oss:20b}"]
 
   gateway:
-    image: mcp-api-gateway:f3
+    image: mcp-api-gateway:f4
     build: .
-    profiles: [review]
+    profiles: [review, automation]
     environment:
       GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Run scripts/Initialize-LocalEnvironment.ps1 first}
       GATEWAY_CONFIG: /config/gateway.json
-    ports:
-      - "127.0.0.1:${GATEWAY_HOST_PORT:-18080}:8080"
+      GITHUB_APP_ID: ${GITHUB_APP_ID:-}
+      GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:-0}
+      GITHUB_PRIVATE_KEY_PATH: /run/secrets/github-app.pem
     volumes:
       - ./config/gateway.json:/config/gateway.json:ro
+      - ./secrets:/run/secrets:ro
     entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f3.GatewayServer]
     healthcheck:
       test: [CMD, java, "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f3.GatewayServer, --health]
@@ -76,7 +78,7 @@ services:
       retries: 6
 
   review:
-    image: mcp-api-gateway:f3
+    image: mcp-api-gateway:f4
     build: .
     profiles: [review]
     environment:
@@ -100,6 +102,83 @@ services:
       - ./reports:/reports
     entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f2.ManualReview]
 
+  edge:
+    image: mcp-api-gateway:f4
+    build: .
+    profiles: [automation, tunnel]
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/mcp_review
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Initialize the local environment first}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?Run scripts/Initialize-LocalEnvironment.ps1 first}
+      GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:-0}
+      AUTOMATION_CONFIG: /config/automation.json
+    ports:
+      - "127.0.0.1:${EDGE_HOST_PORT:-18081}:8081"
+    volumes:
+      - ./config/automation.json:/config/automation.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: [java, "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f4.WebhookEdge]
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.11.0
+    profiles: [tunnel]
+    command: [tunnel, --no-autoupdate, --url, "http://edge:8081"]
+    depends_on:
+      - edge
+
+  worker:
+    image: mcp-api-gateway:f4
+    build: .
+    profiles: [automation]
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/mcp_review
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Initialize the local environment first}
+      GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Initialize the local environment first}
+      MCP_GATEWAY_URL: http://gateway:8080
+      GITHUB_AUTH_MODE: app
+      GITHUB_APP_ID: ${GITHUB_APP_ID:-}
+      GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:-0}
+      GITHUB_PRIVATE_KEY_PATH: /run/secrets/github-app.pem
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gpt-oss:20b}
+      OLLAMA_THINK: ${OLLAMA_THINK:-medium}
+      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-8192}
+      REVIEW_OUTPUT_TOKENS: ${REVIEW_OUTPUT_TOKENS:-4096}
+      REVIEW_PROMPT_PROFILE: ${REVIEW_PROMPT_PROFILE:-calibrated}
+      PUBLISH_REVIEWS: ${PUBLISH_REVIEWS:-false}
+    volumes:
+      - ./secrets:/run/secrets:ro
+      - ./reports:/reports
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", dev.cleisommais.mcp.f2.AutomationWorker]
+
+  checks:
+    image: mcp-api-gateway:checks
+    build:
+      context: .
+      target: build
+    profiles: [testing]
+    environment:
+      TEST_DATABASE_URL: jdbc:postgresql://postgres:5432/mcp_review
+      TEST_DATABASE_USER: mcp_review
+      TEST_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Initialize the local environment first}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - maven_test_cache:/root/.m2
+    entrypoint: [mvn]
+    command: [--batch-mode, --no-transfer-progress, -Dtest=JobStoreIntegrationTest, test]
+
 volumes:
   postgres_data:
   ollama_data:
+  maven_test_cache:

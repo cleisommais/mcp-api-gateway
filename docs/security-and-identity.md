@@ -4,6 +4,8 @@
 
 Requested direction: least privilege, per-call authorization, and identity isolation. Concrete mechanisms below are **P** unless explicitly required. F7 expands evaluation; protections needed by a feature must be present when that feature is delivered.
 
+**F4 update:** the edge validates GitHub HMAC before parsing/queueing, checks the expected installation and repository IDs/names, and enforces branch/draft/contributor/fork policy. The worker and MCP Gateway have no default host ports; the existing worker credential and per-job resource checks remain enforced internally. Private network reachability is not identity. App tokens are minted/renewed locally per repository; the read-only MCP adapter and controlled publisher request different permission scopes. Keys stay in ignored mounted files. Deterministic tests and the local signed-fixture queue run passed; live App/private/publication validation awaits the [setup steps](f4-github-app-setup.md).
+
 **Implemented F3 lab:** the agent authenticates to the gateway with a generated local worker credential; the gateway authorizes the registered repository and binds a job to its PR/base/head snapshot. Only four upstream read/lifecycle tools are exposed. Server process, downstream catalog, version, protocol, and routing come from reviewed code/read-only configuration, never from model arguments. Each forwarded call revalidates the downstream catalog. The child process receives the SDK's minimal environment rather than the gateway credential. [F3 details](f3-governed-gateway.md) distinguish these implemented controls from the future OAuth/GitHub App design below.
 
 ## Identities and credentials at each boundary
@@ -65,7 +67,7 @@ For [GitLab](https://docs.gitlab.com/user/project/integrations/webhooks/) and [B
 
 ## Ollama and transmitted data
 
-The earlier other-project inventory found all-interface Ollama publication. That observation is historical. This project's Ollama now publishes only `127.0.0.1:11435`; its gateway publishes `127.0.0.1:18080` and requires the local worker credential. The agent calls Ollama over the project network without forwarding the gateway credential. A future deployment across an untrusted boundary needs appropriate TLS/authentication; the local lab makes no claim of native Ollama authentication.
+The earlier other-project inventory found all-interface Ollama publication. That observation is historical. This project's Ollama publishes only `127.0.0.1:11435`. F4 keeps the gateway internal by default and requires its worker credential; an explicit debugging override can publish loopback port 18080. The edge's loopback port 18081 can be fronted by the optional HTTPS tunnel. The agent calls Ollama over the project network without forwarding the gateway credential. A future deployment across an untrusted boundary needs appropriate TLS/authentication; the local lab makes no claim of native Ollama authentication.
 
 Only the model access layer should contact registered inference destinations. The model, PR, and tool result cannot choose an endpoint. The cloud demonstration uses an explicitly configured external API as its primary destination; this does not enable automatic fallback when local Ollama fails. Define provider, repositories, data classification, retention, budget, and transmission records. Local inference still requires networking for Git platforms and remote MCP Servers.
 

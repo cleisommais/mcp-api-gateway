@@ -20,8 +20,8 @@ The user requested independent Ollama and PostgreSQL for this project (D20), rep
 | Selected-model offload | `ollama ps`: **100% GPU**, 12 GB model entry |
 | GPU memory during GPT-OSS evaluation | 14,158 MiB used across the GPU; includes other host usage, not an isolated model measurement |
 | Parallelism | One inference, one loaded model, four queued requests; 10-minute keep-alive |
-| PostgreSQL | 17.6-alpine; healthy `mcp_review` database; reserved for F4 |
-| Host ports | Ollama `127.0.0.1:11435`; PostgreSQL `127.0.0.1:15432`; gateway `127.0.0.1:18080` |
+| PostgreSQL | 17.6-alpine; F4 uses the `review` schema for durable jobs and a separate `f4_demo` schema for local fixture evidence |
+| Host ports | Ollama `127.0.0.1:11435`; PostgreSQL `127.0.0.1:15432`; edge `127.0.0.1:18081`; gateway internal by default, loopback 18080 only with the debugging override |
 | Java endpoint | `http://ollama:11434` on the project's Compose network |
 | Persistent volumes | `mcp-api-gateway_ollama_data`, `mcp-api-gateway_postgres_data` |
 
@@ -57,4 +57,4 @@ The earlier read-only inspection found Ollama 0.18.0 in `divine-touch-infra`, wi
 
 Local inference avoids external inference charges but still uses disk, electricity, and hardware time; no energy accounting is required for this POC. A desktop-independent demonstration will use an explicitly selected external API on a temporary VPS, following the [cloud plan](cloud-demo-and-portfolio.md). ChatGPT/Codex account access is separate from Java application credentials and is not used as an inference API credential.
 
-F3 implements the governed MCP Gateway and a measured model comparison. F4 adds webhooks, PostgreSQL jobs, GitHub App identity, and controlled publication. Concurrent capacity, finer patch splitting, arbitrary-language tokenization, broader quality cases, and future model comparisons remain later experiments.
+F3 implements the governed MCP Gateway and model comparison. F4 implements signed edge admission, PostgreSQL jobs, App credential support, and controlled publication, with live installation/callback/publication validation still awaiting the user's [App setup](f4-github-app-setup.md). Optional second-model verification is planned for F6 and is not silently enabled. Concurrent capacity, finer patch splitting, arbitrary-language tokenization, and broader quality cases remain later experiments.
