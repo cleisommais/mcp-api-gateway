@@ -1,0 +1,337 @@
+openapi: 3.1.0
+info:
+  title: PR Review API Gateway
+  version: 0.1.0
+  description: |
+    Queues GitHub pull-request and GitLab merge-request reviews and exposes job status.
+    The worker publishes a summary comment as part of completion. Acknowledgement
+    means the database transaction committed; model analysis happens asynchronously.
+    Repository targets and credentials are configured by the service, not the caller.
+servers:
+  - url: http://localhost:18081
+    description: Local Compose API gateway
+security:
+  - apiToken: []
+tags:
+  - name: Health
+    description: Process health
+  - name: Reviews
+    description: Authenticated manual or CI-triggered reviews
+  - name: Webhooks
+    description: Signed GitHub App deliveries
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      tags: [Health]
+      summary: Check API process health
+      description: This identifies the HTTP process; it does not test model or repository availability.
+      security: []
+      responses:
+        '200':
+          description: API gateway is responding
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, component]
+                additionalProperties: false
+                properties:
+                  status: {type: string, const: UP}
+                  component: {type: string, const: api-gateway}
+  /api/reviews:
+    post:
+      operationId: createReview
+      tags: [Reviews]
+      summary: Queue a review for a configured repository
+      description: |
+        Accepts exactly platform, repository and number. Maximum body size is
+        16,384 bytes. The change must be open, non-draft, current, and target its
+        configured base branch. The service pins its base/head through MCP before
+        enqueueing. Repeating a snapshot returns its existing job, including terminal
+        jobs; it does not rerun a completed review. Model and publication settings
+        cannot be supplied in this request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateReviewRequest'}
+            examples:
+              github:
+                value: {platform: github, repository: cleisommais/pr-test-repo, number: 1}
+              gitlab:
+                value: {platform: gitlab, repository: cleisommais/pr-test-repo, number: 1}
+      responses:
+        '202':
+          description: New job persisted and queued
+          headers:
+            Location:
+              description: Relative URL for querying this job
+              schema: {type: string, format: uri-reference}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CreateReviewResponse'}
+        '200':
+          description: Existing snapshot job returned; duplicate is true
+          headers:
+            Location:
+              description: Relative URL for querying this job
+              schema: {type: string, format: uri-reference}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CreateReviewResponse'}
+        '400': {$ref: '#/components/responses/InvalidInput'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+        '413': {$ref: '#/components/responses/BodyTooLarge'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/reviews/{jobId}:
+    get:
+      operationId: getReview
+      tags: [Reviews]
+      summary: Get review progress, report and published-comment URL
+      description: |
+        Succeeded means analysis completed and its comment was published; it does
+        not mean the model's findings were independently proven correct. Partial
+        analysis may also have a published comment. A null report means no report
+        has been saved yet. Valid UUIDs use the lowercase canonical representation.
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema: {type: string, format: uuid, pattern: '^[a-f0-9-]{36}$'}
+      responses:
+        '200':
+          description: Current persisted job state
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReviewStatusResponse'}
+        '400': {$ref: '#/components/responses/InvalidInput'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404':
+          description: Job not found or request path does not match a supported route
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: job-not-found}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /webhooks/github:
+    post:
+      operationId: receiveGitHubWebhook
+      tags: [Webhooks]
+      summary: Receive a signed GitHub App webhook
+      description: |
+        Maximum body size is 1,000,000 bytes. GitHub computes HMAC-SHA256 over the
+        exact raw request bytes using the configured webhook secret. Reformatting
+        JSON changes the signature. Installation/repository, target-branch,
+        contributor-association and fork policies are checked before admission.
+        Ping and ignored deliveries are persisted without a job and return 200.
+        Eligible actions are opened, synchronize, reopened and ready_for_review.
+        This endpoint does not authenticate with the manual API bearer token.
+      security:
+        - githubSignature: []
+      parameters:
+        - name: X-GitHub-Delivery
+          in: header
+          required: true
+          description: Canonical lowercase delivery UUID; reuse with a different body is rejected.
+          schema: {type: string, format: uuid}
+        - name: X-GitHub-Event
+          in: header
+          required: true
+          description: Usually pull_request; ping is also supported. Other authorized events are ignored.
+          schema: {type: string, pattern: '^[a-z_]{1,64}$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: |
+                Native GitHub webhook payload. Pull-request events must include
+                installation.id, repository.id/full_name, action, number, and
+                pull_request with state, draft, author_association, updated_at,
+                base.sha/ref and head.sha/repo.full_name. The service does not
+                define a replacement GitHub event format.
+      responses:
+        '202':
+          description: Eligible delivery and new review job persisted
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WebhookReceipt'}
+        '200':
+          description: Duplicate, ping or ignored delivery persisted without creating a new job
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WebhookReceipt'}
+        '400': {$ref: '#/components/responses/InvalidInput'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+        '413': {$ref: '#/components/responses/BodyTooLarge'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+components:
+  securitySchemes:
+    apiToken:
+      type: http
+      scheme: bearer
+      description: |
+        Value from secrets/api-token, mounted through API_TOKEN_FILE. Configure
+        the same value as a CI secret when using the manual API from CI. It is
+        not a GitHub token, model-provider key, or the internal MCP token.
+    githubSignature:
+      type: apiKey
+      in: header
+      name: X-Hub-Signature-256
+      description: 'Computed HMAC, not a static API key: sha256=<64 lowercase hex digits>, using the webhook secret and raw request bytes.'
+  responses:
+    InvalidInput:
+      description: Invalid JSON, fields, event identifiers or ineligible manual snapshot
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Unauthorized:
+      description: Missing or incorrect manual API bearer token
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+          example: {error: unauthorized}
+    Forbidden:
+      description: Disallowed repository or failed webhook signature/installation/policy validation
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    MethodNotAllowed:
+      description: The controller requires POST
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+          example: {error: POST-required}
+    BodyTooLarge:
+      description: Request exceeds this endpoint's byte limit
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+          example: {error: body-too-large}
+    Unavailable:
+      description: Required database, MCP, repository access or configuration is unavailable
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+  schemas:
+    CreateReviewRequest:
+      type: object
+      additionalProperties: false
+      required: [platform, repository, number]
+      properties:
+        platform: {type: string, enum: [github, gitlab]}
+        repository:
+          type: string
+          pattern: '^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_.-]+)+$'
+          description: GitHub owner/repository or GitLab namespace/project, including nested GitLab groups.
+        number: {type: integer, format: int32, minimum: 1, maximum: 2147483647}
+      allOf:
+        - if:
+            properties:
+              platform: {const: github}
+          then:
+            properties:
+              repository: {pattern: '^[A-Za-z0-9_-]+/[A-Za-z0-9_.-]+$'}
+    CreateReviewResponse:
+      type: object
+      additionalProperties: false
+      required: [jobId, state, duplicate, statusUrl]
+      properties:
+        jobId: {type: string, format: uuid}
+        state: {$ref: '#/components/schemas/JobState'}
+        duplicate: {type: boolean}
+        statusUrl: {type: string, format: uri-reference, example: /api/reviews/4b7bbdc1-b451-4519-926b-9f9bf966de50}
+    JobState:
+      type: string
+      enum: [queued, running, publishing, succeeded, partial, failed, superseded, publication_uncertain]
+    ReviewStatusResponse:
+      type: object
+      additionalProperties: false
+      required: [jobId, platform, repository, number, state, attempts, failureCode, publicationState, commentId, commentUrl, createdAt, updatedAt, report]
+      properties:
+        jobId: {type: string, format: uuid}
+        platform: {type: string, enum: [github, gitlab]}
+        repository: {type: string}
+        number: {type: integer, format: int32, minimum: 1}
+        state: {$ref: '#/components/schemas/JobState'}
+        attempts: {type: integer, minimum: 0}
+        failureCode: {type: [string, 'null']}
+        publicationState: {type: string, enum: [none, uncertain, published]}
+        commentId: {type: [integer, 'null'], format: int64}
+        commentUrl: {type: [string, 'null'], format: uri}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+        report:
+          type: [object, 'null']
+          additionalProperties: true
+          description: |
+            Saved analysis containing findings, coverage, warnings, errors, snapshot
+            SHAs and provider metadata. Additional diagnostic fields can be present.
+          properties:
+            status: {type: string, enum: [complete, partial, outdated]}
+            platform: {type: string, enum: [github, gitlab]}
+            repository: {type: string}
+            number: {type: integer, minimum: 1}
+            baseSha: {type: string, pattern: '^[a-f0-9]{40}$'}
+            headSha: {type: string, pattern: '^[a-f0-9]{40}$'}
+            baseBranch: {type: string}
+            model: {type: string}
+            promptVersion: {type: string}
+            current: {type: boolean}
+            qualityStatus: {type: string, example: requires-human-review}
+            enumerationComplete: {type: boolean}
+            expectedFiles: {type: integer, minimum: 0}
+            enumeratedFiles: {type: integer, minimum: 0}
+            coverage:
+              type: array
+              items: {$ref: '#/components/schemas/Coverage'}
+            warnings:
+              type: array
+              items: {type: string}
+            errors:
+              type: array
+              items: {type: string}
+            findings:
+              type: array
+              items: {$ref: '#/components/schemas/Finding'}
+    Coverage:
+      type: object
+      additionalProperties: false
+      required: [file, status, reason]
+      properties:
+        file: {type: string}
+        status: {type: string, enum: [analyzed, excluded, pending, partial]}
+        reason: {type: string}
+    Finding:
+      type: object
+      additionalProperties: false
+      required: [file, line, severity, explanation, evidence]
+      properties:
+        file: {type: string}
+        line: {type: integer, minimum: 1}
+        severity: {type: string, enum: [LOW, MEDIUM, HIGH, CRITICAL]}
+        explanation: {type: string}
+        evidence: {type: string, description: Exact code evidence at an added line in the pinned patch}
+    WebhookReceipt:
+      type: object
+      additionalProperties: false
+      required: [outcome, duplicate, jobId]
+      properties:
+        outcome: {type: string, example: accepted}
+        duplicate: {type: boolean}
+        jobId:
+          type: string
+          description: Job UUID, or an empty string for ping/ignored deliveries.
+          example: ''
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error: {type: string}

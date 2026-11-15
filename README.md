@@ -1,6 +1,6 @@
 # PR Review Agent
 
-Java 21 service that reviews GitHub pull requests and GitLab merge requests, then publishes a summary comment with file, line and severity. Saved reports include exact code evidence. PostgreSQL holds the queue; Ollama runs inference locally. [Architecture](architecture.md) covers code entrypoints, API contracts and the database. [Plan](plan.md) lists remaining work.
+Java 21 service that reviews GitHub pull requests and GitLab merge requests, then publishes a summary comment with file, line and severity. Saved reports include exact code evidence. PostgreSQL holds the queue; Ollama runs inference locally. [Architecture](architecture.md) covers requirements, security, code entrypoints and the database. [open-api.yaml](open-api.yaml) defines the HTTP contract. [Plan](plan.md) lists remaining work.
 
 ## Start locally
 
@@ -32,7 +32,7 @@ The startup script builds the application, starts PostgreSQL and Ollama, downloa
 | `secrets/database-password` | PostgreSQL password; preserve it while reusing the database volume |
 | `secrets/openai-api-key` | Optional external provider key; unused by default |
 
-For a GitHub App: Settings -> Developer settings -> GitHub Apps -> create/select App. Grant repository **Contents: read**, **Pull requests: read**, **Issues: read and write** (summary comments), and **Metadata: read**. Install it on the selected repositories, download its PEM into `secrets/github-app.pem`, and enter the App and installation IDs in `.env`. Subscribe to **Pull request** events when enabling its webhook. Restart services after changing credentials.
+For a GitHub App: Settings -> Developer settings -> GitHub Apps -> create/select App. Grant repository **Contents: read**, **Pull requests: read and write** (summary publication), and **Metadata: read**. Install it on the selected repositories, download its PEM into `secrets/github-app.pem`, and enter the App and installation IDs in `.env`. Subscribe to **Pull request** events when enabling its webhook. Restart services after changing credentials.
 
 `config/repositories.json` controls manual/webhook targets, numeric repository/project IDs and target branches. `config/gateway.json` independently controls MCP routing and repository access. Update both when adding a repository. The checked-in configuration targets the owner's public/private test repositories.
 
@@ -69,8 +69,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Test-Project.ps1
 
 The test command runs the whole suite with real PostgreSQL; database tests use disposable schemas. Results are generated under ignored `reports/tests/`. Live review reports are also in PostgreSQL and `reports/job-*.json`. Runtime logs include job IDs and MCP routing decisions. `scripts/Test-LiveReviews.ps1` checks the nine configured test PRs/MRs against their expected findings and reads back each remote comment; run it only when you intend to publish/update comments in those test repositories.
 
-Last validation: **109 automated tests passed, zero skipped**, including real PostgreSQL. All nine public/private GitHub and GitLab reviews completed and their remote comments matched the saved reports. The strict model rubric passed **8/9**: public PR #3 was rated HIGH instead of the expected MEDIUM. Both clean PRs had zero findings, and the seeded defects were detected. Per-PR results are in `reports/live-results.json`; local configuration comparisons are in `reports/model-comparison.json`. These fixture results do not guarantee general model accuracy.
+Last validation: **111 automated tests passed, zero skipped**, including real PostgreSQL. All nine public/private GitHub and GitLab reviews completed and their remote comments matched the saved reports. The strict model rubric passed **8/9**: public PR #3 was rated HIGH instead of the expected MEDIUM. Both clean PRs had zero findings, and the seeded defects were detected. Per-PR results are in `reports/live-results.json`; local configuration comparisons are in `reports/model-comparison.json`. These fixture results do not guarantee general model accuracy.
 
+To compare the local provider with the GPT API on frozen public fixtures:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Test-ModelRegression.ps1 -Provider openai -Label api-check
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Test-ModelRegression.ps1 -Provider ollama -Label local-check
+```
+
+Labels must be unique. This opt-in check never publishes comments, permits only the fixed public test repository, and shares a persistent USD 0.10 reservation cap across API runs. Reports are under `reports/model-regression/`. The GPT API scored 4/4 before and after a stricter severity-prompt trial; the trial reduced local accuracy to 1/4, so the existing prompt was retained.
 For step-through debugging, install a Java 21 JDK and VS Code Extension Pack for Java, then:
 
 ```powershell

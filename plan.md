@@ -7,7 +7,8 @@
 - [x] Document HTTP contracts, debugger entrypoints, database model and cross-worker leasing.
 - [x] Run fresh automated and live public/private review/publication checks; record model accuracy separately.
 - [x] Record validation outcome, review the final diff and commit the refactor.
-- [ ] Improve model severity consistency: the strict fixture run is 8/9 because public pricing PR #3 is HIGH rather than MEDIUM.
+- [x] Check the local severity mismatch against the GPT API on frozen public fixtures (4/4); accept local variability for the POC and reject a prompt candidate that regressed locally.
+- [x] Add the root OpenAPI contract and document delivered requirements, security boundaries and webhook/CI authentication.
 
 Next planned work: validate GitHub-delivered webhooks through a public HTTPS callback, then optionally demonstrate the flow on a temporary VPS with Compose and external inference, followed by teardown. No cloud resources are provisioned by this refactor.
 

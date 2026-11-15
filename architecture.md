@@ -2,6 +2,28 @@
 
 A component-oriented, layered Java backend. Controllers translate HTTP to DTOs, services run workflows, repositories own SQL, and platform clients own external API calls. There is no view layer. The neutral `com.prreview` namespace describes the application rather than an author or implementation milestone. One image runs three separate Java processes.
 
+## Delivered requirements
+
+| Functional requirement | Delivered behavior |
+| --- | --- |
+| Accept review requests | Signed GitHub App webhooks and authenticated manual/CI requests for configured GitHub PRs and GitLab MRs |
+| Queue work asynchronously | Persist the delivery/job before acknowledging; deduplicate deliveries and base/head snapshots |
+| Read the correct change | Retrieve metadata, diffs and bounded file context through MCP, pinned to immutable commit SHAs |
+| Review code | Build prompts, call the selected local or explicitly enabled external model, validate JSON and exact added-line evidence; optionally verify candidates with a second model |
+| Publish the result | Create/update a marked summary comment, including zero-findings and partial results; retain uncertain publication state for reconciliation |
+| Expose progress | Return job state, attempts, failures, analysis and the published-comment URL through the status API |
+
+| Non-functional requirement for this POC | Delivered mechanism and limit |
+| --- | --- |
+| Reproducible local operation | One Compose startup with five services; Java 21/Maven build runs in Docker; debugger attach configurations are included |
+| Durable processing and recovery | PostgreSQL transactions, unique snapshot key, atomic claims, owner fencing and renewable leases; execution is at least once |
+| Bounded resource use | Compose defaults: one active job, 8K model context, 4,096 output tokens, 240-second call timeout and 600-second review deadline; coverage exposes incomplete work |
+| Controlled external usage | External inference is disabled by default; explicit repository allowlist, key file, persistent cost reservations and bounded calls are required |
+| Diagnosable results | Correlated job IDs, MCP audit decisions, saved coverage/errors/provider metadata and comment reconciliation |
+| Verifiable behavior | Real PostgreSQL integration tests, MCP/HTTP/provider contract tests and opt-in live/public-fixture regression checks |
+
+These are local POC capabilities. Availability targets, multi-tenant isolation, Kubernetes deployment, distributed inference admission and production capacity guarantees are not delivered. Model evidence validation checks location and format; human review still assesses whether a finding is correct.
+
 ## Components and boundaries
 
 ```mermaid
@@ -42,7 +64,37 @@ The MCP gateway routes repository **tools**, not Claude/OpenAI/Ollama inference.
 4. `ReviewService.review` selects the configured model(s). `ReviewEngine.review` builds bounded batches from patches and supplemental context, treats repository instructions as untrusted data, requests schema-constrained JSON, and checks finding paths, added lines and exact evidence. `OllamaModelClient.generate` includes the response schema in the system prompt and calls Ollama `/api/chat`. Optional `CandidateVerifier` evaluates proposed findings. Reports include coverage and failures rather than treating incomplete analysis as clean.
 5. The worker persists the report before any remote write. Under `publicationLock`, `GitHubReviewPublisher.publish` or `GitLabReviewPublisher.publish` revalidates the snapshot, finds its own marked comment, records write uncertainty, then creates or updates that comment. It records the comment ID and terminal state. Status derives the comment URL from the stored identity.
 
+## Authentication and security
+
+The source repository is a resource identifier, not an authenticated caller. The caller is GitHub delivering a webhook, or a CI job/user sending an HTTP request. Repository-read credentials are a separate outbound concern.
+
+| Connection | Authentication and checks |
+| --- | --- |
+| GitHub App -> `POST /webhooks/github` | GitHub signs the raw body with the App webhook secret. `GitHubWebhookPolicy.validate` verifies `X-Hub-Signature-256`, installation ID and configured repository; eligible actions also check target branch, contributor association and fork policy. Delivery UUID/body hash prevent replay from creating another job. |
+| CI/user -> `POST /api/reviews` and `GET /api/reviews/{id}` | `Authorization: Bearer <api-token>`, checked by `ReviewController.handle`. The token comes from `API_TOKEN_FILE`; requests are restricted to configured repository targets. This POC has one shared API token, not per-user or per-repository identities. |
+| API/worker -> MCP gateway | Separate internal bearer token, approved tool catalog, configured repository routing and pinned job/commit/path scope |
+| Services -> GitHub/GitLab | GitHub App private key signs a JWT used to obtain a repository-scoped installation token. Reads request read permissions; publication requests Pull requests write. GitLab uses separate read and publish token files. These credentials are never supplied in the review request. |
+| Worker -> inference | Ollama is local to the Compose environment. External requests use the provider key over HTTPS, after the explicit external-data and budget checks. |
+
+**GitHub App webhook setup:** configure the App callback as `https://<reachable-api-host>/webhooks/github`, select JSON, and configure the same secret as `secrets/github-webhook-secret`. Install the App on allowed repositories and subscribe to Pull request events. Opening/updating an eligible PR then triggers the review directly; a GitHub Actions workflow is not required for this path.
+
+**GitHub Actions or GitLab CI setup:** store the value of `secrets/api-token` as a CI secret such as `PR_REVIEW_API_TOKEN`, and the reachable HTTPS base URL as `REVIEW_API_URL`. A hosted CI runner cannot reach the developer computer's `localhost`. Provide the token only to trusted jobs. The request is:
+
+```http
+POST /api/reviews
+Authorization: Bearer <PR_REVIEW_API_TOKEN>
+Content-Type: application/json
+
+{"platform":"github","repository":"owner/repository","number":123}
+```
+
+A GitHub Actions job obtains the repository and number from `github.repository` and `github.event.pull_request.number`. A GitLab MR pipeline uses `platform=gitlab`, `CI_PROJECT_PATH` and `CI_MERGE_REQUEST_IID`. It receives a job/status URL and can poll using the same bearer token. GitLab currently uses this API path; there is no GitLab webhook controller.
+
+Only the API gateway is exposed for incoming review traffic. Local PostgreSQL/Ollama ports and optional debugger ports bind to loopback; MCP has no default host port. Public HTTPS terminates at the configured tunnel/reverse proxy. The delivered controls use signatures, tokens and allowlists; IP filtering, OIDC, per-caller scopes and internal TLS are not implemented. Repository text is untrusted model input, and repository code is never executed. Credentials live in ignored `secrets/` files with per-service mounts; `.env` contains settings.
+
 ## HTTP contracts
+
+Machine-readable contract: [open-api.yaml](open-api.yaml).
 
 | Method/path | Authentication | Contract |
 | --- | --- | --- |
