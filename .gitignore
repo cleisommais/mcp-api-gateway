@@ -7,4 +7,3 @@
 *.log
 /reports/
 /secrets/
-/model-secrets/

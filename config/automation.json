@@ -1,8 +1,0 @@
-{
-  "repositories": [
-    {"id": 1456683306, "name": "cleisommais/pr-test-repo", "baseBranch": "main"},
-    {"id": 1457261925, "name": "cleisommais/pr-test-repo-private", "baseBranch": "main"}
-  ],
-  "trustedAssociations": ["OWNER", "MEMBER", "COLLABORATOR"],
-  "allowForks": false
-}

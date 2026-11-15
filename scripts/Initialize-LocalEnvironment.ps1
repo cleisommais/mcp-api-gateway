@@ -1,21 +1,19 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
+$secretRoot = Join-Path $projectRoot 'secrets'
+New-Item -ItemType Directory -Force $secretRoot | Out-Null
 $envPath = Join-Path $projectRoot '.env'
-New-Item -ItemType Directory -Force -Path (Join-Path $projectRoot 'secrets') | Out-Null
-$content = if (Test-Path -LiteralPath $envPath) { [IO.File]::ReadAllText($envPath) }
-    else { [IO.File]::ReadAllText((Join-Path $projectRoot '.env.example')) }
-$changed = $false
-foreach ($key in @('POSTGRES_PASSWORD', 'GATEWAY_TOKEN', 'WEBHOOK_SECRET')) {
-    $pattern = '(?m)^' + $key + '=([^\r\n]*)'
-    $match = [regex]::Match($content, $pattern)
-    if ($match.Success -and -not [string]::IsNullOrWhiteSpace($match.Groups[1].Value)) { continue }
-    $bytes = New-Object byte[] 32
-    $random = [Security.Cryptography.RandomNumberGenerator]::Create()
-    try { $random.GetBytes($bytes) } finally { $random.Dispose() }
-    $line = $key + '=' + [Convert]::ToBase64String($bytes)
-    if ($match.Success) { $content = [regex]::Replace($content, $pattern, $line) }
-    else { $content = $content.TrimEnd() + "`n" + $line + "`n" }
-    $changed = $true
+if (!(Test-Path $envPath)) { Copy-Item (Join-Path $projectRoot '.env.example') $envPath }
+foreach ($name in @('database-password','mcp-gateway-token','github-webhook-secret','api-token','gitlab-read-token','gitlab-publish-token','openai-api-key','github-app.pem')) {
+    $path = Join-Path $secretRoot $name
+    if (Test-Path $path) { continue }
+    $value = ''
+    if ($name -in @('database-password','mcp-gateway-token','github-webhook-secret','api-token')) {
+        $bytes = New-Object byte[] 32
+        $rng = [Security.Cryptography.RandomNumberGenerator]::Create()
+        try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
+        $value = [Convert]::ToBase64String($bytes)
+    }
+    [IO.File]::WriteAllText($path, $value, (New-Object Text.UTF8Encoding($false)))
 }
-if ($changed) { [IO.File]::WriteAllText($envPath, $content, (New-Object Text.UTF8Encoding($false))) }
-Write-Output 'Local environment ready; existing values preserved and missing credentials generated.'
+Write-Output 'Credential files initialized in secrets/; existing files preserved.'

@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS jobs (
  id uuid PRIMARY KEY,
+ platform text NOT NULL DEFAULT 'github',
  repository_id bigint NOT NULL,
  repository text NOT NULL,
  pr_number integer NOT NULL,
@@ -17,9 +18,12 @@ CREATE TABLE IF NOT EXISTS jobs (
  publication_state text NOT NULL DEFAULT 'none',
  publication_id bigint,
  created_at timestamptz NOT NULL DEFAULT now(),
- updated_at timestamptz NOT NULL DEFAULT now(),
- UNIQUE(repository_id, pr_number, base_sha, head_sha)
+ updated_at timestamptz NOT NULL DEFAULT now()
 );
+-- Preserve the existing local queue when upgrading from the GitHub-only schema.
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS platform text NOT NULL DEFAULT 'github';
+ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_repository_id_pr_number_base_sha_head_sha_key;
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_snapshot_unique ON jobs(platform,repository_id,pr_number,base_sha,head_sha);
 CREATE INDEX IF NOT EXISTS jobs_pending ON jobs(state, created_at);
 CREATE TABLE IF NOT EXISTS deliveries (
  delivery_id uuid PRIMARY KEY,

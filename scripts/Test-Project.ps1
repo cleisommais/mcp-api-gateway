@@ -1,8 +1,5 @@
-# Build-time tests deliberately have no database; this run supplies the project PostgreSQL connection.
-Push-Location -LiteralPath (Split-Path -Parent $PSScriptRoot) -ErrorAction Stop
-try {
-    & docker compose --profile testing build checks
-    if ($LASTEXITCODE -ne 0) { throw 'Checks image build failed' }
-    & docker compose --profile testing run --rm checks --batch-mode --no-transfer-progress test
-    if ($LASTEXITCODE -ne 0) { throw 'Project tests failed' }
-} finally { Pop-Location }
+$ErrorActionPreference = 'Stop'
+Set-Location (Split-Path -Parent $PSScriptRoot)
+New-Item -ItemType Directory -Force reports/tests | Out-Null
+docker compose -f compose.yaml -f compose.tools.yaml run --build --rm checks
+if ($LASTEXITCODE) { throw 'Test suite failed' }

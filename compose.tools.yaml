@@ -1,0 +1,16 @@
+# Auxiliary build/test tools; normal startup uses compose.yaml alone.
+services:
+  checks:
+    image: mcp-api-gateway:checks
+    build: {context: ., target: build}
+    profiles: [testing]
+    environment:
+      TEST_DATABASE_URL: jdbc:postgresql://postgres:5432/mcp_review
+      TEST_DATABASE_USER: mcp_review
+      TEST_DATABASE_PASSWORD_FILE: /run/secrets/database-password
+    secrets: [database-password]
+    depends_on:
+      postgres: {condition: service_healthy}
+    volumes: ["maven_test_cache:/root/.m2", "./reports/tests:/workspace/target/surefire-reports"]
+    entrypoint: [mvn]
+    command: [--batch-mode, --no-transfer-progress, test]

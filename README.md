@@ -1,77 +1,96 @@
-# MCP API Gateway — project plan
+# PR Review Agent
 
-A PR/MR review POC with a Java agent, MCP Gateway, and adapters for GitHub, GitLab, and Bitbucket. Its purpose is hands-on learning and an interview portfolio demonstrating MCP Client, MCP Servers, authorization, and auditing.
+Java 21 service that reviews GitHub pull requests and GitLab merge requests, then publishes a summary comment with file, line and severity. Saved reports include exact code evidence. PostgreSQL holds the queue; Ollama runs inference locally. [Architecture](architecture.md) covers code entrypoints, API contracts and the database. [Plan](plan.md) lists remaining work.
 
-**Status as of 2026-11-14:** F1–F3 and F4's local webhook/queue/worker implementation are verified. **F5 adds live-validated GitLab.com review and summary publication** on `codex/f5-gitlab-adapter`: private [MR !1](https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/1) produced the expected finding, and repeated publication updated one summary. GitLab automation remains unsupported. Live GitHub App authentication and private PR #1 review are verified; real GitHub webhook/publication still await the remaining [installation steps](docs/f4-github-app-setup.md). The [model investigation](docs/f3-model-evaluation.md) separates reasoning quality from valid JSON.
+## Start locally
 
-**Project language: English.** Documentation, diagrams, code comments, tool descriptions, application messages, and future commit messages use English.
-
-**F6 is implemented and evaluated:** configurable providers, optional candidate verification, shared call/deadline limits and external campaign reservations. The approved GPT-6 Luna trial matched all four public cases at an estimated USD 0.001092175 across six API calls; it is selected for the initial external demonstration. Local single-model GPT-OSS stays default. The [F6 guide](docs/f6-model-providers.md) preserves verifier failures and explains why agreement is not proof of correctness.
-
-**F7 is implemented and exercised:** independent job/repository/inference/platform-read limits, two-repository execution, a killed-worker recovery and explicit partial/failure reporting. The complete suite passes **104 tests with zero skips**, including all five PostgreSQL tests. Live experiments also preserve wide-PR false positives and an injection-case severity error; these are quality failures, not claimed successes. [F7 guide](docs/f7-concurrency-and-recovery.md).
-
-This project owns its Ollama and PostgreSQL containers, network, and named volumes. Its measured F3 default is `gpt-oss:20b` with medium reasoning on the local NVIDIA GPU; the Qwen candidates remain installed for comparison. To demonstrate independence from the personal computer, the plan includes a temporary VPS using an external model API, initially without a cloud GPU or Ollama on the VPS. The Java harness coordinates the review; Ollama serves the local model; the gateway governs tools.
-
-This is not intended to become a commercial service or a permanently available installation. The repository will be prepared for public release with reproducible instructions, examples, evaluations, and a short recording. The demonstration ends by exporting evidence and removing billable resources.
-
-## Documentation
-
-| Document | Main content |
-| --- | --- |
-| [PLAN.md](PLAN.md) | Scope, phases, learning goals, and first exercise |
-| [F1: Java MCP call](docs/f1-mcp-stdio.md) | How to run, understand, and verify the first phase |
-| [F2: local PR review](docs/f2-local-pr-review.md) | Compose setup, code walkthrough, manual review, limits, and test results |
-| [F3: governed gateway](docs/f3-governed-gateway.md) | Separate containers, scoped routing, lab identity, contract validation, audit, and tests |
-| [F3: model quality investigation](docs/f3-model-evaluation.md) | Identical-input comparisons, larger models, reasoning settings, failures, and conclusions |
-| [F4: webhook jobs and private access](docs/f4-webhook-jobs.md) | Edge admission, PostgreSQL queue, worker, installation tokens, and publication recovery |
-| [F4: install the GitHub App](docs/f4-github-app-setup.md) | Step-by-step registration, key, selected repositories, local settings, tunnel, and first live review |
-| [F5: second platform, GitLab.com](docs/f5-gitlab-platform.md) | Shared contracts, semantic translation, credentials, manual review/publication, live evidence and unsupported capabilities |
-| [F6: model providers and verification](docs/f6-model-providers.md) | Configurable local/external provider, optional verifier, call/deadline/campaign limits, and controlled comparisons |
-| [F7: concurrency and recovery](docs/f7-concurrency-and-recovery.md) | Independent limits, all database tests, two repositories, restart/fault/coverage experiments and honest quality results |
-| [Requirements](docs/requirements.md) | Functional/nonfunctional requirement IDs, acceptance, measurement, and phase |
-| [Architecture](docs/architecture.md) | Components, contracts, flows, and coverage |
-| [Security and identity](docs/security-and-identity.md) | Credentials, authorization, and threats |
-| [Decisions](docs/decisions.md) | Confirmed directions, proposals, future work, and alternatives |
-| [Open questions](docs/open-questions.md) | Outstanding choices, recommendations, and when to address them |
-| [Local infrastructure](docs/local-inference.md) | Verified inventory, Ollama, networking, evaluation, and future updates |
-| [Cloud demonstration and portfolio](docs/cloud-demo-and-portfolio.md) | Temporary VPS, API comparison, budget, evidence, and teardown |
-
-Decision classifications are defined in [decisions.md](docs/decisions.md). Including a technical proposal in a diagram or acceptance criterion does not make it an approved decision.
-
-## Run the current review flow
+Requires Docker Desktop with Linux containers, Docker Compose, PowerShell and an NVIDIA GPU supported by Docker. The default model is `gpt-oss:20b` with low reasoning (about 14 GB of model storage; tested with 16 GB VRAM). No host Java or Maven is required to run containers.
 
 ```powershell
+Copy-Item .env.example .env # First setup only; preserve an existing .env.
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Initialize-LocalEnvironment.ps1
-docker compose up -d postgres ollama
-docker compose --profile setup run --rm model-pull
-docker compose --profile review build gateway review
-docker compose --profile review up -d gateway
-docker compose --profile review run --rm review github cleisommais/pr-test-repo 1
+# Configure credentials below, then:
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Start-Local.ps1
+Invoke-RestMethod http://localhost:18081/health
 ```
 
-Reports appear in `reports/`. Ollama uses host loopback port 11435 and PostgreSQL 15432. F4's optional edge uses 18081; the worker and MCP Gateway have no host ports by default. `compose.debug.yaml` explicitly restores a loopback gateway debugging port if needed. The initializer preserves existing values and generates missing database/gateway/webhook secrets in ignored `.env`. PostgreSQL now stores durable review jobs.
+The startup script builds the application, starts PostgreSQL and Ollama, downloads the selected model if missing, and starts all three Java services. Normal startup needs no profiles. After source changes, run the same command again. Startup preserves database and model volumes.
 
-For the second platform, configure `GITLAB_READ_TOKEN` in `.env`, then run `docker compose --profile review run --rm review gitlab cleisommais/pr-test-repo 1`. The [F5 guide](docs/f5-gitlab-platform.md) explains the separate publication token and explicit `gitlab-publish` command. The model/review container receives neither GitLab credential.
+## Configuration
 
-The [F4 guide](docs/f4-webhook-jobs.md) explains the current boundaries and the [private fixture PRs](https://github.com/cleisommais/pr-test-repo-private/pulls). A signed local fixture exercised the real queue, gateway, and model with publication disabled. Enable bot comments only after following the App guide. `complete` still describes mechanical coverage/validation, and quality requires human review. [F6](docs/f6-model-providers.md) implements optional candidate verification, disabled by default; two models agreeing does not establish correctness.
+`.env` contains settings. All credentials are ignored files in **`secrets/`**, mounted individually only into services that need them. The initializer preserves existing credentials and generates local database, API, MCP and webhook secrets. Never commit these files.
 
-## Run all tests
+| File or setting | Purpose |
+| --- | --- |
+| `secrets/github-app.pem` | GitHub App private key, downloaded from the App settings |
+| `.env`: `GITHUB_APP_ID`, `GITHUB_INSTALLATION_ID` | App identity and installation; numeric values, not secrets |
+| `secrets/gitlab-read-token` | GitLab token with `read_api` and access to configured projects |
+| `secrets/gitlab-publish-token` | GitLab token with `api` and permission to comment |
+| `secrets/api-token` | Bearer token for manual review requests and status |
+| `secrets/mcp-gateway-token` | Internal MCP authentication |
+| `secrets/github-webhook-secret` | GitHub webhook HMAC secret |
+| `secrets/database-password` | PostgreSQL password; preserve it while reusing the database volume |
+| `secrets/openai-api-key` | Optional external provider key; unused by default |
 
-Run the complete suite with the project test database (including database tests):
+For a GitHub App: Settings -> Developer settings -> GitHub Apps -> create/select App. Grant repository **Contents: read**, **Pull requests: read**, **Issues: read and write** (summary comments), and **Metadata: read**. Install it on the selected repositories, download its PEM into `secrets/github-app.pem`, and enter the App and installation IDs in `.env`. Subscribe to **Pull request** events when enabling its webhook. Restart services after changing credentials.
+
+`config/repositories.json` controls manual/webhook targets, numeric repository/project IDs and target branches. `config/gateway.json` independently controls MCP routing and repository access. Update both when adding a repository. The checked-in configuration targets the owner's public/private test repositories.
+
+## Run a review
 
 ```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Invoke-Review.ps1 -Platform github -Repository cleisommais/pr-test-repo -Number 1
+# Private GitHub:
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Invoke-Review.ps1 -Platform github -Repository cleisommais/pr-test-repo-private -Number 1
+# GitLab:
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Invoke-Review.ps1 -Platform gitlab -Repository cleisommais/pr-test-repo -Number 1
+```
+
+This submits, polls and returns the report plus `commentUrl`. Publication is required in the normal worker path, including a zero-findings summary. Repeated requests for the same base/head reuse the existing job. Partial analysis is explicitly reported; a failed or uncertain job is not a successful review.
+
+Equivalent HTTP request:
+
+```powershell
+$headers = @{ Authorization = 'Bearer ' + (Get-Content secrets/api-token -Raw).Trim() }
+$body = '{"platform":"github","repository":"cleisommais/pr-test-repo","number":1}'
+$job = Invoke-RestMethod http://localhost:18081/api/reviews -Method Post -Headers $headers -ContentType application/json -Body $body
+Invoke-RestMethod ("http://localhost:18081" + $job.statusUrl) -Headers $headers
+```
+
+For GitHub automation, expose only the API gateway through your HTTPS callback/tunnel and set the App webhook URL to `/webhooks/github`, content type JSON and the secret from `secrets/github-webhook-secret`. An optional local tunnel starts with `docker compose -f compose.yaml -f compose.webhook.yaml up -d`; read its URL with `docker compose -f compose.yaml -f compose.webhook.yaml logs tunnel`. GitLab currently uses the manual API; there is no GitLab webhook endpoint.
+
+## Inspect, debug and test
+
+```powershell
+docker compose ps
+docker compose logs -f api-gateway agent-worker mcp-gateway
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Test-Project.ps1
 ```
 
-The image build alone intentionally skips database-only tests; the command above supplies PostgreSQL and runs all 104 with zero skips.
+The test command runs the whole suite with real PostgreSQL; database tests use disposable schemas. Results are generated under ignored `reports/tests/`. Live review reports are also in PostgreSQL and `reports/job-*.json`. Runtime logs include job IDs and MCP routing decisions. `scripts/Test-LiveReviews.ps1` checks the nine configured test PRs/MRs against their expected findings and reads back each remote comment; run it only when you intend to publish/update comments in those test repositories.
 
-## Run F1
+Last validation: **109 automated tests passed, zero skipped**, including real PostgreSQL. All nine public/private GitHub and GitLab reviews completed and their remote comments matched the saved reports. The strict model rubric passed **8/9**: public PR #3 was rated HIGH instead of the expected MEDIUM. Both clean PRs had zero findings, and the seeded defects were detected. Per-PR results are in `reports/live-results.json`; local configuration comparisons are in `reports/model-comparison.json`. These fixture results do not guarantee general model accuracy.
+
+For step-through debugging, install a Java 21 JDK and VS Code Extension Pack for Java, then:
 
 ```powershell
-docker build --progress plain -t mcp-api-gateway:f1 .
-docker run --rm --network none mcp-api-gateway:f1
+docker compose -f compose.yaml -f compose.debug.yaml up -d
 ```
 
-The client starts a child MCP Server over stdio, discovers `get_review_fixture`, and calls it with valid and invalid arguments. The build runs seven integration tests; the [F1 guide](docs/f1-mcp-stdio.md) explains each file and the unavailable-server scenario.
+Use the checked-in VS Code attach configurations (API 5005, MCP 5006, worker 5007). Start at `ReviewController.handle`, `ReviewRequestService.create`, `PostgresJobRepository.claim`, `ReviewWorker.once`, `ReviewEngine.review`, and the platform publisher's `publish` method. [Architecture](architecture.md) gives the call sequence. Debug ports bind to loopback.
 
-The F1 exercise needs no AI, Git account, database, or network ports. All implemented phases use Java 21 and MCP SDK 2.1.0. The project's infrastructure remains separate from other projects' containers and data.
+To retry a failed job after fixing its cause:
+
+```powershell
+docker compose exec agent-worker java -cp '/app/mcp-api-gateway.jar:/app/lib/*' com.prreview.tools.QueueAdminCli retry JOB_UUID
+```
+
+To recompute a terminal job after a model/configuration change, use `reanalyze JOB_UUID` in the same administrative command; its existing comment is updated. `retry` reuses a saved report when available.
+
+Stop with `docker compose down`. Do not add `-v` unless intentionally deleting this project's database and downloaded models.
+
+## Model settings
+
+Set `OLLAMA_MODEL`, `OLLAMA_THINK`, `OLLAMA_CONTEXT_LENGTH` and `REVIEW_OUTPUT_TOKENS` in `.env`. `REVIEW_MODE=verified` enables a second candidate-verification pass using `VERIFIER_MODEL` (default `qwen3:14b`; download with `docker compose exec ollama ollama pull qwen3:14b`). This increases latency and may reject valid findings; it does not guarantee higher accuracy. Repository reads use MCP; inference calls the provider directly.
+
+External inference requires explicit enablement, a repository allowlist and a positive campaign budget; it is disabled by default. Keep private code local unless you explicitly authorize its transmission. Model findings require human judgment; this service does not approve or merge changes.
