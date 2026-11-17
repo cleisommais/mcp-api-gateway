@@ -3,6 +3,8 @@ name: mcp-api-gateway
 x-java: &java
   image: mcp-api-gateway:local
   build: .
+  # Unix initialization records the host owner for secrets and report mounts.
+  user: "${LOCAL_UID:-10001}:${LOCAL_GID:-10001}"
   restart: unless-stopped
 x-database: &database
   DATABASE_URL: jdbc:postgresql://postgres:5432/mcp_review
@@ -35,7 +37,7 @@ services:
       retries: 20
     restart: unless-stopped
 
-  # Local GPU inference; repository tools do not pass through this service.
+  # Portable CPU inference. Optional NVIDIA acceleration: compose.gpu.yaml.
   ollama:
     image: ollama/ollama:${OLLAMA_VERSION:-0.40.16}
     environment:
@@ -47,13 +49,6 @@ services:
       OLLAMA_FLASH_ATTENTION: "1"
     ports: ["127.0.0.1:${OLLAMA_HOST_PORT:-11435}:11434"]
     volumes: ["ollama_data:/root/.ollama"]
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
     healthcheck:
       test: [CMD, ollama, list]
       interval: 10s

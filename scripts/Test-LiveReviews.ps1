@@ -1,6 +1,8 @@
 param([string]$BaseUrl='http://localhost:18081', [int]$TimeoutSeconds=3600)
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
+Set-Location $root
+New-Item -ItemType Directory -Force (Join-Path $root 'reports') | Out-Null
 $headers=@{Authorization='Bearer '+[IO.File]::ReadAllText((Join-Path $root 'secrets/api-token')).Trim()}
 $cases=@()
 foreach($repo in @('cleisommais/pr-test-repo','cleisommais/pr-test-repo-private')) {

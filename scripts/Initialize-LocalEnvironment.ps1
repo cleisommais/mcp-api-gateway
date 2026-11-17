@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $secretRoot = Join-Path $projectRoot 'secrets'
 New-Item -ItemType Directory -Force $secretRoot | Out-Null
+New-Item -ItemType Directory -Force (Join-Path $projectRoot 'reports') | Out-Null
 $envPath = Join-Path $projectRoot '.env'
 if (!(Test-Path $envPath)) { Copy-Item (Join-Path $projectRoot '.env.example') $envPath }
 foreach ($name in @('database-password','mcp-gateway-token','github-webhook-secret','api-token','gitlab-read-token','gitlab-publish-token','openai-api-key','github-app.pem')) {

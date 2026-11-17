@@ -7,3 +7,5 @@
 *.log
 /reports/
 /secrets/
+/compose.override.yaml
+__pycache__/

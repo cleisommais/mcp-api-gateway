@@ -1,0 +1,11 @@
+# Copy to compose.override.yaml to enable NVIDIA acceleration on Windows/Linux.
+# Docker Compose automatically loads that local override for normal commands.
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
