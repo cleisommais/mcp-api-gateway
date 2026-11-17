@@ -176,11 +176,13 @@ bash scripts/Initialize-BitbucketFixture.sh
 bash scripts/Test-LiveReviews.sh --platform bitbucket --label local-original --expected-prompt-version review-original-v3
 ```
 
-The setup credential also needs `write:repository:bitbucket` to create fixture commits and `write:pullrequest:bitbucket` to open PRs. Results and the commit/PR manifest are under `reports/bitbucket/`. The tracked [Bitbucket validation evidence](docs/evaluation/bitbucket/README.md) records live local/GPT results, including unsuccessful prompt profiles. [The Bitbucket guide](docs/bitbucket-platform.md#explicit-gpt-api-comparison) gives the isolated GPT API comparison commands and their repository/budget limits.
+The setup credential also needs `write:repository:bitbucket` to create fixture commits and `write:pullrequest:bitbucket` to open PRs. The fixture manifest is under `reports/bitbucket/`. The [current all-repository comparison](docs/evaluation/current/README.md) contains fresh local/GPT results for all four configured repositories. [The Bitbucket guide](docs/bitbucket-platform.md#explicit-gpt-api-comparison) gives the isolated GPT API comparison commands and their repository/budget limits.
 
-Latest automated validation: **134 Java tests passed, zero skipped**, including real PostgreSQL and 22 Bitbucket adapter/publication/gateway tests. The separate **14 Linux script/fixture checks** also passed.
+Latest automated validation: **134 Java tests passed, zero skipped**, including real PostgreSQL and 22 Bitbucket adapter/publication/gateway tests. The separate **18 Linux script/fixture/comparison checks** also passed.
 
-Earlier live validation: all nine public/private GitHub and GitLab reviews completed and their remote comments matched the saved reports. The strict model rubric passed **8/9**: public PR #3 was rated HIGH instead of the expected MEDIUM. Both clean PRs had zero findings, and the seeded defects were detected. Per-PR results are in `reports/live-results.json`; local configuration comparisons are in `reports/model-comparison.json`. Bitbucket now has a real baseline and five open PRs reviewed with both the local model and GPT API, with each published comment read back and checked against its saved report. These fixture results do not guarantee general model accuracy.
+Current live validation uses one fresh local analysis and one fresh GPT API analysis for each of 14 PRs/MRs across public GitHub, private GitHub, GitLab and Bitbucket. Both providers use the same verified prompt and commit pairs. [Current results](docs/evaluation/current/README.md) separate defect/clean checks, strict severity grading and publication/read-back. Raw current reports are under `reports/current/`; superseded reports were backed up under ignored `reports/archive/` and removed from the active result tables. These synthetic fixtures do not establish general model accuracy.
+
+To collect or verify the complete cohort, use `-Platform all` / `--platform all`. `-SubmitOnly -RequireFresh` / `--submit-only --require-fresh` rejects deduplicated jobs in a new evaluation schema; `-Resume` / `--resume` polls and verifies that exact submitted cohort without posting new requests. Specify the expected prompt version and model. Compare the two queues' pinned commits before starting the GPT worker. Run `python3 scripts/summarize_review_comparison.py` after both cohorts finish to regenerate the single current result table; the script rejects mismatched snapshots, models or prompt settings. The fresh comparison records its schemas and settings in `reports/current/campaign.json`.
 
 To compare the local provider with the GPT API on frozen public fixtures:
 
@@ -194,7 +196,7 @@ bash scripts/Test-ModelRegression.sh --provider openai --label api-check
 bash scripts/Test-ModelRegression.sh --provider ollama --label local-check
 ```
 
-Labels must be unique. This opt-in check never publishes comments, permits only the fixed public test repository, and shares a persistent USD 0.10 reservation cap across API runs. Reports are under `reports/model-regression/`. The GPT API scored 4/4 before and after a stricter severity-prompt trial; the trial reduced local accuracy to 1/4, so the existing prompt was retained.
+Labels must be unique. This opt-in check never publishes comments, permits only the fixed public test repository, and shares a persistent USD 0.10 reservation cap across API runs. Reports are under `reports/model-regression/`. Its outputs are separate from the current all-repository live comparison.
 
 Start the application first for either comparison; the API comparison also needs a key in `secrets/openai-api-key`.
 

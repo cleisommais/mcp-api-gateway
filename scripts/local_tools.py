@@ -92,11 +92,13 @@ def assess(job, status):
     severity = "MEDIUM" if gitlab or number == 3 else None if number == 2 else "HIGH"
     count = 1 if severity else 0
     quality = len(findings) == count
+    severity_passed = True
     if count == 1 and len(findings) == 1:
         finding = findings[0]
         file = "src/demo/ShippingCalculator.java" if gitlab else "src/demo/Checkout.java" if number == 3 else "src/demo/ArrayTotals.java"
         line = 10 if not gitlab and number == 3 else 9 if not gitlab and number == 4 else 8
-        quality = quality and finding.get("severity") == severity and finding.get("file") == file and finding.get("line") == line
+        severity_passed = finding.get("severity") == severity
+        quality = quality and finding.get("file") == file and finding.get("line") == line
         explanation = finding.get("explanation", "").replace(",", "")
         if gitlab:
             quality = quality and "5000" in explanation and "500" in explanation
@@ -105,12 +107,19 @@ def assess(job, status):
         else:
             quality = quality and bool(re.search(r"bounds|crash|exception", explanation, re.IGNORECASE))
     report = status.get("report") or {}
+    expected_files = report.get("expectedFiles", -1)
+    snapshot_passed = (report.get("current") is True and report.get("enumerationComplete") is True
+                       and isinstance(expected_files, int) and expected_files >= 0
+                       and report.get("enumeratedFiles") == expected_files and not report.get("errors")
+                       and all(not job.get(key) or job[key] == report.get(key) for key in ("baseSha", "headSha")))
     return {**{key: job[key] for key in ("platform", "repository", "number", "jobId")},
             "state": status["state"], "failureCode": status.get("failureCode"),
             "findings": len(findings), "actualSeverities": [f.get("severity") for f in findings],
             "model": report.get("model"), "promptVersion": report.get("promptVersion"),
             "analysisErrors": report.get("errors") or [], "expectedCount": count,
-            "expectedSeverity": severity, "qualityPassed": bool(quality),
+            "expectedSeverity": severity, "defectDetected": bool(quality and snapshot_passed),
+            "severityPassed": severity_passed, "snapshotPassed": snapshot_passed,
+            "qualityPassed": bool(quality and severity_passed and snapshot_passed),
             "commentUrl": status.get("commentUrl"), "publicationState": status.get("publicationState")}
 
 
@@ -150,7 +159,8 @@ def assess_bitbucket(job, status):
             "findings": len(findings), "actualSeverities": [finding.get("severity") for finding in findings],
             "model": report.get("model"), "promptVersion": report.get("promptVersion"),
             "analysisErrors": report.get("errors") or [], "expectedCount": expected["count"],
-            "expectedSeverity": expected["severity"], "defectDetected": bool(detected),
+            "expectedSeverity": expected["severity"], "defectDetected": bool(detected and snapshot_passed),
+            "severityPassed": severity_passed,
             "snapshotPassed": snapshot_passed, "qualityPassed": bool(detected and severity_passed and snapshot_passed),
             "commentUrl": status.get("commentUrl"), "publicationState": status.get("publicationState")}
 
@@ -169,16 +179,34 @@ def live(args):
              for number in range(1, 5)]
     cases.append({"platform": "gitlab", "repository": "cleisommais/pr-test-repo", "number": 1})
     platform = getattr(args, "platform", "existing")
-    if platform == "bitbucket":
-        cases = bitbucket_cases()
-    prefix = "bitbucket/live" if platform == "bitbucket" else "live"
+    if platform in ("bitbucket", "all"):
+        bitbucket = bitbucket_cases()
+        cases = cases + bitbucket if platform == "all" else bitbucket
+    directory = "bitbucket/" if platform == "bitbucket" else "current/" if platform == "all" else ""
+    prefix = directory + "live"
     if args.label:
-        prefix = ("bitbucket/" if platform == "bitbucket" else "") + args.label
-    for case in cases:
-        response = client.request("/api/reviews", {key: case[key] for key in ("platform", "repository", "number")})
-        jobs.append({**case, "jobId": response["jobId"], "statusUrl": response["statusUrl"]})
-        save_report(prefix + "-jobs.json", jobs)
-        print(f"{case['platform']} {case['repository']} #{case['number']}: {response['state']}", flush=True)
+        prefix = directory + args.label
+    if args.resume:
+        jobs = json.loads((ROOT / "reports" / (prefix + "-jobs.json")).read_text(encoding="utf-8-sig"))
+        jobs = [{**job.get("fixture", {}), **job} for job in jobs]
+        identity = lambda case: (case["platform"], case["repository"], case["number"])
+        if len(jobs) != len(cases) or {identity(job) for job in jobs} != {identity(case) for case in cases}:
+            raise ValueError("Saved jobs do not match the requested fixture cohort")
+        for job in jobs:
+            if not re.fullmatch(r"[a-f0-9-]{36}", job["jobId"]) or job["statusUrl"] != "/api/reviews/" + job["jobId"]:
+                raise ValueError("Invalid saved review job identity")
+            if job["platform"] == "bitbucket":
+                job["expected"] = next(case["expected"] for case in cases if identity(case) == identity(job))
+    else:
+        for case in cases:
+            response = client.request("/api/reviews", {key: case[key] for key in ("platform", "repository", "number")})
+            if args.require_fresh and response["duplicate"]:
+                raise ValueError("Existing job returned; use a fresh evaluation queue schema")
+            jobs.append({**case, "jobId": response["jobId"], "statusUrl": response["statusUrl"]})
+            save_report(prefix + "-jobs.json", jobs)
+            print(f"{case['platform']} {case['repository']} #{case['number']}: {response['state']}", flush=True)
+    if args.submit_only:
+        return
     deadline = time.monotonic() + args.timeout_seconds
     while True:
         results = [assess(job, client.request(job["statusUrl"])) for job in jobs]
@@ -186,6 +214,9 @@ def live(args):
             for result in results:
                 result["promptProfilePassed"] = result["promptVersion"] == args.expected_prompt_version
                 result["qualityPassed"] = result["qualityPassed"] and result["promptProfilePassed"]
+        for result in results:
+            result["modelPassed"] = not args.expected_model or result["model"] == args.expected_model
+            result["qualityPassed"] = result["qualityPassed"] and result["modelPassed"]
         save_report(prefix + "-results.json", results)
         if not any(result["state"] in ACTIVE_STATES for result in results):
             break
@@ -235,10 +266,15 @@ def main():
     review_parser.add_argument("--repository", default="cleisommais/pr-test-repo")
     review_parser.add_argument("--number", type=positive_integer, default=1)
     live_parser = commands.add_parser("live")
-    live_parser.add_argument("--platform", choices=("existing", "bitbucket"), default="existing")
+    live_parser.add_argument("--platform", choices=("existing", "bitbucket", "all"), default="existing")
     live_parser.add_argument("--label", type=run_label)
     live_parser.add_argument("--database-schema", type=database_schema)
     live_parser.add_argument("--expected-prompt-version", choices=("review-original-v3", "review-calibrated-v2"))
+    live_parser.add_argument("--expected-model")
+    mode = live_parser.add_mutually_exclusive_group()
+    mode.add_argument("--submit-only", action="store_true")
+    mode.add_argument("--resume", action="store_true")
+    live_parser.add_argument("--require-fresh", action="store_true")
     for command, timeout in ((review_parser, 1800), (live_parser, 3600)):
         command.add_argument("--base-url", default="http://localhost:18081")
         command.add_argument("--timeout-seconds", type=positive_integer, default=timeout)

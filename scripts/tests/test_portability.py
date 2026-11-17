@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 import threading
 import unittest
+import uuid
 
 
 SOURCE = Path(__file__).resolve().parents[2]
@@ -63,9 +64,11 @@ if 'show' in args and os.environ.get('MODEL_MISSING') == '1':
         self.run_script("Initialize-LocalEnvironment")
 
     @contextmanager
-    def api(self, state="succeeded", quality=True, comment=True):
+    def api(self, state="succeeded", quality=True, comment=True, duplicate=False):
         requests = []
         jobs = {}
+        test_case = self
+        self.get_count = 0
         token = (self.root / "secrets/api-token").read_text().strip()
 
         class Handler(BaseHTTPRequestHandler):
@@ -83,12 +86,13 @@ if 'show' in args and os.environ.get('MODEL_MISSING') == '1':
 
             def do_POST(self):
                 case = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-                job_id = str(len(jobs) + 1)
+                job_id = str(uuid.uuid4())
                 jobs[job_id] = case
                 requests.append(case)
-                self.respond({"jobId": job_id, "state": "queued", "duplicate": False, "statusUrl": "/jobs/" + job_id})
+                self.respond({"jobId": job_id, "state": "queued", "duplicate": duplicate, "statusUrl": "/api/reviews/" + job_id})
 
             def do_GET(self):
+                test_case.get_count += 1
                 case = jobs[self.path.rsplit("/", 1)[1]]
                 gitlab = case["platform"] == "gitlab"
                 number = case["number"]
@@ -105,7 +109,8 @@ if 'show' in args and os.environ.get('MODEL_MISSING') == '1':
                               "report": {"findings": findings, "errors": [], "model": "fixture",
                                          "promptVersion": "review-original-v3",
                                          "current": True, "enumerationComplete": True,
-                                         "enumeratedFiles": 22 if number == 2 else 2 if number == 3 else 1,
+                                         "enumeratedFiles": (23 if case["repository"].endswith("private") else 22) if number == 2 else 2 if number == 3 else 1,
+                                         "expectedFiles": (23 if case["repository"].endswith("private") else 22) if number == 2 else 2 if number == 3 else 1,
                                          "baseSha": "a" * 40, "headSha": "b" * 40}})
 
         server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
@@ -238,6 +243,44 @@ if 'show' in args and os.environ.get('MODEL_MISSING') == '1':
                              ("Test-ModelRegression", ["--provider", "bad", "--label", "test"]),
                              ("Test-ModelRegression", ["--label"]), ("Invoke-Review", ["--number", "0"])):
             self.run_script(script, *args, ok=False)
+        self.assertEqual([], self.calls())
+
+    def test_all_targets_submit_once_then_resume_without_reposting(self):
+        self.initialize()
+        shutil.copytree(SOURCE / "fixtures/bitbucket", self.root / "fixtures/bitbucket")
+        definitions = json.loads((self.root / "fixtures/bitbucket/cases.json").read_text())
+        manifest = {"repository": "cleisommais/pr-test-repo", "baseBranch": "main", "cases": [
+            {"id": case["id"], "platform": "bitbucket", "repository": "cleisommais/pr-test-repo", "number": number,
+             "baseSha": "a" * 40, "headSha": "b" * 40}
+            for number, case in enumerate(definitions, 1)]}
+        directory = self.root / "reports/bitbucket"
+        directory.mkdir()
+        (directory / "fixture-manifest.json").write_text(json.dumps(manifest))
+        with self.api() as (base_url, requests):
+            self.run_script("Test-LiveReviews", "--platform", "all", "--label", "fresh-local", "--base-url", base_url,
+                            "--submit-only", "--require-fresh")
+            self.assertEqual(14, len(requests))
+            self.assertEqual(0, self.get_count)
+            self.assertEqual([], self.calls())
+            # Windows and Bash can resume the same saved cohort.
+            jobs_path = self.root / "reports/current/fresh-local-jobs.json"
+            submitted = json.loads(jobs_path.read_text())
+            jobs_path.write_text(json.dumps([{**{key: job[key] for key in ("platform", "repository", "number", "jobId", "statusUrl")},
+                                             "fixture": {key: value for key, value in job.items() if key not in ("jobId", "statusUrl")}}
+                                            for job in submitted]))
+            self.run_script("Test-LiveReviews", "--platform", "all", "--label", "fresh-local", "--base-url", base_url,
+                            "--resume", "--expected-model", "fixture", "--expected-prompt-version", "review-original-v3")
+            self.assertEqual(14, len(requests))
+            self.assertEqual(14, self.get_count)
+        results = json.loads((self.root / "reports/current/fresh-local-results.json").read_text())
+        self.assertEqual(14, len(results))
+        self.assertTrue(all(result["qualityPassed"] and result["remoteCommentVerified"] for result in results))
+
+    def test_fresh_collection_rejects_deduplicated_jobs(self):
+        self.initialize()
+        with self.api(duplicate=True) as (base_url, _):
+            result = self.run_script("Test-LiveReviews", "--base-url", base_url, "--submit-only", "--require-fresh", ok=False)
+            self.assertIn("fresh evaluation queue", result.stderr)
         self.assertEqual([], self.calls())
 
 
