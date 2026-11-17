@@ -376,5 +376,26 @@ public class PostgresJobRepositoryTest {
         assertNotNull(first);
         assertNotNull(second);
         assertNotEquals(first.platform(), second.platform());
+        var bitbucket =
+                new ReviewEvent(
+                        UUID.randomUUID().toString(),
+                        github.payloadHash(),
+                        github.event(),
+                        github.action(),
+                        github.repositoryId(),
+                        github.repository(),
+                        github.number(),
+                        0,
+                        github.baseSha(),
+                        github.headSha(),
+                        github.baseBranch(),
+                        github.updatedAt(),
+                        true,
+                        "accepted",
+                        "bitbucket");
+        var receipt = store.enqueue(bitbucket);
+        assertNotEquals(first.id(), receipt.jobId());
+        assertNotEquals(second.id(), receipt.jobId());
+        assertEquals("bitbucket", store.find(receipt.jobId()).platform());
     }
 }

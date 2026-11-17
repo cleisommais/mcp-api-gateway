@@ -3,7 +3,7 @@ info:
   title: PR Review API Gateway
   version: 0.1.0
   description: |
-    Queues GitHub pull-request and GitLab merge-request reviews and exposes job status.
+    Queues GitHub/Bitbucket pull-request and GitLab merge-request reviews and exposes job status.
     The worker publishes a summary comment as part of completion. Acknowledgement
     means the database transaction committed; model analysis happens asynchronously.
     Repository targets and credentials are configured by the service, not the caller.
@@ -61,6 +61,8 @@ paths:
                 value: {platform: github, repository: cleisommais/pr-test-repo, number: 1}
               gitlab:
                 value: {platform: gitlab, repository: cleisommais/pr-test-repo, number: 1}
+              bitbucket:
+                value: {platform: bitbucket, repository: cleisommais/pr-test-repo, number: 1}
       responses:
         '202':
           description: New job persisted and queued
@@ -225,16 +227,16 @@ components:
       additionalProperties: false
       required: [platform, repository, number]
       properties:
-        platform: {type: string, enum: [github, gitlab]}
+        platform: {type: string, enum: [github, gitlab, bitbucket]}
         repository:
           type: string
           pattern: '^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_.-]+)+$'
-          description: GitHub owner/repository or GitLab namespace/project, including nested GitLab groups.
+          description: GitHub owner/repository, Bitbucket workspace/repository slug, or GitLab namespace/project (including nested GitLab groups).
         number: {type: integer, format: int32, minimum: 1, maximum: 2147483647}
       allOf:
         - if:
             properties:
-              platform: {const: github}
+              platform: {enum: [github, bitbucket]}
           then:
             properties:
               repository: {pattern: '^[A-Za-z0-9_-]+/[A-Za-z0-9_.-]+$'}
@@ -256,7 +258,7 @@ components:
       required: [jobId, platform, repository, number, state, attempts, failureCode, publicationState, commentId, commentUrl, createdAt, updatedAt, report]
       properties:
         jobId: {type: string, format: uuid}
-        platform: {type: string, enum: [github, gitlab]}
+        platform: {type: string, enum: [github, gitlab, bitbucket]}
         repository: {type: string}
         number: {type: integer, format: int32, minimum: 1}
         state: {$ref: '#/components/schemas/JobState'}
@@ -275,7 +277,7 @@ components:
             SHAs and provider metadata. Additional diagnostic fields can be present.
           properties:
             status: {type: string, enum: [complete, partial, outdated]}
-            platform: {type: string, enum: [github, gitlab]}
+            platform: {type: string, enum: [github, gitlab, bitbucket]}
             repository: {type: string}
             number: {type: integer, minimum: 1}
             baseSha: {type: string, pattern: '^[a-f0-9]{40}$'}

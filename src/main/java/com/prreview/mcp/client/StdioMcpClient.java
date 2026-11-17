@@ -38,6 +38,8 @@ public final class StdioMcpClient implements ChangeSource {
                 switch (platform) {
                     case "github" -> GitHubMcpServer.class.getName();
                     case "gitlab" -> com.prreview.mcp.server.gitlab.GitLabMcpServer.class.getName();
+                    case "bitbucket" ->
+                            com.prreview.mcp.server.bitbucket.BitbucketMcpServer.class.getName();
                     default -> throw new IllegalArgumentException("Unsupported review platform");
                 };
         String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();

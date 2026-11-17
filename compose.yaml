@@ -56,15 +56,17 @@ services:
       retries: 12
     restart: unless-stopped
 
-  # Internal MCP entrypoint. Routes allowlisted tools to GitHub/GitLab MCP subprocesses.
+  # Internal MCP entrypoint. Routes allowlisted tools to GitHub/GitLab/Bitbucket MCP subprocesses.
   mcp-gateway:
     <<: *java
     environment:
       <<: [*github, *mcp]
       GATEWAY_CONFIG: /config/gateway.json
       GITLAB_READ_TOKEN_FILE: /run/secrets/gitlab-read-token
+      BITBUCKET_READ_TOKEN_FILE: /run/secrets/bitbucket-read-token
+      BITBUCKET_EMAIL: ${BITBUCKET_EMAIL:-}
       PLATFORM_MAX_CONCURRENT: ${PLATFORM_MAX_CONCURRENT:-1}
-    secrets: [mcp-gateway-token, github-app-key, gitlab-read-token]
+    secrets: [mcp-gateway-token, github-app-key, gitlab-read-token, bitbucket-read-token]
     volumes: ["./config/gateway.json:/config/gateway.json:ro"]
     entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", -cp, "/app/mcp-api-gateway.jar:/app/lib/*", com.prreview.mcpgateway.McpGatewayApplication]
     healthcheck:
@@ -102,6 +104,7 @@ services:
       <<: [*database, *github, *mcp]
       MODEL_PROVIDER: ${MODEL_PROVIDER:-ollama}
       REVIEW_MODE: ${REVIEW_MODE:-single}
+      REVIEW_PROMPT_PROFILE: ${REVIEW_PROMPT_PROFILE:-original}
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL:-gpt-oss:20b}
       OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-8192}
@@ -118,13 +121,15 @@ services:
       WORKER_LEASE_SECONDS: ${WORKER_LEASE_SECONDS:-90}
       INFERENCE_MAX_CONCURRENT: "1"
       GITLAB_PUBLISH_TOKEN_FILE: /run/secrets/gitlab-publish-token
+      BITBUCKET_PUBLISH_TOKEN_FILE: /run/secrets/bitbucket-publish-token
+      BITBUCKET_EMAIL: ${BITBUCKET_EMAIL:-}
       OPENAI_API_KEY_FILE: /run/secrets/openai-api-key
       EXTERNAL_INFERENCE_ENABLED: ${EXTERNAL_INFERENCE_ENABLED:-false}
       EXTERNAL_ALLOWED_REPOSITORIES: ${EXTERNAL_ALLOWED_REPOSITORIES:-github:cleisommais/pr-test-repo}
       EXTERNAL_MAX_COST_USD: ${EXTERNAL_MAX_COST_USD:-0}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-6-luna}
       REPORT_DIR: /reports
-    secrets: [database-password, mcp-gateway-token, github-app-key, gitlab-publish-token, openai-api-key]
+    secrets: [database-password, mcp-gateway-token, github-app-key, gitlab-publish-token, bitbucket-publish-token, openai-api-key]
     volumes: ["./reports:/reports"]
     depends_on:
       postgres: {condition: service_healthy}
@@ -145,6 +150,8 @@ secrets:
   github-app-key: {file: ./secrets/github-app.pem}
   gitlab-read-token: {file: ./secrets/gitlab-read-token}
   gitlab-publish-token: {file: ./secrets/gitlab-publish-token}
+  bitbucket-read-token: {file: ./secrets/bitbucket-read-token}
+  bitbucket-publish-token: {file: ./secrets/bitbucket-publish-token}
   openai-api-key: {file: ./secrets/openai-api-key}
 
 volumes:

@@ -41,6 +41,7 @@ public record McpGatewayConfig(String principal, int maxOpenJobs, List<Registrat
             return switch (mainClass) {
                 case "com.prreview.mcp.server.github.GitHubMcpServer" -> "github";
                 case "com.prreview.mcp.server.gitlab.GitLabMcpServer" -> "gitlab";
+                case "com.prreview.mcp.server.bitbucket.BitbucketMcpServer" -> "bitbucket";
                 default -> throw new IllegalArgumentException("Unapproved server process");
             };
         }
@@ -74,7 +75,7 @@ public record McpGatewayConfig(String principal, int maxOpenJobs, List<Registrat
             }
             for (String repository : server.repositories()) {
                 GitLabApiClient.validateRepository(repository);
-                if ((platform.equals("github") && repository.split("/").length != 2)
+                if ((!platform.equals("gitlab") && repository.split("/").length != 2)
                         || !repositories.add(platform + ":" + repository)) {
                     throw new IllegalArgumentException("Invalid or ambiguously routed repository");
                 }

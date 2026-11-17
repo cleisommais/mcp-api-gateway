@@ -53,7 +53,7 @@ public final class ReviewToolCatalog {
     }
 
     public static Map<String, Map<String, Object>> schemas() {
-        return schemas(Set.of("github", "gitlab"));
+        return schemas(Set.of("github", "gitlab", "bitbucket"));
     }
 
     public static Map<String, Map<String, Object>> schemas(Set<String> platforms) {
@@ -67,7 +67,7 @@ public final class ReviewToolCatalog {
                         Map.of("type", "integer", "minimum", 1));
         var result = new LinkedHashMap<String, Map<String, Object>>();
         for (String platform : platforms) {
-            if (!Set.of("github", "gitlab").contains(platform))
+            if (!Set.of("github", "gitlab", "bitbucket").contains(platform))
                 throw new IllegalArgumentException("Unsupported platform");
             for (String operation :
                     List.of(

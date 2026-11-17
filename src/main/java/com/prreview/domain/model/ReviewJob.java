@@ -64,6 +64,13 @@ public record ReviewJob(
 
     public String publicationUrl() {
         if (publicationId == null) return null;
+        if (platform.equals("bitbucket"))
+            return "https://bitbucket.org/"
+                    + repository
+                    + "/pull-requests/"
+                    + number
+                    + "#comment-"
+                    + publicationId;
         return platform.equals("github")
                 ? "https://github.com/"
                         + repository

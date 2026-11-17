@@ -46,7 +46,7 @@ public final class GatewayMcpClient implements ChangeSource {
             String repository,
             int number,
             UUID jobId) {
-        if (!Set.of("github", "gitlab").contains(platform))
+        if (!Set.of("github", "gitlab", "bitbucket").contains(platform))
             throw new IllegalArgumentException("Unsupported review platform");
         this.platform = platform;
         this.jobId = jobId.toString();

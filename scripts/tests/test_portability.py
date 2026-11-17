@@ -92,16 +92,21 @@ if 'show' in args and os.environ.get('MODEL_MISSING') == '1':
                 case = jobs[self.path.rsplit("/", 1)[1]]
                 gitlab = case["platform"] == "gitlab"
                 number = case["number"]
+                shipping = gitlab or case["platform"] == "bitbucket" and number == 5
                 findings = []
                 if gitlab or number != 2:
-                    findings = [{"severity": "MEDIUM" if gitlab or number == 3 else "HIGH",
-                                 "file": "src/demo/ShippingCalculator.java" if gitlab else "src/demo/Checkout.java" if number == 3 else "src/demo/ArrayTotals.java",
+                    findings = [{"severity": "MEDIUM" if shipping or number == 3 else "HIGH",
+                                 "file": "src/demo/ShippingCalculator.java" if shipping else "src/demo/Checkout.java" if number == 3 else "src/demo/ArrayTotals.java",
                                  "line": 10 if not gitlab and number == 3 else 9 if not gitlab and number == 4 else 8,
-                                 "explanation": "5,000 becomes 500" if gitlab else "12 instead of 1,250" if number == 3 else "array bounds exception"}]
+                                 "explanation": "5,000 becomes 500" if shipping else "12 instead of 1,250" if number == 3 else "array bounds exception"}]
                     if not quality:
                         findings[0]["line"] = 999
                 self.respond({"state": state, "commentUrl": "https://fixture.invalid/comment" if comment else None,
-                              "report": {"findings": findings, "errors": [], "model": "fixture"}})
+                              "report": {"findings": findings, "errors": [], "model": "fixture",
+                                         "promptVersion": "review-original-v3",
+                                         "current": True, "enumerationComplete": True,
+                                         "enumeratedFiles": 22 if number == 2 else 2 if number == 3 else 1,
+                                         "baseSha": "a" * 40, "headSha": "b" * 40}})
 
         server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -116,7 +121,7 @@ if 'show' in args and os.environ.get('MODEL_MISSING') == '1':
     def test_initialization_is_private_and_preserves_configuration(self):
         self.initialize()
         credentials = {path.name: path.read_bytes() for path in (self.root / "secrets").iterdir()}
-        self.assertEqual(8, len(credentials))
+        self.assertEqual(10, len(credentials))
         self.assertTrue(credentials["api-token"])
         self.assertEqual(b"", credentials["github-app.pem"])
         for path in (self.root / "secrets").iterdir():
@@ -199,6 +204,34 @@ if 'show' in args and os.environ.get('MODEL_MISSING') == '1':
             self.run_script("Test-LiveReviews", "--base-url", base_url, ok=False)
         results = json.loads((self.root / "reports/live-results.json").read_text())
         self.assertFalse(any(result["remoteCommentVerified"] for result in results))
+
+    def test_live_bitbucket_uses_manifest_and_isolated_schema_and_preserves_labels(self):
+        self.initialize()
+        shutil.copytree(SOURCE / "fixtures/bitbucket", self.root / "fixtures/bitbucket")
+        cases = json.loads((self.root / "fixtures/bitbucket/cases.json").read_text())
+        manifest = {"repository": "cleisommais/pr-test-repo", "baseBranch": "main", "cases": [
+            {"id": case["id"], "platform": "bitbucket", "repository": "cleisommais/pr-test-repo", "number": index,
+             "baseSha": "a" * 40, "headSha": "b" * 40, "expected": {"count": 999}}
+            for index, case in enumerate(cases, 1)]}
+        directory = self.root / "reports/bitbucket"
+        directory.mkdir()
+        (directory / "fixture-manifest.json").write_text(json.dumps(manifest))
+        with self.api() as (base_url, requests):
+            self.run_script("Test-LiveReviews", "--platform", "bitbucket", "--label", "api-check",
+                            "--database-schema", "bitbucket_eval", "--base-url", base_url,
+                            "--expected-prompt-version", "review-original-v3")
+            self.assertEqual(5, len(requests))
+            self.assertTrue(all(case["platform"] == "bitbucket" and len(case) == 3 for case in requests))
+        results = json.loads((directory / "api-check-results.json").read_text())
+        self.assertTrue(all(result["qualityPassed"] and result["remoteCommentVerified"] for result in results))
+        self.assertTrue(all(result["promptProfilePassed"] for result in results))
+        self.assertTrue(all("DATABASE_SCHEMA=bitbucket_eval" in call["args"] for call in self.calls()))
+        self.assertFalse((self.root / "reports/live-results.json").exists())
+        with self.api() as (base_url, _):
+            self.run_script("Test-LiveReviews", "--platform", "bitbucket", "--label", "wrong-profile",
+                            "--base-url", base_url, "--expected-prompt-version", "review-calibrated-v2", ok=False)
+        wrong = json.loads((directory / "wrong-profile-results.json").read_text())
+        self.assertFalse(any(result["qualityPassed"] for result in wrong))
 
     def test_bad_arguments_fail_before_docker_or_http(self):
         for script, args in (("Start-Local", ["--unknown"]), ("Test-Project", ["--unknown"]),

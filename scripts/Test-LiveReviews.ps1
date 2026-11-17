@@ -1,4 +1,4 @@
-param([string]$BaseUrl='http://localhost:18081', [int]$TimeoutSeconds=3600)
+param([string]$BaseUrl='http://localhost:18081', [int]$TimeoutSeconds=3600, [ValidateSet('existing','bitbucket')][string]$Platform='existing', [ValidatePattern('^[a-z0-9-]{1,40}$')][string]$Label, [ValidatePattern('^[a-z][a-z0-9_]{0,62}$')][string]$DatabaseSchema, [ValidateSet('review-original-v3','review-calibrated-v2')][string]$ExpectedPromptVersion)
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 Set-Location $root
@@ -9,11 +9,27 @@ foreach($repo in @('cleisommais/pr-test-repo','cleisommais/pr-test-repo-private'
     foreach($number in 1..4) {$cases += [pscustomobject]@{platform='github';repository=$repo;number=$number}}
 }
 $cases += [pscustomobject]@{platform='gitlab';repository='cleisommais/pr-test-repo';number=1}
+$prefix='live'
+if($Platform -eq 'bitbucket') {
+    $manifest=Get-Content (Join-Path $root 'reports/bitbucket/fixture-manifest.json') -Raw | ConvertFrom-Json
+    $definitions=Get-Content (Join-Path $root 'fixtures/bitbucket/cases.json') -Raw | ConvertFrom-Json
+    $cases=@($manifest.cases)
+    if($manifest.repository -ne 'cleisommais/pr-test-repo' -or $manifest.baseBranch -ne 'main' -or $cases.Count -ne $definitions.Count) { throw 'Run Initialize-BitbucketFixture first; invalid or incomplete manifest' }
+    foreach($case in $cases) {
+        $definition=@($definitions | Where-Object { $_.id -ceq $case.id })
+        if($definition.Count -ne 1 -or $case.platform -ne 'bitbucket' -or $case.repository -ne $manifest.repository -or $case.number -lt 1 -or $case.headSha -notmatch '^[a-f0-9]{40}$' -or $case.baseSha -notmatch '^[a-f0-9]{40}$') { throw 'Invalid Bitbucket fixture identity' }
+        $case.expected=$definition[0].expected
+    }
+    if(@($cases.id | Select-Object -Unique).Count -ne $definitions.Count) { throw 'Repeated Bitbucket fixture identity' }
+    $prefix='bitbucket/live'
+}
+if($Label) { $prefix=if($Platform -eq 'bitbucket'){'bitbucket/'+$Label}else{$Label} }
 $jobs=@()
 foreach($case in $cases) {
-    $response=Invoke-RestMethod -Uri "$BaseUrl/api/reviews" -Headers $headers -Method Post -ContentType application/json -Body ($case|ConvertTo-Json -Compress)
-    $jobs += [pscustomobject]@{platform=$case.platform;repository=$case.repository;number=$case.number;jobId=$response.jobId;statusUrl=$response.statusUrl}
-    $jobs|ConvertTo-Json -Depth 4|Set-Content (Join-Path $root 'reports/live-jobs.json')
+    $body=@{platform=$case.platform;repository=$case.repository;number=$case.number}|ConvertTo-Json -Compress
+    $response=Invoke-RestMethod -Uri "$BaseUrl/api/reviews" -Headers $headers -Method Post -ContentType application/json -Body $body
+    $jobs += [pscustomobject]@{platform=$case.platform;repository=$case.repository;number=$case.number;jobId=$response.jobId;statusUrl=$response.statusUrl;fixture=$case}
+    $jobs|ConvertTo-Json -Depth 8|Set-Content (Join-Path $root ('reports/'+$prefix+'-jobs.json'))
     Write-Output "$($case.platform) $($case.repository) #$($case.number): $($response.state)"
 }
 $deadline=[DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
@@ -22,6 +38,21 @@ do {
     foreach($job in $jobs) {
         $status=Invoke-RestMethod -Uri ($BaseUrl+$job.statusUrl) -Headers $headers
         $findings=@($status.report.findings | Where-Object { $null -ne $_ })
+        if($job.platform -eq 'bitbucket') {
+            $expected=$job.fixture.expected
+            $detected=($findings.Count -eq $expected.count)
+            $severityPassed=$true
+            if($detected -and $expected.count -eq 1) {
+                $finding=$findings[0]
+                $detected=$finding.file -eq $expected.file -and $finding.line -eq $expected.line
+                $explanation=$finding.explanation.Replace(',','')
+                foreach($pattern in $expected.explanationPatterns) { $detected=$detected -and $explanation -match $pattern }
+                $severityPassed=$finding.severity -eq $expected.severity
+            }
+            $snapshotPassed=$status.report.headSha -eq $job.fixture.headSha -and $status.report.baseSha -eq $job.fixture.baseSha -and $status.report.current -eq $true -and $status.report.enumerationComplete -eq $true -and $status.report.enumeratedFiles -eq $expected.files -and @($status.report.errors | Where-Object { $null -ne $_ }).Count -eq 0
+            $results += [pscustomobject]@{platform=$job.platform;repository=$job.repository;number=$job.number;jobId=$job.jobId;case=$job.fixture.id;state=$status.state;failureCode=$status.failureCode;findings=$findings.Count;actualSeverities=@($findings|ForEach-Object {$_.severity});model=$status.report.model;promptVersion=$status.report.promptVersion;analysisErrors=@($status.report.errors);expectedCount=$expected.count;expectedSeverity=$expected.severity;defectDetected=$detected;snapshotPassed=$snapshotPassed;qualityPassed=($detected -and $severityPassed -and $snapshotPassed);commentUrl=$status.commentUrl;publicationState=$status.publicationState}
+            continue
+        }
         $expectedSeverity=if($job.platform -eq 'gitlab' -or $job.number -eq 3){'MEDIUM'}elseif($job.number -eq 2){$null}else{'HIGH'}
         $expectedCount=if($expectedSeverity){1}else{0}
         $quality=($findings.Count -eq $expectedCount)
@@ -37,20 +68,29 @@ do {
         }
         $results += [pscustomobject]@{platform=$job.platform;repository=$job.repository;number=$job.number;jobId=$job.jobId;state=$status.state;failureCode=$status.failureCode;findings=$findings.Count;actualSeverities=@($findings | ForEach-Object { $_.severity });model=$status.report.model;promptVersion=$status.report.promptVersion;analysisErrors=@($status.report.errors);expectedCount=$expectedCount;expectedSeverity=$expectedSeverity;qualityPassed=$quality;commentUrl=$status.commentUrl;publicationState=$status.publicationState}
     }
-    $results|ConvertTo-Json -Depth 5|Set-Content (Join-Path $root 'reports/live-results.json')
+    if($ExpectedPromptVersion) {
+        foreach($result in $results) {
+            $profilePassed=$result.promptVersion -eq $ExpectedPromptVersion
+            $result|Add-Member -NotePropertyName promptProfilePassed -NotePropertyValue $profilePassed -Force
+            $result.qualityPassed=$result.qualityPassed -and $profilePassed
+        }
+    }
+    $results|ConvertTo-Json -Depth 5|Set-Content (Join-Path $root ('reports/'+$prefix+'-results.json'))
     $active=@($results|Where-Object {$_.state -in @('queued','running','publishing')})
     if(!$active.Count){break}
-    if([DateTime]::UtcNow -gt $deadline){throw 'Live reviews timed out; inspect reports/live-results.json'}
+    if([DateTime]::UtcNow -gt $deadline){throw ('Live reviews timed out; inspect reports/'+$prefix+'-results.json')}
     Start-Sleep -Seconds 5
 }while($true)
 foreach($result in $results) {
     $verified=$false
     if($result.commentUrl) {
-        docker compose exec -T agent-worker java -cp '/app/mcp-api-gateway.jar:/app/lib/*' com.prreview.tools.QueueAdminCli verify $result.jobId
+        $execEnvironment=@()
+        if($DatabaseSchema) { $execEnvironment=@('-e',('DATABASE_SCHEMA='+$DatabaseSchema)) }
+        docker compose exec -T @execEnvironment agent-worker java -cp '/app/mcp-api-gateway.jar:/app/lib/*' com.prreview.tools.QueueAdminCli verify $result.jobId
         $verified=($LASTEXITCODE -eq 0)
     }
     $result|Add-Member -NotePropertyName remoteCommentVerified -NotePropertyValue $verified -Force
 }
-$results|ConvertTo-Json -Depth 5|Set-Content (Join-Path $root 'reports/live-results.json')
+$results|ConvertTo-Json -Depth 5|Set-Content (Join-Path $root ('reports/'+$prefix+'-results.json'))
 $results|Format-Table platform,repository,number,state,findings,qualityPassed,commentUrl -AutoSize
-if(@($results|Where-Object {$_.state -ne 'succeeded' -or !$_.commentUrl -or !$_.qualityPassed -or !$_.remoteCommentVerified}).Count){throw 'Live validation failed; inspect reports/live-results.json'}
+if(@($results|Where-Object {$_.state -ne 'succeeded' -or !$_.commentUrl -or !$_.qualityPassed -or !$_.remoteCommentVerified}).Count){throw ('Live validation failed; inspect reports/'+$prefix+'-results.json')}

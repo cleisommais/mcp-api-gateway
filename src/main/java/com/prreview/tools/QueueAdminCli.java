@@ -73,6 +73,25 @@ public final class QueueAdminCli {
             if (!api.actor().equals(Json.map(remote.get("user")).get("login")))
                 throw new SecurityException("Comment author mismatch");
             marker = "<!-- mcp-review-poc:" + job.repositoryId() + ":" + job.number() + " -->";
+        } else if (job.platform().equals("bitbucket")) {
+            var api =
+                    com.prreview.platform.bitbucket.client.BitbucketApiClient.environment(
+                            job.repository(), true);
+            remote =
+                    Json.map(
+                            api.get(
+                                    api.repositoryPath()
+                                            + "/pullrequests/"
+                                            + job.number()
+                                            + "/comments/"
+                                            + job.publicationId()));
+            if (!Json.text(Json.map(api.get("user")), "uuid")
+                    .equals(Json.map(remote.get("user")).get("uuid")))
+                throw new SecurityException("Comment author mismatch");
+            marker =
+                    com.prreview.platform.bitbucket.service.BitbucketReviewPublisher.marker(
+                            job.repository(), job.number());
+            remote = Map.of("body", Json.text(Json.map(remote.get("content")), "raw"));
         } else {
             var api = com.prreview.platform.gitlab.client.GitLabApiClient.environment(true);
             remote =

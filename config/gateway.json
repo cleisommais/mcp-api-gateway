@@ -25,6 +25,17 @@
                         "credentialMode":  "app"
                     },
                     {
+                        "id":  "private-bitbucket",
+                        "transport":  "stdio",
+                        "mainClass":  "com.prreview.mcp.server.bitbucket.BitbucketMcpServer",
+                        "version":  "0.1.0",
+                        "protocol":  "2025-11-25",
+                        "repositories":  [
+                                             "cleisommais/pr-test-repo"
+                                         ],
+                        "credentialMode":  "token"
+                    },
+                    {
                         "id":  "private-gitlab",
                         "transport":  "stdio",
                         "mainClass":  "com.prreview.mcp.server.gitlab.GitLabMcpServer",

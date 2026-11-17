@@ -68,17 +68,7 @@ public final class McpGatewayService implements AutoCloseable {
 
     public static Factory stdioFactory() {
         return (registration, repository, number) -> {
-            var environment = new HashMap<String, String>();
-            if (registration.credentialMode().equals("app")) {
-                environment.putAll(GitHubApiClient.appEnvironment(System.getenv()));
-            }
-            if (registration.credentialMode().equals("token")) {
-                String token = SecretReader.optional("GITLAB_READ_TOKEN");
-                if (token == null || token.isBlank())
-                    throw new IllegalArgumentException(
-                            "GITLAB_READ_TOKEN is required for this connection");
-                environment.put("GITLAB_READ_TOKEN_FILE", System.getenv("GITLAB_READ_TOKEN_FILE"));
-            }
+            var environment = backendEnvironment(registration, System.getenv());
             var source =
                     new StdioMcpClient(registration.platform(), repository, number, environment);
             return new Backend() {
@@ -115,6 +105,29 @@ public final class McpGatewayService implements AutoCloseable {
                 }
             };
         };
+    }
+
+    /**
+     * Construct the complete subprocess allowlist; no publishing/provider credentials are
+     * inherited.
+     */
+    public static Map<String, String> backendEnvironment(
+            McpGatewayConfig.Registration registration, Map<String, String> parent) {
+        var environment = new HashMap<String, String>();
+        if (registration.credentialMode().equals("app"))
+            environment.putAll(GitHubApiClient.appEnvironment(parent));
+        if (registration.credentialMode().equals("token")) {
+            String name =
+                    registration.platform().equals("bitbucket")
+                            ? "BITBUCKET_READ_TOKEN"
+                            : "GITLAB_READ_TOKEN";
+            if (SecretReader.read(parent, name).isBlank())
+                throw new IllegalArgumentException(name + " is required for this connection");
+            environment.put(name + "_FILE", parent.get(name + "_FILE"));
+            if (registration.platform().equals("bitbucket"))
+                environment.put("BITBUCKET_EMAIL", parent.getOrDefault("BITBUCKET_EMAIL", ""));
+        }
+        return Map.copyOf(environment);
     }
 
     public Object invoke(String principal, String tool, Map<String, Object> arguments)

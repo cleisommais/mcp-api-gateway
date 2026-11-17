@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-/** The same three read-only MCP operations for both platform adapters. */
+/** The same three read-only MCP operations for every platform adapter. */
 public final class ReadOnlyReviewMcpServer {
     private ReadOnlyReviewMcpServer() {}
 

@@ -19,7 +19,7 @@ public record ReviewEvent(
         String reason,
         String platform) {
     public ReviewEvent {
-        if (!java.util.Set.of("github", "gitlab").contains(platform))
+        if (!java.util.Set.of("github", "gitlab", "bitbucket").contains(platform))
             throw new IllegalArgumentException("Unsupported platform");
     }
 

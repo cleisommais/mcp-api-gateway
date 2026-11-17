@@ -1,6 +1,6 @@
 # PR Review Agent
 
-Java 21 service that reviews GitHub pull requests and GitLab merge requests, then publishes a summary comment with file, line and severity. Saved reports include exact code evidence. PostgreSQL holds the queue; Ollama runs inference locally. [Architecture](architecture.md) covers requirements, security, code entrypoints and the database. [open-api.yaml](open-api.yaml) defines the HTTP contract. [Plan](plan.md) lists remaining work.
+Java 21 service that reviews GitHub and Bitbucket Cloud pull requests and GitLab merge requests, then publishes a summary comment with file, line and severity. Saved reports include exact code evidence. PostgreSQL holds the queue; Ollama runs inference locally. [Architecture](architecture.md) covers requirements, security, code entrypoints and the database. [open-api.yaml](open-api.yaml) defines the HTTP contract. [Plan](plan.md) lists remaining work.
 
 ## Start locally
 
@@ -58,6 +58,9 @@ On macOS/Linux, initialization creates private secret files and appends `LOCAL_U
 | `.env`: `GITHUB_APP_ID`, `GITHUB_INSTALLATION_ID` | App identity and installation; numeric values, not secrets |
 | `secrets/gitlab-read-token` | GitLab token with `read_api` and access to configured projects |
 | `secrets/gitlab-publish-token` | GitLab token with `api` and permission to comment |
+| `secrets/bitbucket-read-token` | Bitbucket API token with `read:repository:bitbucket` and `read:pullrequest:bitbucket` |
+| `secrets/bitbucket-publish-token` | Bitbucket publication token with repository/PR read, `write:pullrequest:bitbucket` and `read:user:bitbucket` |
+| `.env`: `BITBUCKET_EMAIL` | Atlassian account email associated with the Bitbucket API tokens |
 | `secrets/api-token` | Bearer token for manual review requests and status |
 | `secrets/mcp-gateway-token` | Internal MCP authentication |
 | `secrets/github-webhook-secret` | GitHub webhook HMAC secret |
@@ -66,7 +69,9 @@ On macOS/Linux, initialization creates private secret files and appends `LOCAL_U
 
 For a GitHub App: Settings -> Developer settings -> GitHub Apps -> create/select App. Grant repository **Contents: read**, **Pull requests: read and write** (summary publication), and **Metadata: read**. Install it on the selected repositories, download its PEM into `secrets/github-app.pem`, and enter the App and installation IDs in `.env`. Subscribe to **Pull request** events when enabling its webhook. Restart services after changing credentials.
 
-`config/repositories.json` controls manual/webhook targets, numeric repository/project IDs and target branches. `config/gateway.json` independently controls MCP routing and repository access. Update both when adding a repository. The checked-in configuration targets the owner's public/private test repositories.
+For Bitbucket Cloud, create scoped [API tokens](https://support.atlassian.com/bitbucket-cloud/docs/using-api-tokens/) for an account with access to the private repository. Put the account email in `.env` as `BITBUCKET_EMAIL` and the tokens in the files above. The client uses email/token Basic authentication when an email is configured, otherwise Bearer authentication. Keep the MCP token limited to reads; only the worker receives the publication token. Repository metadata alone is insufficient: missing pull-request read scope returns HTTP 403. Restart/recreate services after changing credentials. [Bitbucket details](docs/bitbucket-platform.md) describe retrieval, publication and validation limits.
+
+`config/repositories.json` controls manual/webhook targets, queue repository IDs and target branches. `config/gateway.json` independently controls MCP routing and repository access. Update both when adding a repository. Bitbucket uses UUIDs remotely; its positive numeric `id` here is a local queue key, unique among configured Bitbucket repositories. The checked-in Bitbucket entry uses `id: 1`, `cleisommais/pr-test-repo` and target branch `main`. The checked-in configuration targets the owner's public/private test repositories.
 
 ## Run a review
 
@@ -78,6 +83,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Invoke-Review.ps1 -P
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Invoke-Review.ps1 -Platform github -Repository cleisommais/pr-test-repo-private -Number 1
 # GitLab:
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Invoke-Review.ps1 -Platform gitlab -Repository cleisommais/pr-test-repo -Number 1
+# Bitbucket Cloud (replace 1 with an existing open PR number):
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Invoke-Review.ps1 -Platform bitbucket -Repository cleisommais/pr-test-repo -Number 1
 ```
 
 macOS/Linux Bash:
@@ -88,6 +95,8 @@ bash scripts/Invoke-Review.sh --platform github --repository cleisommais/pr-test
 bash scripts/Invoke-Review.sh --platform github --repository cleisommais/pr-test-repo-private --number 1
 # GitLab:
 bash scripts/Invoke-Review.sh --platform gitlab --repository cleisommais/pr-test-repo --number 1
+# Bitbucket Cloud (replace 1 with an existing open PR number):
+bash scripts/Invoke-Review.sh --platform bitbucket --repository cleisommais/pr-test-repo --number 1
 ```
 
 This submits, polls and returns the report plus `commentUrl`. Publication is required in the normal worker path, including a zero-findings summary. Repeated requests for the same base/head reuse the existing job. Partial analysis is explicitly reported; a failed or uncertain job is not a successful review.
@@ -112,7 +121,7 @@ status_url=$(printf '%s' "$job" | python3 -c 'import json,sys; print(json.load(s
 curl --fail --silent --show-error "http://localhost:18081$status_url" -H "Authorization: Bearer $token"
 ```
 
-For GitHub automation, expose only the API gateway through your HTTPS callback/tunnel and set the App webhook URL to `/webhooks/github`, content type JSON and the secret from `secrets/github-webhook-secret`. An optional local tunnel starts with `docker compose -f compose.yaml -f compose.webhook.yaml up -d`; read its URL with `docker compose -f compose.yaml -f compose.webhook.yaml logs tunnel`. GitLab currently uses the manual API; there is no GitLab webhook endpoint.
+For GitHub automation, expose only the API gateway through your HTTPS callback/tunnel and set the App webhook URL to `/webhooks/github`, content type JSON and the secret from `secrets/github-webhook-secret`. An optional local tunnel starts with `docker compose -f compose.yaml -f compose.webhook.yaml up -d`; read its URL with `docker compose -f compose.yaml -f compose.webhook.yaml logs tunnel`. GitLab and Bitbucket currently use the manual API; their webhook endpoints are not implemented.
 
 The tunnel and debug commands use explicit `-f` files, which disable automatic override loading. If using the NVIDIA override, insert `-f compose.override.yaml` immediately after `-f compose.yaml` in those commands. These Docker commands work in both PowerShell and Bash.
 
@@ -155,7 +164,23 @@ bash scripts/Test-LiveReviews.sh
 
 Both versions accept the endpoint and timeout options described above; the live deadline defaults to 3600 seconds. The Bash version writes the same `reports/live-jobs.json` and `reports/live-results.json` artifacts as PowerShell.
 
-Last validation: **111 automated tests passed, zero skipped**, including real PostgreSQL. All nine public/private GitHub and GitLab reviews completed and their remote comments matched the saved reports. The strict model rubric passed **8/9**: public PR #3 was rated HIGH instead of the expected MEDIUM. Both clean PRs had zero findings, and the seeded defects were detected. Per-PR results are in `reports/live-results.json`; local configuration comparisons are in `reports/model-comparison.json`. These fixture results do not guarantee general model accuracy.
+For the private Bitbucket fixture, populate its baseline and five independent PRs, then select only those cases. Setup reuses matching existing branches/PRs and refuses to overwrite different fixture content. These commands create remote commits/PRs and publish/update review comments:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Initialize-BitbucketFixture.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Test-LiveReviews.ps1 -Platform bitbucket -Label local-original -ExpectedPromptVersion review-original-v3
+```
+
+```bash
+bash scripts/Initialize-BitbucketFixture.sh
+bash scripts/Test-LiveReviews.sh --platform bitbucket --label local-original --expected-prompt-version review-original-v3
+```
+
+The setup credential also needs `write:repository:bitbucket` to create fixture commits and `write:pullrequest:bitbucket` to open PRs. Results and the commit/PR manifest are under `reports/bitbucket/`. The tracked [Bitbucket validation evidence](docs/evaluation/bitbucket/README.md) records live local/GPT results, including unsuccessful prompt profiles. [The Bitbucket guide](docs/bitbucket-platform.md#explicit-gpt-api-comparison) gives the isolated GPT API comparison commands and their repository/budget limits.
+
+Latest automated validation: **134 Java tests passed, zero skipped**, including real PostgreSQL and 22 Bitbucket adapter/publication/gateway tests. The separate **14 Linux script/fixture checks** also passed.
+
+Earlier live validation: all nine public/private GitHub and GitLab reviews completed and their remote comments matched the saved reports. The strict model rubric passed **8/9**: public PR #3 was rated HIGH instead of the expected MEDIUM. Both clean PRs had zero findings, and the seeded defects were detected. Per-PR results are in `reports/live-results.json`; local configuration comparisons are in `reports/model-comparison.json`. Bitbucket now has a real baseline and five open PRs reviewed with both the local model and GPT API, with each published comment read back and checked against its saved report. These fixture results do not guarantee general model accuracy.
 
 To compare the local provider with the GPT API on frozen public fixtures:
 
@@ -193,6 +218,6 @@ Stop with `docker compose down`. Do not add `-v` unless intentionally deleting t
 
 ## Model settings
 
-Set `OLLAMA_MODEL`, `OLLAMA_THINK`, `OLLAMA_CONTEXT_LENGTH` and `REVIEW_OUTPUT_TOKENS` in `.env`. `REVIEW_MODE=verified` enables a second candidate-verification pass using `VERIFIER_MODEL` (default `qwen3:14b`; download with `docker compose exec ollama ollama pull qwen3:14b`). This increases latency and may reject valid findings; it does not guarantee higher accuracy. Repository reads use MCP; inference calls the provider directly.
+Set `OLLAMA_MODEL`, `OLLAMA_THINK`, `OLLAMA_CONTEXT_LENGTH` and `REVIEW_OUTPUT_TOKENS` in `.env`. `REVIEW_PROMPT_PROFILE=original` is the retained default; `calibrated` explicitly adds severity definitions for experiments. The worker and regression tool both receive that setting. `REVIEW_MODE=verified` enables a second candidate-verification pass using `VERIFIER_MODEL` (default `qwen3:14b`; download with `docker compose exec ollama ollama pull qwen3:14b`). This increases latency and may reject valid findings; it does not guarantee higher accuracy. Repository reads use MCP; inference calls the provider directly.
 
 External inference requires explicit enablement, a repository allowlist and a positive campaign budget; it is disabled by default. Keep private code local unless you explicitly authorize its transmission. Model findings require human judgment; this service does not approve or merge changes.

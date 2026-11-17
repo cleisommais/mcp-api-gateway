@@ -16,6 +16,47 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ReviewServiceTest {
+    @Test
+    void defaultsToRetainedOriginalPromptAndAllowsExplicitCalibration() throws Exception {
+        for (boolean calibrated : List.of(false, true)) {
+            var model =
+                    new com.prreview.domain.port.ReviewModel() {
+                        public String name() {
+                            return "prompt-profile-fixture";
+                        }
+
+                        public com.prreview.domain.model.ModelGeneration generate(
+                                String system, String context, Map<String, Object> schema)
+                                throws Exception {
+                            if (calibrated)
+                                assertTrue(
+                                        system.contains(
+                                                "Severity must reflect demonstrated impact"));
+                            else assertEquals(ReviewEngine.SYSTEM, system);
+                            return new com.prreview.domain.model.ModelGeneration(
+                                    Json.write(
+                                            Map.of(
+                                                    "summary",
+                                                    "Fixture output",
+                                                    "findings",
+                                                    List.of())),
+                                    1,
+                                    1,
+                                    1);
+                        }
+                    };
+            Map<String, String> env =
+                    calibrated ? Map.of("REVIEW_PROMPT_PROFILE", "calibrated") : Map.of();
+            try (var session = new ReviewService(env, "github", "owner/repo", model)) {
+                var report = session.review(source());
+                assertEquals(
+                        calibrated ? "review-calibrated-v2" : "review-original-v3",
+                        report.get("promptVersion"));
+                assertEquals("complete", report.get("status"));
+            }
+        }
+    }
+
     private ChangeSource source() {
         var snapshot =
                 new ChangeSnapshot(

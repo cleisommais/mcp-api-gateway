@@ -5,7 +5,7 @@ New-Item -ItemType Directory -Force $secretRoot | Out-Null
 New-Item -ItemType Directory -Force (Join-Path $projectRoot 'reports') | Out-Null
 $envPath = Join-Path $projectRoot '.env'
 if (!(Test-Path $envPath)) { Copy-Item (Join-Path $projectRoot '.env.example') $envPath }
-foreach ($name in @('database-password','mcp-gateway-token','github-webhook-secret','api-token','gitlab-read-token','gitlab-publish-token','openai-api-key','github-app.pem')) {
+foreach ($name in @('database-password','mcp-gateway-token','github-webhook-secret','api-token','gitlab-read-token','gitlab-publish-token','bitbucket-read-token','bitbucket-publish-token','openai-api-key','github-app.pem')) {
     $path = Join-Path $secretRoot $name
     if (Test-Path $path) { continue }
     $value = ''

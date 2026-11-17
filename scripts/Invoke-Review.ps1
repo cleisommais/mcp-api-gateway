@@ -1,4 +1,4 @@
-param([ValidateSet('github','gitlab')][string]$Platform = 'github', [string]$Repository = 'cleisommais/pr-test-repo', [int]$Number = 1, [string]$BaseUrl = 'http://localhost:18081', [int]$TimeoutSeconds = 1800)
+param([ValidateSet('github','gitlab','bitbucket')][string]$Platform = 'github', [string]$Repository = 'cleisommais/pr-test-repo', [int]$Number = 1, [string]$BaseUrl = 'http://localhost:18081', [int]$TimeoutSeconds = 1800)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $headers = @{Authorization='Bearer ' + [IO.File]::ReadAllText((Join-Path $root 'secrets/api-token')).Trim()}

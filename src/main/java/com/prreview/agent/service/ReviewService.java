@@ -235,7 +235,7 @@ public final class ReviewService implements AutoCloseable {
                 new ReviewEngine(
                                 context,
                                 integer("REVIEW_MAX_BATCHES", 4, 1, 100),
-                                value("REVIEW_PROMPT_PROFILE", "calibrated"),
+                                value("REVIEW_PROMPT_PROFILE", "original"),
                                 output)
                         .review(source, model);
         if (verified != null) verified.annotate(report);

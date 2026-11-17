@@ -7,6 +7,8 @@ import com.prreview.domain.model.ChangeSnapshot;
 import com.prreview.domain.port.ChangeSource;
 import com.prreview.mcp.client.GatewayMcpClient;
 import com.prreview.persistence.repository.PostgresJobRepository;
+import com.prreview.platform.bitbucket.client.BitbucketApiClient;
+import com.prreview.platform.bitbucket.service.BitbucketReviewPublisher;
 import com.prreview.platform.github.client.GitHubApiClient;
 import com.prreview.platform.github.service.GitHubReviewPublisher;
 import com.prreview.platform.gitlab.client.GitLabApiClient;
@@ -184,6 +186,20 @@ public final class ReviewWorker {
                                                         store.beginPublication(job.id(), owner);
                                                         wroteThisAttempt.set(true);
                                                     });
+                        } else if (job.platform().equals("bitbucket")) {
+                            id =
+                                    new BitbucketReviewPublisher(
+                                                    BitbucketApiClient.environment(
+                                                            job.repository(), true))
+                                            .publish(
+                                                    job.repository(),
+                                                    job.number(),
+                                                    report,
+                                                    "uncertain".equals(fresh.publicationState()),
+                                                    () -> {
+                                                        store.beginPublication(job.id(), owner);
+                                                        wroteThisAttempt.set(true);
+                                                    });
                         } else {
                             id =
                                     new GitLabReviewPublisher(GitLabApiClient.environment(true))
@@ -226,6 +242,14 @@ public final class ReviewWorker {
                     store.clearRejectedPublication(job.id(), owner);
                 }
                 store.finish(job.id(), owner, "failed", "github-http-" + error.status(), null);
+            }
+        } catch (BitbucketApiClient.RequestException error) {
+            if (ownsLease.get()) {
+                if (wroteThisAttempt.get()
+                        && !"uncertain".equals(job.publicationState())
+                        && error.status() >= 400
+                        && error.status() < 500) store.clearRejectedPublication(job.id(), owner);
+                store.finish(job.id(), owner, "failed", "bitbucket-http-" + error.status(), null);
             }
         } catch (GitLabApiClient.RequestException error) {
             if (ownsLease.get()) {
