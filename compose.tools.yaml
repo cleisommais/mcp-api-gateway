@@ -1,0 +1,48 @@
+# Auxiliary build/test tools; normal startup uses compose.yaml alone.
+services:
+  checks:
+    image: mcp-api-gateway:checks
+    build: {context: ., target: build}
+    profiles: [testing]
+    environment:
+      TEST_DATABASE_URL: jdbc:postgresql://postgres:5432/mcp_review
+      TEST_DATABASE_USER: mcp_review
+      TEST_DATABASE_PASSWORD_FILE: /run/secrets/database-password
+    secrets: [database-password]
+    depends_on:
+      postgres: {condition: service_healthy}
+    volumes: ["maven_test_cache:/root/.m2", "./reports/tests:/workspace/target/surefire-reports"]
+    entrypoint: [mvn]
+    command: [--batch-mode, --no-transfer-progress, test]
+
+  # Opt-in public-fixture analysis only. Does not run the worker or write PR comments.
+  model-regression:
+    image: mcp-api-gateway:checks
+    build: {context: ., target: build}
+    profiles: [testing]
+    environment:
+      MCP_GATEWAY_URL: http://mcp-gateway:8080
+      MCP_GATEWAY_TOKEN_FILE: /run/secrets/mcp-gateway-token
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gpt-oss:20b}
+      OLLAMA_THINK: ${OLLAMA_THINK:-low}
+      MODEL_PROVIDER: ${REGRESSION_PROVIDER:-openai}
+      REVIEW_MODE: single
+      REVIEW_PROMPT_PROFILE: ${REVIEW_PROMPT_PROFILE:-original}
+      OLLAMA_CONTEXT_LENGTH: "8192"
+      REVIEW_OUTPUT_TOKENS: "4096"
+      REVIEW_TIMEOUT_SECONDS: "240"
+      REVIEW_TOTAL_SECONDS: "600"
+      EXTERNAL_INFERENCE_ENABLED: "true"
+      EXTERNAL_ALLOWED_REPOSITORIES: github:cleisommais/pr-test-repo
+      EXTERNAL_MAX_COST_USD: "0.10"
+      EXTERNAL_BUDGET_JOURNAL: /reports/model-regression/budget.json
+      OPENAI_API_KEY_FILE: /run/secrets/openai-api-key
+      OPENAI_MODEL: gpt-6-luna
+      OPENAI_REASONING: medium
+    secrets: [mcp-gateway-token, openai-api-key]
+    depends_on:
+      mcp-gateway: {condition: service_healthy}
+      ollama: {condition: service_healthy}
+    volumes: ["./reports:/reports"]
+    entrypoint: [java, '-Dorg.slf4j.simpleLogger.defaultLogLevel=off', -cp, '/workspace/target/test-classes:/workspace/target/classes:/workspace/target/lib/*', com.prreview.tools.evaluation.ModelRegressionRunner]

@@ -1,0 +1,50 @@
+{
+    "principal":  "poc-worker",
+    "maxOpenJobs":  8,
+    "servers":  [
+                    {
+                        "id":  "public-github",
+                        "transport":  "stdio",
+                        "mainClass":  "com.prreview.mcp.server.github.GitHubMcpServer",
+                        "version":  "0.2.0",
+                        "protocol":  "2025-11-25",
+                        "repositories":  [
+                                             "cleisommais/pr-test-repo"
+                                         ],
+                        "credentialMode":  "app"
+                    },
+                    {
+                        "id":  "private-github-app",
+                        "transport":  "stdio",
+                        "mainClass":  "com.prreview.mcp.server.github.GitHubMcpServer",
+                        "version":  "0.2.0",
+                        "protocol":  "2025-11-25",
+                        "repositories":  [
+                                             "cleisommais/pr-test-repo-private"
+                                         ],
+                        "credentialMode":  "app"
+                    },
+                    {
+                        "id":  "private-bitbucket",
+                        "transport":  "stdio",
+                        "mainClass":  "com.prreview.mcp.server.bitbucket.BitbucketMcpServer",
+                        "version":  "0.1.0",
+                        "protocol":  "2025-11-25",
+                        "repositories":  [
+                                             "cleisommais/pr-test-repo"
+                                         ],
+                        "credentialMode":  "token"
+                    },
+                    {
+                        "id":  "private-gitlab",
+                        "transport":  "stdio",
+                        "mainClass":  "com.prreview.mcp.server.gitlab.GitLabMcpServer",
+                        "version":  "0.1.0",
+                        "protocol":  "2025-11-25",
+                        "repositories":  [
+                                             "cleisommais/pr-test-repo"
+                                         ],
+                        "credentialMode":  "token"
+                    }
+                ]
+}

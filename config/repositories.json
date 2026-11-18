@@ -1,0 +1,32 @@
+{
+    "repositories":  [
+                         {
+                             "id":  1456683306,
+                             "name":  "cleisommais/pr-test-repo",
+                             "baseBranch":  "main"
+                         },
+                         {
+                             "id":  1457261925,
+                             "name":  "cleisommais/pr-test-repo-private",
+                             "baseBranch":  "main"
+                         },
+                         {
+                             "id":  1,
+                             "name":  "cleisommais/pr-test-repo",
+                             "baseBranch":  "main",
+                             "platform":  "bitbucket"
+                         },
+                         {
+                             "id":  88936485,
+                             "name":  "cleisommais/pr-test-repo",
+                             "baseBranch":  "f5/reference",
+                             "platform":  "gitlab"
+                         }
+                     ],
+    "trustedAssociations":  [
+                                "OWNER",
+                                "MEMBER",
+                                "COLLABORATOR"
+                            ],
+    "allowForks":  false
+}

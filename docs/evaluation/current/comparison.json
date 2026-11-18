@@ -1,0 +1,2298 @@
+{
+  "runId": "20261117_020455",
+  "startedAt": "2026-11-17T02:04:55+00:00",
+  "collectedAt": "2026-11-17T02:33:37.530085+00:00",
+  "timezone": "America/Chicago",
+  "sourceImage": "sha256:40c739bd23bdb43a1a3179094a963e105723f5550e30af7ec97f151657c822aa",
+  "promptVersion": "review-original-v3",
+  "contextTokens": 8192,
+  "outputTokens": 4096,
+  "localReasoning": "low",
+  "gptReasoning": "medium",
+  "freshJobsVerified": true,
+  "sameCommitPairsVerified": true,
+  "oneAnalysisPerProviderPerCase": true,
+  "sameSummaryCommentsVerified": true,
+  "targets": [
+    {
+      "platform": "github",
+      "repository": "cleisommais/pr-test-repo",
+      "local": {
+        "cases": 4,
+        "strictPassed": 1,
+        "detectionPassed": 2,
+        "publishedVerified": 4
+      },
+      "gpt": {
+        "cases": 4,
+        "strictPassed": 3,
+        "detectionPassed": 4,
+        "publishedVerified": 4
+      }
+    },
+    {
+      "platform": "github",
+      "repository": "cleisommais/pr-test-repo-private",
+      "local": {
+        "cases": 4,
+        "strictPassed": 1,
+        "detectionPassed": 1,
+        "publishedVerified": 4
+      },
+      "gpt": {
+        "cases": 4,
+        "strictPassed": 3,
+        "detectionPassed": 4,
+        "publishedVerified": 4
+      }
+    },
+    {
+      "platform": "bitbucket",
+      "repository": "cleisommais/pr-test-repo",
+      "local": {
+        "cases": 5,
+        "strictPassed": 4,
+        "detectionPassed": 4,
+        "publishedVerified": 5
+      },
+      "gpt": {
+        "cases": 5,
+        "strictPassed": 4,
+        "detectionPassed": 5,
+        "publishedVerified": 5
+      }
+    },
+    {
+      "platform": "gitlab",
+      "repository": "cleisommais/pr-test-repo",
+      "local": {
+        "cases": 1,
+        "strictPassed": 1,
+        "detectionPassed": 1,
+        "publishedVerified": 1
+      },
+      "gpt": {
+        "cases": 1,
+        "strictPassed": 1,
+        "detectionPassed": 1,
+        "publishedVerified": 1
+      }
+    }
+  ],
+  "local": {
+    "model": "gpt-oss:20b",
+    "provider": "ollama",
+    "queueSchema": "eval_20261117_020455_local",
+    "cases": 14,
+    "strictPassed": 7,
+    "detectionPassed": 8,
+    "publishedVerified": 14,
+    "results": [
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 1,
+        "jobId": "0bdab75e-569d-4df3-9e46-25631837d36c",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+        "headSha": "246db3687351ff225f81f5a78e7b3bc2f561c293",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [],
+        "detectionPassed": false,
+        "severityPassed": true,
+        "strictRubricPassed": false,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 1,
+          "promptTokens": 793,
+          "outputTokens": 35,
+          "inferenceMillis": 22135,
+          "elapsedMillis": 23103,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 22135,
+            "elapsedMillis": 22140,
+            "inputBytes": 1017,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 793,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 35,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/1#issuecomment-6884935072",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 2,
+        "jobId": "e32e75b1-c7ca-4df7-b65f-2ed12442cf29",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+        "headSha": "85aa355614728b0d1eed356e19ff2de45c90532d",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 0,
+        "expectedSeverity": null,
+        "findings": [],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 22,
+        "enumeratedFiles": 22,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 3,
+          "promptTokens": 3560,
+          "outputTokens": 155,
+          "inferenceMillis": 2732,
+          "elapsedMillis": 5248,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 1315,
+            "elapsedMillis": 1318,
+            "inputBytes": 3036,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 1385,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 76,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 763,
+            "elapsedMillis": 765,
+            "inputBytes": 3070,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 1406,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 38,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 654,
+            "elapsedMillis": 656,
+            "inputBytes": 954,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 769,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 41,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/2#issuecomment-6884994196",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 3,
+        "jobId": "6e5fbdb0-fc97-4a60-ba6f-45c851abb94b",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+        "headSha": "4b2d0cd7e7d25e5d97d72bfd96cb11d3b46d12a8",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "MEDIUM",
+        "findings": [
+          {
+            "file": "src/demo/Checkout.java",
+            "line": 10,
+            "severity": "HIGH",
+            "explanation": "The change replaces integer cent calculations with double dollar calculations and casts the result to int, truncating fractional cents. For example, a quantity of 1 now returns 12 instead of the correct 1250 cents, leading to incorrect total amounts.",
+            "evidence": "        return (int) (PriceCatalog.unitPrice() * quantity);"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": false,
+        "strictRubricPassed": false,
+        "snapshotPassed": true,
+        "expectedFiles": 2,
+        "enumeratedFiles": 2,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 1,
+          "promptTokens": 954,
+          "outputTokens": 163,
+          "inferenceMillis": 2190,
+          "elapsedMillis": 2956,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2190,
+            "elapsedMillis": 2193,
+            "inputBytes": 1670,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 954,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 163,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/3#issuecomment-6884996501",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 4,
+        "jobId": "0be2d778-cd60-40ba-bb3c-93a8c7ec5c9e",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+        "headSha": "073a54ad93513d1e38abd9eae077ea878f440fc7",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [],
+        "detectionPassed": false,
+        "severityPassed": true,
+        "strictRubricPassed": false,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 1,
+          "promptTokens": 856,
+          "outputTokens": 35,
+          "inferenceMillis": 772,
+          "elapsedMillis": 1396,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 772,
+            "elapsedMillis": 774,
+            "inputBytes": 1330,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 856,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 35,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/4#issuecomment-6884998239",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo-private",
+        "number": 1,
+        "jobId": "1cbcd688-8cd6-45d7-afb3-d7b494ac2cd7",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+        "headSha": "638c5c59736fca0e1afa995117d9e475adeef523",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [],
+        "detectionPassed": false,
+        "severityPassed": true,
+        "strictRubricPassed": false,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 1,
+          "promptTokens": 790,
+          "outputTokens": 38,
+          "inferenceMillis": 634,
+          "elapsedMillis": 1180,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 634,
+            "elapsedMillis": 637,
+            "inputBytes": 1039,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 790,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 38,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/1#issuecomment-6884999899",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo-private",
+        "number": 2,
+        "jobId": "ed694042-b2df-4255-b37d-4564976072bc",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+        "headSha": "ae86aa2bb8508226355cfc930aa2e376fae4d882",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 0,
+        "expectedSeverity": null,
+        "findings": [],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 23,
+        "enumeratedFiles": 23,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 3,
+          "promptTokens": 3936,
+          "outputTokens": 169,
+          "inferenceMillis": 2848,
+          "elapsedMillis": 6881,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 1167,
+            "elapsedMillis": 1170,
+            "inputBytes": 3058,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 1384,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 63,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 627,
+            "elapsedMillis": 630,
+            "inputBytes": 3092,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 1405,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 38,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 1054,
+            "elapsedMillis": 1056,
+            "inputBytes": 2368,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 1147,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 68,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/2#issuecomment-6885002564",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo-private",
+        "number": 3,
+        "jobId": "a0c39f89-ffee-455b-947d-d14d16a84902",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+        "headSha": "0912a54a2f34cb97b7bb781a96f92927c3c7c0ce",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "MEDIUM",
+        "findings": [
+          {
+            "file": "src/demo/Checkout.java",
+            "line": 10,
+            "severity": "HIGH",
+            "explanation": "Using (int)(PriceCatalog.unitPrice() * quantity) truncates the fractional cents, causing totalInCents to return an incorrect value for non\u2011whole\u2011cent prices.",
+            "evidence": "        return (int) (PriceCatalog.unitPrice() * quantity);"
+          }
+        ],
+        "detectionPassed": false,
+        "severityPassed": false,
+        "strictRubricPassed": false,
+        "snapshotPassed": true,
+        "expectedFiles": 2,
+        "enumeratedFiles": 2,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 1,
+          "promptTokens": 950,
+          "outputTokens": 142,
+          "inferenceMillis": 2037,
+          "elapsedMillis": 3074,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2037,
+            "elapsedMillis": 2039,
+            "inputBytes": 1692,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 950,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 142,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/3#issuecomment-6885004799",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo-private",
+        "number": 4,
+        "jobId": "44d8a1db-1198-41dc-ae7e-518efffac3c5",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+        "headSha": "e972a5b7aead1765c3d72f07d305efe9cdd41bc2",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [],
+        "detectionPassed": false,
+        "severityPassed": true,
+        "strictRubricPassed": false,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 1,
+          "promptTokens": 857,
+          "outputTokens": 35,
+          "inferenceMillis": 674,
+          "elapsedMillis": 1326,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 674,
+            "elapsedMillis": 677,
+            "inputBytes": 1338,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 857,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 35,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/4#issuecomment-6885006527",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "gitlab",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 1,
+        "jobId": "f39a9a32-ae03-410a-a80d-f89ddecc0aed",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "879f61bc5ffd8ea53558c005942255e42cbcd578",
+        "headSha": "4143f7bd0bf4cd801c11e42ffac574dd91eeb462",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "MEDIUM",
+        "findings": [
+          {
+            "file": "src/demo/ShippingCalculator.java",
+            "line": 8,
+            "severity": "MEDIUM",
+            "explanation": "The change from `>= 5000` to `> 5000` causes orders with a subtotal of exactly 5,000 cents to incorrectly incur a shipping fee of 500 cents instead of qualifying for free shipping.",
+            "evidence": "        if (subtotalCents > 5000) {"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 1,
+          "promptTokens": 806,
+          "outputTokens": 158,
+          "inferenceMillis": 2031,
+          "elapsedMillis": 2706,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2031,
+            "elapsedMillis": 2033,
+            "inputBytes": 1117,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 806,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 158,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/1#note_4235283597",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "bitbucket",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 1,
+        "jobId": "91af1330-40ee-497a-8424-6cdcaf33a85b",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+        "headSha": "0b4b01f406586b10e77235eb96fbc827bac2ff7f",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [
+          {
+            "file": "src/demo/ArrayTotals.java",
+            "line": 8,
+            "severity": "HIGH",
+            "explanation": "The loop iterates one step beyond the array length, attempting to access values[values.length], which throws ArrayIndexOutOfBoundsException.",
+            "evidence": "        for (int i = 0; i <= values.length; i++) {"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 1,
+          "promptTokens": 796,
+          "outputTokens": 114,
+          "inferenceMillis": 1707,
+          "elapsedMillis": 2889,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 1707,
+            "elapsedMillis": 1709,
+            "inputBytes": 1027,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 796,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 114,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/1#comment-903959074",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "bitbucket",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 2,
+        "jobId": "31126049-6941-4e3e-800d-6e908806a8f9",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+        "headSha": "bf5fe0feae39d70b7d556fde7720e8854188e97c",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 0,
+        "expectedSeverity": null,
+        "findings": [],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 22,
+        "enumeratedFiles": 22,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 3,
+          "promptTokens": 3585,
+          "outputTokens": 133,
+          "inferenceMillis": 2380,
+          "elapsedMillis": 6088,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 956,
+            "elapsedMillis": 959,
+            "inputBytes": 3043,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 1393,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 54,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 789,
+            "elapsedMillis": 791,
+            "inputBytes": 3086,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 1419,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 39,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 635,
+            "elapsedMillis": 636,
+            "inputBytes": 952,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 773,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 40,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/2#comment-903959135",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "bitbucket",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 3,
+        "jobId": "976916e1-0171-4d50-826a-6267c9d21375",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+        "headSha": "80e8dbfe6301045934aeee59559a182ae60ae061",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "MEDIUM",
+        "findings": [
+          {
+            "file": "src/demo/Checkout.java",
+            "line": 10,
+            "severity": "MEDIUM",
+            "explanation": "The Checkout.totalInCents method now multiplies a double unit price by quantity and casts the result to int, truncating fractional cents. This causes incorrect total amounts for non\u2011whole\u2011cents prices.",
+            "evidence": "        return (int) (PriceCatalog.unitPrice() * quantity);"
+          }
+        ],
+        "detectionPassed": false,
+        "severityPassed": true,
+        "strictRubricPassed": false,
+        "snapshotPassed": true,
+        "expectedFiles": 2,
+        "enumeratedFiles": 2,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 1,
+          "promptTokens": 943,
+          "outputTokens": 135,
+          "inferenceMillis": 1876,
+          "elapsedMillis": 3369,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 1876,
+            "elapsedMillis": 1879,
+            "inputBytes": 1671,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 943,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 135,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/3#comment-903959194",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "bitbucket",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 4,
+        "jobId": "ab650ed3-b131-4690-b27c-3adb9e0ca120",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+        "headSha": "4e864df84d4570507324a95952aa2840d132dc54",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [
+          {
+            "file": "src/demo/ArrayTotals.java",
+            "line": 9,
+            "severity": "HIGH",
+            "explanation": "The loop iterates one step beyond the array length, causing an ArrayIndexOutOfBoundsException when accessing values[i].",
+            "evidence": "for (int i = 0; i <= values.length; i++) {"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 1,
+          "promptTokens": 842,
+          "outputTokens": 114,
+          "inferenceMillis": 1626,
+          "elapsedMillis": 2945,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 1626,
+            "elapsedMillis": 1628,
+            "inputBytes": 1274,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 842,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 114,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/4#comment-903959258",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "bitbucket",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 5,
+        "jobId": "fe5236be-2ae3-4ec3-b127-1e293ae73f60",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+        "headSha": "7098aa3012ab8fdb86d3947d47fc9a7804154d40",
+        "model": "gpt-oss:20b",
+        "provider": "ollama",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "MEDIUM",
+        "findings": [
+          {
+            "file": "src/demo/ShippingCalculator.java",
+            "line": 8,
+            "severity": "MEDIUM",
+            "explanation": "The change alters the free\u2011shipping threshold from subtotal >= 5000 to subtotal > 5000, causing orders with a subtotal of exactly 5000 cents to incorrectly incur a shipping fee of 500 cents instead of being free.",
+            "evidence": "        return subtotalInCents > 5000 ? 0 : 500;"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "batches": 1,
+          "promptTokens": 813,
+          "outputTokens": 152,
+          "inferenceMillis": 2104,
+          "elapsedMillis": 3316,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2104,
+            "elapsedMillis": 2106,
+            "inputBytes": 1101,
+            "provider": "ollama",
+            "systemBytes": 1513,
+            "promptTokens": 813,
+            "model": "gpt-oss:20b",
+            "admissionWaitMillis": 0,
+            "outputTokens": 152,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [],
+        "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/5#comment-903959338",
+        "remoteCommentVerified": true
+      }
+    ]
+  },
+  "gpt": {
+    "model": "gpt-6-luna",
+    "provider": "openai",
+    "queueSchema": "eval_20261117_020455_gpt",
+    "cases": 14,
+    "strictPassed": 11,
+    "detectionPassed": 14,
+    "publishedVerified": 14,
+    "results": [
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 1,
+        "jobId": "70bea1b4-64be-4f70-b6d8-2b09ace10c55",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+        "headSha": "246db3687351ff225f81f5a78e7b3bc2f561c293",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [
+          {
+            "file": "src/demo/ArrayTotals.java",
+            "line": 8,
+            "severity": "HIGH",
+            "explanation": "The loop reaches `values.length`, which is outside the array bounds, so every call with a non-null array throws `ArrayIndexOutOfBoundsException` instead of returning the sum.",
+            "evidence": "        for (int i = 0; i <= values.length; i++) {"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 4555,
+          "inferenceMillis": 4024,
+          "outputTokens": 141,
+          "promptTokens": 690,
+          "batches": 1,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 4024,
+            "elapsedMillis": 4043,
+            "inputBytes": 1017,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 690,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 141,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 690,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 141,
+              "output_tokens_details": {
+                "reasoning_tokens": 30
+              },
+              "total_tokens": 831
+            },
+            "estimatedUsd": "0.0001395000",
+            "reservedUsd": "0.0025943750"
+          }
+        ],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/1#issuecomment-6884935072",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 2,
+        "jobId": "0e77ad20-d778-4c6d-9e64-355b3f2658f3",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+        "headSha": "85aa355614728b0d1eed356e19ff2de45c90532d",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 0,
+        "expectedSeverity": null,
+        "findings": [],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 22,
+        "enumeratedFiles": 22,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 7301,
+          "inferenceMillis": 5213,
+          "outputTokens": 196,
+          "promptTokens": 3251,
+          "batches": 3,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2110,
+            "elapsedMillis": 2127,
+            "inputBytes": 3036,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 1282,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 71,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 1812,
+            "elapsedMillis": 1827,
+            "inputBytes": 3070,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 1303,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 67,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 1291,
+            "elapsedMillis": 1307,
+            "inputBytes": 954,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 666,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 58,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 1282,
+              "input_tokens_details": {
+                "cache_write_tokens": 1279,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 1279
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 71,
+              "output_tokens_details": {
+                "reasoning_tokens": 47
+              },
+              "total_tokens": 1353
+            },
+            "estimatedUsd": "0.0001956750",
+            "reservedUsd": "0.0028787500"
+          },
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 1303,
+              "input_tokens_details": {
+                "cache_write_tokens": 1300,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 1300
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 67,
+              "output_tokens_details": {
+                "reasoning_tokens": 43
+              },
+              "total_tokens": 1370
+            },
+            "estimatedUsd": "0.0001963000",
+            "reservedUsd": "0.0028863750"
+          },
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 666,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 58,
+              "output_tokens_details": {
+                "reasoning_tokens": 34
+              },
+              "total_tokens": 724
+            },
+            "estimatedUsd": "0.0000956000",
+            "reservedUsd": "0.0025901250"
+          }
+        ],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/2#issuecomment-6884994196",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 3,
+        "jobId": "5c3b164d-9301-4cf2-b305-c8bad18e69fc",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+        "headSha": "4b2d0cd7e7d25e5d97d72bfd96cb11d3b46d12a8",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "MEDIUM",
+        "findings": [
+          {
+            "file": "src/demo/Checkout.java",
+            "line": 10,
+            "severity": "HIGH",
+            "explanation": "`unitPrice()` now returns dollars, but this calculation casts the dollar total directly to an integer without converting it to cents. For example, quantity 1 returns 12 instead of 1250.",
+            "evidence": "        return (int) (PriceCatalog.unitPrice() * quantity);"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": false,
+        "strictRubricPassed": false,
+        "snapshotPassed": true,
+        "expectedFiles": 2,
+        "enumeratedFiles": 2,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 5711,
+          "inferenceMillis": 5068,
+          "outputTokens": 328,
+          "promptTokens": 851,
+          "batches": 1,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 5068,
+            "elapsedMillis": 5082,
+            "inputBytes": 1670,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 851,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 328,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 851,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 328,
+              "output_tokens_details": {
+                "reasoning_tokens": 218
+              },
+              "total_tokens": 1179
+            },
+            "estimatedUsd": "0.0002491000",
+            "reservedUsd": "0.0026822500"
+          }
+        ],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/3#issuecomment-6884996501",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 4,
+        "jobId": "9e69d3fa-e368-475d-8f16-b09af3d83a91",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+        "headSha": "073a54ad93513d1e38abd9eae077ea878f440fc7",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [
+          {
+            "file": "src/demo/ArrayTotals.java",
+            "line": 9,
+            "severity": "HIGH",
+            "explanation": "The inclusive bound reaches `values[values.length]`, which is outside the array, so every call with a non-null array throws `ArrayIndexOutOfBoundsException` instead of returning the sum.",
+            "evidence": "        for (int i = 0; i <= values.length; i++) {"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 3799,
+          "inferenceMillis": 3306,
+          "outputTokens": 158,
+          "promptTokens": 753,
+          "batches": 1,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 3306,
+            "elapsedMillis": 3319,
+            "inputBytes": 1330,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 753,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 158,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 753,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 158,
+              "output_tokens_details": {
+                "reasoning_tokens": 44
+              },
+              "total_tokens": 911
+            },
+            "estimatedUsd": "0.0001543000",
+            "reservedUsd": "0.0026342500"
+          }
+        ],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/4#issuecomment-6884998239",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo-private",
+        "number": 1,
+        "jobId": "331d55e1-c909-4df9-ae93-ba7bbea06f40",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+        "headSha": "638c5c59736fca0e1afa995117d9e475adeef523",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [
+          {
+            "file": "src/demo/ArrayTotals.java",
+            "line": 8,
+            "severity": "HIGH",
+            "explanation": "The inclusive bound reaches `values[values.length]`, which is outside the array. As a result, `sum` throws `ArrayIndexOutOfBoundsException` for every input, including an empty array.",
+            "evidence": "        for (int i = 0; i <= values.length; i++) {"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 2894,
+          "inferenceMillis": 2311,
+          "outputTokens": 157,
+          "promptTokens": 687,
+          "batches": 1,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2311,
+            "elapsedMillis": 2327,
+            "inputBytes": 1039,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 687,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 157,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 687,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 157,
+              "output_tokens_details": {
+                "reasoning_tokens": 41
+              },
+              "total_tokens": 844
+            },
+            "estimatedUsd": "0.0001472000",
+            "reservedUsd": "0.0025971250"
+          }
+        ],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/1#issuecomment-6884999899",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo-private",
+        "number": 2,
+        "jobId": "92d58822-f078-4ba0-bb70-c58bb71a8fda",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+        "headSha": "ae86aa2bb8508226355cfc930aa2e376fae4d882",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 0,
+        "expectedSeverity": null,
+        "findings": [],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 23,
+        "enumeratedFiles": 23,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 8628,
+          "inferenceMillis": 6066,
+          "outputTokens": 262,
+          "promptTokens": 3627,
+          "batches": 3,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2257,
+            "elapsedMillis": 2273,
+            "inputBytes": 3058,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 1281,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 82,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 1725,
+            "elapsedMillis": 1739,
+            "inputBytes": 3092,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 1302,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 69,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2084,
+            "elapsedMillis": 2099,
+            "inputBytes": 2368,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 1044,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 111,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 1281,
+              "input_tokens_details": {
+                "cache_write_tokens": 1278,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 1278
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 82,
+              "output_tokens_details": {
+                "reasoning_tokens": 58
+              },
+              "total_tokens": 1363
+            },
+            "estimatedUsd": "0.0002010500",
+            "reservedUsd": "0.0028815000"
+          },
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 1302,
+              "input_tokens_details": {
+                "cache_write_tokens": 1299,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 1299
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 69,
+              "output_tokens_details": {
+                "reasoning_tokens": 45
+              },
+              "total_tokens": 1371
+            },
+            "estimatedUsd": "0.0001971750",
+            "reservedUsd": "0.0028891250"
+          },
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 1044,
+              "input_tokens_details": {
+                "cache_write_tokens": 1041,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 1041
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 111,
+              "output_tokens_details": {
+                "reasoning_tokens": 87
+              },
+              "total_tokens": 1155
+            },
+            "estimatedUsd": "0.0001859250",
+            "reservedUsd": "0.0027803750"
+          }
+        ],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/2#issuecomment-6885002564",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo-private",
+        "number": 3,
+        "jobId": "f3da9725-3c29-4fb6-9070-03fa531b121e",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+        "headSha": "0912a54a2f34cb97b7bb781a96f92927c3c7c0ce",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "MEDIUM",
+        "findings": [
+          {
+            "file": "src/demo/Checkout.java",
+            "line": 10,
+            "severity": "HIGH",
+            "explanation": "The method still returns a total in cents, but `unitPrice()` is now expressed in dollars. Casting the dollar total to `int` truncates it without converting to cents, so a quantity of 1 returns 12 instead of 1250.",
+            "evidence": "        return (int) (PriceCatalog.unitPrice() * quantity);"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": false,
+        "strictRubricPassed": false,
+        "snapshotPassed": true,
+        "expectedFiles": 2,
+        "enumeratedFiles": 2,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 4596,
+          "inferenceMillis": 3906,
+          "outputTokens": 221,
+          "promptTokens": 847,
+          "batches": 1,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 3906,
+            "elapsedMillis": 3922,
+            "inputBytes": 1692,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 847,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 221,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 847,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 221,
+              "output_tokens_details": {
+                "reasoning_tokens": 93
+              },
+              "total_tokens": 1068
+            },
+            "estimatedUsd": "0.0001952000",
+            "reservedUsd": "0.0026850000"
+          }
+        ],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/3#issuecomment-6885004799",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "github",
+        "repository": "cleisommais/pr-test-repo-private",
+        "number": 4,
+        "jobId": "0b2117f5-1f5d-4baa-ad36-3ae60087d41a",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+        "headSha": "e972a5b7aead1765c3d72f07d305efe9cdd41bc2",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [
+          {
+            "file": "src/demo/ArrayTotals.java",
+            "line": 9,
+            "severity": "HIGH",
+            "explanation": "The inclusive condition runs one iteration past the last valid index, so every call eventually throws `ArrayIndexOutOfBoundsException` instead of returning the sum (including for an empty array).",
+            "evidence": "        for (int i = 0; i <= values.length; i++) {"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 3388,
+          "inferenceMillis": 2813,
+          "outputTokens": 186,
+          "promptTokens": 754,
+          "batches": 1,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2813,
+            "elapsedMillis": 2829,
+            "inputBytes": 1338,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 754,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 186,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 754,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 186,
+              "output_tokens_details": {
+                "reasoning_tokens": 75
+              },
+              "total_tokens": 940
+            },
+            "estimatedUsd": "0.0001684000",
+            "reservedUsd": "0.0026352500"
+          }
+        ],
+        "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/4#issuecomment-6885006527",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "gitlab",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 1,
+        "jobId": "3489a524-8fe7-4fa8-a09f-0168ad9facbb",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "879f61bc5ffd8ea53558c005942255e42cbcd578",
+        "headSha": "4143f7bd0bf4cd801c11e42ffac574dd91eeb462",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "MEDIUM",
+        "findings": [
+          {
+            "file": "src/demo/ShippingCalculator.java",
+            "line": 8,
+            "severity": "MEDIUM",
+            "explanation": "An order with a subtotal of exactly 5,000 cents now incurs a 500-cent shipping charge, despite qualifying for free shipping.",
+            "evidence": "        if (subtotalCents > 5000) {"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 2786,
+          "inferenceMillis": 2189,
+          "outputTokens": 135,
+          "promptTokens": 703,
+          "batches": 1,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2189,
+            "elapsedMillis": 2203,
+            "inputBytes": 1117,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 703,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 135,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 703,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 135,
+              "output_tokens_details": {
+                "reasoning_tokens": 36
+              },
+              "total_tokens": 838
+            },
+            "estimatedUsd": "0.0001378000",
+            "reservedUsd": "0.0026070000"
+          }
+        ],
+        "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/1#note_4235283597",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "bitbucket",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 1,
+        "jobId": "5898bdc4-b44a-409e-ad6a-fa1cd64b5efe",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+        "headSha": "0b4b01f406586b10e77235eb96fbc827bac2ff7f",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [
+          {
+            "file": "src/demo/ArrayTotals.java",
+            "line": 8,
+            "severity": "HIGH",
+            "explanation": "The loop includes `i == values.length`, so every call with a non-null array attempts to read past its last element and throws `ArrayIndexOutOfBoundsException` instead of returning the sum.",
+            "evidence": "        for (int i = 0; i <= values.length; i++) {"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 3946,
+          "inferenceMillis": 2642,
+          "outputTokens": 166,
+          "promptTokens": 693,
+          "batches": 1,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2642,
+            "elapsedMillis": 2658,
+            "inputBytes": 1027,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 693,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 166,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 693,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 166,
+              "output_tokens_details": {
+                "reasoning_tokens": 51
+              },
+              "total_tokens": 859
+            },
+            "estimatedUsd": "0.0001523000",
+            "reservedUsd": "0.0025957500"
+          }
+        ],
+        "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/1#comment-903959074",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "bitbucket",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 2,
+        "jobId": "bbd2ea4d-996d-484d-8116-742f8c0892a4",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+        "headSha": "bf5fe0feae39d70b7d556fde7720e8854188e97c",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 0,
+        "expectedSeverity": null,
+        "findings": [],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 22,
+        "enumeratedFiles": 22,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 9732,
+          "inferenceMillis": 5552,
+          "outputTokens": 223,
+          "promptTokens": 3276,
+          "batches": 3,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2179,
+            "elapsedMillis": 2194,
+            "inputBytes": 3043,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 1290,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 95,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 1510,
+            "elapsedMillis": 1523,
+            "inputBytes": 3086,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 1316,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 68,
+            "status": "completed"
+          },
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 1863,
+            "elapsedMillis": 1877,
+            "inputBytes": 952,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 670,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 60,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 1290,
+              "input_tokens_details": {
+                "cache_write_tokens": 1287,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 1287
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 95,
+              "output_tokens_details": {
+                "reasoning_tokens": 71
+              },
+              "total_tokens": 1385
+            },
+            "estimatedUsd": "0.0002086750",
+            "reservedUsd": "0.0028807500"
+          },
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 1316,
+              "input_tokens_details": {
+                "cache_write_tokens": 1313,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 1313
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 68,
+              "output_tokens_details": {
+                "reasoning_tokens": 44
+              },
+              "total_tokens": 1384
+            },
+            "estimatedUsd": "0.0001984250",
+            "reservedUsd": "0.0028897500"
+          },
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 670,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 60,
+              "output_tokens_details": {
+                "reasoning_tokens": 36
+              },
+              "total_tokens": 730
+            },
+            "estimatedUsd": "0.0000970000",
+            "reservedUsd": "0.0025901250"
+          }
+        ],
+        "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/2#comment-903959135",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "bitbucket",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 3,
+        "jobId": "d46f6f0f-68ac-41fd-9f0d-5b83395335f3",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+        "headSha": "80e8dbfe6301045934aeee59559a182ae60ae061",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "MEDIUM",
+        "findings": [
+          {
+            "file": "src/demo/Checkout.java",
+            "line": 10,
+            "severity": "HIGH",
+            "explanation": "`unitPrice()` now returns dollars, but this casts the dollar total directly to an integer instead of converting it to cents. For example, a quantity of 1 returns 12 instead of 1250.",
+            "evidence": "        return (int) (PriceCatalog.unitPrice() * quantity);"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": false,
+        "strictRubricPassed": false,
+        "snapshotPassed": true,
+        "expectedFiles": 2,
+        "enumeratedFiles": 2,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 4697,
+          "inferenceMillis": 3088,
+          "outputTokens": 205,
+          "promptTokens": 840,
+          "batches": 1,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 3088,
+            "elapsedMillis": 3102,
+            "inputBytes": 1671,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 840,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 205,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 840,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 205,
+              "output_tokens_details": {
+                "reasoning_tokens": 96
+              },
+              "total_tokens": 1045
+            },
+            "estimatedUsd": "0.0001865000",
+            "reservedUsd": "0.0026826250"
+          }
+        ],
+        "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/3#comment-903959194",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "bitbucket",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 4,
+        "jobId": "fdbceaac-6864-4e73-af5c-732fd5e1b145",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+        "headSha": "4e864df84d4570507324a95952aa2840d132dc54",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "HIGH",
+        "findings": [
+          {
+            "file": "src/demo/ArrayTotals.java",
+            "line": 9,
+            "severity": "HIGH",
+            "explanation": "The inclusive bound runs the loop once with `i == values.length`, so every call eventually reads past the end of the array and throws `ArrayIndexOutOfBoundsException` instead of returning the sum.",
+            "evidence": "        for (int i = 0; i <= values.length; i++) {"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 3609,
+          "inferenceMillis": 2261,
+          "outputTokens": 146,
+          "promptTokens": 739,
+          "batches": 1,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 2261,
+            "elapsedMillis": 2277,
+            "inputBytes": 1274,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 739,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 146,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 739,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 146,
+              "output_tokens_details": {
+                "reasoning_tokens": 31
+              },
+              "total_tokens": 885
+            },
+            "estimatedUsd": "0.0001469000",
+            "reservedUsd": "0.0026273750"
+          }
+        ],
+        "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/4#comment-903959258",
+        "remoteCommentVerified": true
+      },
+      {
+        "platform": "bitbucket",
+        "repository": "cleisommais/pr-test-repo",
+        "number": 5,
+        "jobId": "5802deb4-e87c-491c-9a16-8244d0fe3775",
+        "state": "succeeded",
+        "failureCode": null,
+        "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+        "headSha": "7098aa3012ab8fdb86d3947d47fc9a7804154d40",
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "promptVersion": "review-original-v3",
+        "expectedCount": 1,
+        "expectedSeverity": "MEDIUM",
+        "findings": [
+          {
+            "file": "src/demo/ShippingCalculator.java",
+            "line": 8,
+            "severity": "MEDIUM",
+            "explanation": "A subtotal of exactly 5,000 cents now incurs a 500-cent fee, whereas the existing threshold made that subtotal eligible for free shipping.",
+            "evidence": "        return subtotalInCents > 5000 ? 0 : 500;"
+          }
+        ],
+        "detectionPassed": true,
+        "severityPassed": true,
+        "strictRubricPassed": true,
+        "snapshotPassed": true,
+        "expectedFiles": 1,
+        "enumeratedFiles": 1,
+        "analysisErrors": [],
+        "usage": {
+          "elapsedMillis": 4981,
+          "inferenceMillis": 3745,
+          "outputTokens": 231,
+          "promptTokens": 710,
+          "batches": 1,
+          "unknownUsageAttempts": 0
+        },
+        "inferenceAttempts": [
+          {
+            "role": "primary",
+            "schemaBytes": 493,
+            "reportedRuntimeMillis": 3745,
+            "elapsedMillis": 3758,
+            "inputBytes": 1101,
+            "provider": "openai",
+            "systemBytes": 1513,
+            "promptTokens": 710,
+            "model": "gpt-6-luna",
+            "admissionWaitMillis": 0,
+            "outputTokens": 231,
+            "status": "completed"
+          }
+        ],
+        "apiCalls": [
+          {
+            "model": "gpt-6-luna",
+            "usage": {
+              "input_tokens": 710,
+              "input_tokens_details": {
+                "cache_write_tokens": 0,
+                "cache_write_tokens_details": {
+                  "ttl_12h_tokens": 0,
+                  "ttl_30m_tokens": 0
+                },
+                "cached_tokens": 0
+              },
+              "output_tokens": 231,
+              "output_tokens_details": {
+                "reasoning_tokens": 128
+              },
+              "total_tokens": 941
+            },
+            "estimatedUsd": "0.0001865000",
+            "reservedUsd": "0.0026055000"
+          }
+        ],
+        "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/5#comment-903959338",
+        "remoteCommentVerified": true
+      }
+    ]
+  },
+  "apiUsage": {
+    "calls": 20,
+    "outcomes": [
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed"
+    ],
+    "inputTokens": 18421,
+    "outputTokens": 2755,
+    "estimatedUsd": "0.0034395250",
+    "newReservedUsd": "0.0542133750",
+    "cumulativeJournalReservedUsd": "0.0926177500",
+    "reservationLimitUsd": "0.25",
+    "costScope": "Configured POC rate estimate, not an invoice; existing reservations retained"
+  },
+  "checks": {
+    "javaTests": 134,
+    "javaSkipped": 0,
+    "javaFailures": 0,
+    "javaErrors": 0,
+    "scriptTests": 18,
+    "scriptTestsPassed": true
+  },
+  "runtime": {
+    "normalProvider": "ollama",
+    "normalPromptProfile": "original",
+    "normalExternalInferenceEnabled": false,
+    "temporaryEvaluationContainersRemoved": true,
+    "runtimeImageUnchanged": true
+  },
+  "commonSystemPromptSha256": "f4a3cfa1dd9e335b3e149a2d4a863c829e25e1ab49fe0a5f5025a09d7e9d587a"
+}

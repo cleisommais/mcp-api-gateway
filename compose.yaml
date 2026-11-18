@@ -1,0 +1,163 @@
+name: mcp-api-gateway
+
+x-java: &java
+  image: mcp-api-gateway:local
+  build: .
+  # Unix initialization records the host owner for secrets and report mounts.
+  user: "${LOCAL_UID:-10001}:${LOCAL_GID:-10001}"
+  restart: unless-stopped
+x-database: &database
+  DATABASE_URL: jdbc:postgresql://postgres:5432/mcp_review
+  DATABASE_SCHEMA: ${DATABASE_SCHEMA:-review}
+  DATABASE_PASSWORD_FILE: /run/secrets/database-password
+x-github: &github
+  GITHUB_AUTH_MODE: app
+  GITHUB_APP_ID: ${GITHUB_APP_ID:-}
+  GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:-0}
+  GITHUB_PRIVATE_KEY_PATH: /run/secrets/github-app-key
+x-mcp: &mcp
+  MCP_GATEWAY_URL: http://mcp-gateway:8080
+  MCP_GATEWAY_TOKEN_FILE: /run/secrets/mcp-gateway-token
+
+services:
+  # Durable job queue, delivery deduplication, leases and published-report state.
+  postgres:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_DB: mcp_review
+      POSTGRES_USER: mcp_review
+      POSTGRES_PASSWORD_FILE: /run/secrets/database-password
+    secrets: [database-password]
+    ports: ["127.0.0.1:${POSTGRES_HOST_PORT:-15432}:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U mcp_review -d mcp_review"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # Portable CPU inference. Optional NVIDIA acceleration: compose.gpu.yaml.
+  ollama:
+    image: ollama/ollama:${OLLAMA_VERSION:-0.40.16}
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_MAX_QUEUE: "4"
+      OLLAMA_KEEP_ALIVE: 10m
+      OLLAMA_FLASH_ATTENTION: "1"
+    ports: ["127.0.0.1:${OLLAMA_HOST_PORT:-11435}:11434"]
+    volumes: ["ollama_data:/root/.ollama"]
+    healthcheck:
+      test: [CMD, ollama, list]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  # Internal MCP entrypoint. Routes allowlisted tools to GitHub/GitLab/Bitbucket MCP subprocesses.
+  mcp-gateway:
+    <<: *java
+    environment:
+      <<: [*github, *mcp]
+      GATEWAY_CONFIG: /config/gateway.json
+      GITLAB_READ_TOKEN_FILE: /run/secrets/gitlab-read-token
+      BITBUCKET_READ_TOKEN_FILE: /run/secrets/bitbucket-read-token
+      BITBUCKET_EMAIL: ${BITBUCKET_EMAIL:-}
+      PLATFORM_MAX_CONCURRENT: ${PLATFORM_MAX_CONCURRENT:-1}
+    secrets: [mcp-gateway-token, github-app-key, gitlab-read-token, bitbucket-read-token]
+    volumes: ["./config/gateway.json:/config/gateway.json:ro"]
+    entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", -cp, "/app/mcp-api-gateway.jar:/app/lib/*", com.prreview.mcpgateway.McpGatewayApplication]
+    healthcheck:
+      test: [CMD, java, -cp, "/app/mcp-api-gateway.jar:/app/lib/*", com.prreview.mcpgateway.McpGatewayApplication, --health]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # Public-facing HTTP contracts: signed webhook, authenticated manual review and job status.
+  api-gateway:
+    <<: *java
+    environment:
+      <<: [*database, *mcp]
+      GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:-0}
+      REPOSITORIES_CONFIG: /config/repositories.json
+      API_TOKEN_FILE: /run/secrets/api-token
+      GITHUB_WEBHOOK_SECRET_FILE: /run/secrets/github-webhook-secret
+    secrets: [database-password, mcp-gateway-token, api-token, github-webhook-secret]
+    volumes: ["./config/repositories.json:/config/repositories.json:ro"]
+    ports: ["127.0.0.1:${API_HOST_PORT:-18081}:8081"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      mcp-gateway: {condition: service_healthy}
+    entrypoint: [java, -cp, "/app/mcp-api-gateway.jar:/app/lib/*", com.prreview.apigateway.ApiGatewayApplication]
+    healthcheck:
+      test: [CMD, java, -cp, "/app/mcp-api-gateway.jar:/app/lib/*", com.prreview.apigateway.ApiGatewayApplication, --health]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # Private consumer: claims a leased job, builds prompts, calls inference and publishes its result.
+  agent-worker:
+    <<: *java
+    environment:
+      <<: [*database, *github, *mcp]
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-ollama}
+      REVIEW_MODE: ${REVIEW_MODE:-single}
+      REVIEW_PROMPT_PROFILE: ${REVIEW_PROMPT_PROFILE:-original}
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gpt-oss:20b}
+      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-8192}
+      OLLAMA_THINK: ${OLLAMA_THINK:-low}
+      CLEAN_AUDIT_THINK: ${CLEAN_AUDIT_THINK:-medium}
+      CLEAN_AUDIT_CONTEXT_LENGTH: ${CLEAN_AUDIT_CONTEXT_LENGTH:-16384}
+      CLEAN_AUDIT_OUTPUT_TOKENS: ${CLEAN_AUDIT_OUTPUT_TOKENS:-8192}
+      REVIEW_OUTPUT_TOKENS: ${REVIEW_OUTPUT_TOKENS:-4096}
+      REVIEW_TIMEOUT_SECONDS: ${REVIEW_TIMEOUT_SECONDS:-240}
+      REVIEW_TOTAL_SECONDS: ${REVIEW_TOTAL_SECONDS:-600}
+      VERIFIER_PROVIDER: ${VERIFIER_PROVIDER:-ollama}
+      VERIFIER_MODEL: ${VERIFIER_MODEL:-qwen3:14b}
+      VERIFIER_THINK: ${VERIFIER_THINK:-false}
+      VERIFIER_OUTPUT_TOKENS: ${VERIFIER_OUTPUT_TOKENS:-1536}
+      WORKER_MAX_JOBS: ${WORKER_MAX_JOBS:-1}
+      WORKER_MAX_JOBS_PER_REPOSITORY: ${WORKER_MAX_JOBS_PER_REPOSITORY:-1}
+      WORKER_LEASE_SECONDS: ${WORKER_LEASE_SECONDS:-90}
+      INFERENCE_MAX_CONCURRENT: "1"
+      GITLAB_PUBLISH_TOKEN_FILE: /run/secrets/gitlab-publish-token
+      BITBUCKET_PUBLISH_TOKEN_FILE: /run/secrets/bitbucket-publish-token
+      BITBUCKET_EMAIL: ${BITBUCKET_EMAIL:-}
+      OPENAI_API_KEY_FILE: /run/secrets/openai-api-key
+      EXTERNAL_INFERENCE_ENABLED: ${EXTERNAL_INFERENCE_ENABLED:-false}
+      EXTERNAL_ALLOWED_REPOSITORIES: ${EXTERNAL_ALLOWED_REPOSITORIES:-github:cleisommais/pr-test-repo}
+      EXTERNAL_MAX_COST_USD: ${EXTERNAL_MAX_COST_USD:-0}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-6-luna}
+      REPORT_DIR: /reports
+    secrets: [database-password, mcp-gateway-token, github-app-key, gitlab-publish-token, bitbucket-publish-token, openai-api-key]
+    volumes: ["./reports:/reports"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      mcp-gateway: {condition: service_healthy}
+      ollama: {condition: service_healthy}
+    entrypoint: [java, "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", -cp, "/app/mcp-api-gateway.jar:/app/lib/*", com.prreview.agent.AgentWorkerApplication]
+    healthcheck:
+      test: [CMD, java, -cp, "/app/mcp-api-gateway.jar:/app/lib/*", com.prreview.agent.AgentWorkerApplication, --health]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+secrets:
+  database-password: {file: ./secrets/database-password}
+  mcp-gateway-token: {file: ./secrets/mcp-gateway-token}
+  api-token: {file: ./secrets/api-token}
+  github-webhook-secret: {file: ./secrets/github-webhook-secret}
+  github-app-key: {file: ./secrets/github-app.pem}
+  gitlab-read-token: {file: ./secrets/gitlab-read-token}
+  gitlab-publish-token: {file: ./secrets/gitlab-publish-token}
+  bitbucket-read-token: {file: ./secrets/bitbucket-read-token}
+  bitbucket-publish-token: {file: ./secrets/bitbucket-publish-token}
+  openai-api-key: {file: ./secrets/openai-api-key}
+
+volumes:
+  postgres_data:
+  ollama_data:
+  maven_test_cache:

@@ -1,0 +1,8 @@
+{
+  "name": "mcp-pr-review-poc",
+  "repository_selection": ["cleisommais/pr-test-repo", "cleisommais/pr-test-repo-private"],
+  "repository_permissions": {"contents": "read", "pull_requests": "write", "metadata": "read"},
+  "subscribe_to": ["pull_request"],
+  "webhook_path": "/webhooks/github",
+  "notes": "Setup reference, not an API manifest. Configure an HTTPS delivery URL when a tunnel or deployment is available. Store the generated private key in ignored secrets/github-app.pem; never paste it into chat."
+}

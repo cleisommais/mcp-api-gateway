@@ -10,4 +10,4 @@ WORKDIR /app
 COPY --from=build /workspace/target/mcp-api-gateway.jar ./mcp-api-gateway.jar
 COPY --from=build /workspace/target/lib ./lib
 USER 10001:10001
-ENTRYPOINT ["java", "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", "dev.cleisommais.mcp.f1.FixtureClient"]
+ENTRYPOINT ["java", "-Dorg.slf4j.simpleLogger.defaultLogLevel=off", "-cp", "/app/mcp-api-gateway.jar:/app/lib/*", "com.prreview.apigateway.ApiGatewayApplication"]

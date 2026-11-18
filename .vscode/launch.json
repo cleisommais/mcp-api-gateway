@@ -1,0 +1,5 @@
+{"version":"0.2.0","configurations":[
+ {"type":"java","name":"Attach API gateway","request":"attach","hostName":"localhost","port":5005},
+ {"type":"java","name":"Attach MCP gateway","request":"attach","hostName":"localhost","port":5006},
+ {"type":"java","name":"Attach agent worker","request":"attach","hostName":"localhost","port":5007}
+]}

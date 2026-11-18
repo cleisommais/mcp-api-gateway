@@ -1,0 +1,640 @@
+{
+  "date": "2026-11-18",
+  "deployment": "OCI us-chicago-1 Docker Compose",
+  "trigger": "Native provider webhooks; no remote repository polling or manual review POST",
+  "finalPolicyChecks": 8,
+  "finalPolicyPassed": 8,
+  "earlierFailedCheckRetained": "Bitbucket first fix: unsupported generic integer-overflow finding",
+  "primaryPrompt": "review-original-v3",
+  "finalAudit": "clean-review-audit-v2",
+  "cases": [
+    {
+      "name": "github-public",
+      "platform": "github",
+      "repository": "cleisommais/pr-test-repo",
+      "url": "https://github.com/cleisommais/pr-test-repo/pull/7",
+      "branch": "oci-webhook/20261118/github-public",
+      "initialLocalCommits": [
+        "ef6fb55c60c6cb414f338cb0ea7e506781e7f643",
+        "5b9cf47b806a14784d34a1e4ed6cd638c9834f18",
+        "4ceafb5a17c2173c2839ecdfbdc519206bab35ae"
+      ],
+      "stages": [
+        {
+          "stage": "initial",
+          "headSha": "4ceafb5a17c2173c2839ecdfbdc519206bab35ae",
+          "jobId": "57a8249b-8cef-4cfc-9047-325b42fd39fa",
+          "expectedFindings": 1,
+          "findings": [
+            {
+              "file": "src/demo/OciTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The inclusive bound makes the loop read values[values.length], which is outside the array, so every call with a non-null array throws ArrayIndexOutOfBoundsException instead of returning the sum."
+            }
+          ],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v1",
+          "commentId": 6980739501,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/7#issuecomment-6980739501",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "ffda6a00-e357-11f1-8f44-12fffba21834",
+              "event": "pull_request",
+              "action": "opened",
+              "received_at": "2026-11-18T13:59:03.544998+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "fixed",
+          "headSha": "6bf4c5aa6cadb3a2dbeb6c456e0ff8f6fa6acaf9",
+          "jobId": "532e9b75-bb17-4c23-ad34-6a7c70e50050",
+          "expectedFindings": 0,
+          "findings": [],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v1",
+          "commentId": 6980739501,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/7#issuecomment-6980739501",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "77063a00-e358-11f1-9fc3-309f540c81e0",
+              "event": "pull_request",
+              "action": "synchronize",
+              "received_at": "2026-11-18T14:00:54.440735+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "regression",
+          "headSha": "47405f0521816ee03ee68002c913ceeed3945a41",
+          "jobId": "9bd880c6-f4e1-4af5-8d75-c861f766d5fc",
+          "expectedFindings": 1,
+          "findings": [
+            {
+              "file": "src/demo/OciTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop reaches `i == values.length` and accesses `values[i]`, which throws `ArrayIndexOutOfBoundsException` for every non-null array, including an empty one."
+            }
+          ],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v2",
+          "commentId": 6980739501,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/7#issuecomment-6980739501",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "2bd5c360-e359-11f1-96dc-1d85fb65114a",
+              "event": "pull_request",
+              "action": "synchronize",
+              "received_at": "2026-11-18T14:05:57.61774+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "fixed-again",
+          "headSha": "c4ec97f5612cf6d9f1d1e12a51ce5b3d66410376",
+          "jobId": "e9faefeb-df60-413d-bb39-25d2e5d080bd",
+          "expectedFindings": 0,
+          "findings": [],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v2",
+          "commentId": 6980739501,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/7#issuecomment-6980739501",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "65240550-e359-11f1-80eb-7ec3d92e4c46",
+              "event": "pull_request",
+              "action": "synchronize",
+              "received_at": "2026-11-18T14:07:33.301621+00:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "github-private",
+      "platform": "github",
+      "repository": "cleisommais/pr-test-repo-private",
+      "url": "https://github.com/cleisommais/pr-test-repo-private/pull/7",
+      "branch": "oci-webhook/20261118/github-private",
+      "initialLocalCommits": [
+        "d72d97b8867e5f9befbc4c78d53933c695e3356d",
+        "4cedc7b1fc7df89b5f93060409b2b31f2c644ca8",
+        "3bcd861792e89e329e18fd678e53cab757b54681"
+      ],
+      "stages": [
+        {
+          "stage": "initial",
+          "headSha": "3bcd861792e89e329e18fd678e53cab757b54681",
+          "jobId": "105c2cb2-1ed8-41d9-ac80-8833692e4014",
+          "expectedFindings": 1,
+          "findings": [
+            {
+              "file": "src/demo/OciTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop includes `values.length`, which is outside the valid index range. Calling `sum` with any array, including an empty one, throws `ArrayIndexOutOfBoundsException` instead of returning the sum."
+            }
+          ],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v1",
+          "commentId": 6980743702,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/7#issuecomment-6980743702",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "39ec2300-e358-11f1-91ab-661f0453e485",
+              "event": "pull_request",
+              "action": "opened",
+              "received_at": "2026-11-18T13:59:12.155317+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "fixed",
+          "headSha": "bd89e91d1567c99f52eb3a500337fcca0a37de78",
+          "jobId": "386d8382-1bca-42fb-9355-5b44e06db68f",
+          "expectedFindings": 0,
+          "findings": [],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v1",
+          "commentId": 6980743702,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/7#issuecomment-6980743702",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "78cf3a30-e358-11f1-9bb5-d6157e5a9b1c",
+              "event": "pull_request",
+              "action": "synchronize",
+              "received_at": "2026-11-18T14:00:57.171391+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "regression",
+          "headSha": "352df277982a1c65a9f26830f4e754b6b9830525",
+          "jobId": "07da8dfe-8c7a-41ba-886a-f7e0ba0b533a",
+          "expectedFindings": 1,
+          "findings": [
+            {
+              "file": "src/demo/OciTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop reaches i == values.length and accesses values[i] on the next line, so every call with a non-null array throws ArrayIndexOutOfBoundsException instead of returning its sum."
+            }
+          ],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v2",
+          "commentId": 6980743702,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/7#issuecomment-6980743702",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "2de2d170-e359-11f1-82d9-7fe701b8b7f6",
+              "event": "pull_request",
+              "action": "synchronize",
+              "received_at": "2026-11-18T14:06:00.728559+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "fixed-again",
+          "headSha": "49bb027729c49382ce2971ddb916c5410def80ae",
+          "jobId": "2479fba9-53cb-4050-b398-4404136e02c5",
+          "expectedFindings": 0,
+          "findings": [],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v2",
+          "commentId": 6980743702,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/7#issuecomment-6980743702",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "6707b970-e359-11f1-87f6-e898496498bb",
+              "event": "pull_request",
+              "action": "synchronize",
+              "received_at": "2026-11-18T14:07:36.86313+00:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gitlab",
+      "platform": "gitlab",
+      "repository": "cleisommais/pr-test-repo",
+      "url": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/4",
+      "branch": "oci-webhook/20261118/gitlab",
+      "initialLocalCommits": [
+        "2b9962f71841b143f0574b0453e25ead8648caa2",
+        "a81234291d331d9402b9a8caa0ba45d656ea63e8",
+        "ee7fc1fadb82dc014ba9b666f48b87ce39f4be95"
+      ],
+      "stages": [
+        {
+          "stage": "initial",
+          "headSha": "ee7fc1fadb82dc014ba9b666f48b87ce39f4be95",
+          "jobId": "e9691649-c5f7-4a22-8672-f889a36d0825",
+          "expectedFindings": 1,
+          "findings": [
+            {
+              "file": "src/demo/OciTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop includes `values.length`, so every call with a non-empty array eventually reads past its end and throws `ArrayIndexOutOfBoundsException` instead of returning the sum."
+            }
+          ],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v1",
+          "commentId": 4265163419,
+          "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/4#note_4265163419",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "17493f47-fcfc-392d-9671-06c046d0a1d9",
+              "event": "merge_request",
+              "action": "open",
+              "received_at": "2026-11-18T13:54:15.386936+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "fixed",
+          "headSha": "6ba176284d5ce78f2837b40029b1e5a2d89269cf",
+          "jobId": "3a69bdf1-51c9-41da-a111-5adcb2aa1cce",
+          "expectedFindings": 0,
+          "findings": [],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v1",
+          "commentId": 4265163419,
+          "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/4#note_4265163419",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "9bb0a2aa-10f4-34a0-8aae-4c3dd63a2c91",
+              "event": "merge_request",
+              "action": "update",
+              "received_at": "2026-11-18T14:01:05.098099+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "regression",
+          "headSha": "93bab584fb9bfff1b47815882457b9a47f5f2c7c",
+          "jobId": "ad8caf5f-f0b4-4518-960f-d05cd9d34bf0",
+          "expectedFindings": 1,
+          "findings": [
+            {
+              "file": "src/demo/OciTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop reaches i == values.length and then accesses values[i] on line 9, causing an ArrayIndexOutOfBoundsException instead of returning the sum."
+            }
+          ],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v2",
+          "commentId": 4265163419,
+          "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/4#note_4265163419",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "df5ece34-493d-361b-9e1e-4d78b6476f0b",
+              "event": "merge_request",
+              "action": "update",
+              "received_at": "2026-11-18T14:06:06.234016+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "fixed-again",
+          "headSha": "07643e0178f0bede8461acbdbecf136503707e26",
+          "jobId": "8d58f6be-52b8-49d6-acc8-6f221a85fabe",
+          "expectedFindings": 0,
+          "findings": [],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v2",
+          "commentId": 4265163419,
+          "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/4#note_4265163419",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "7ace0d30-b54e-328c-9c9c-a8f18eb3554b",
+              "event": "merge_request",
+              "action": "update",
+              "received_at": "2026-11-18T14:07:42.013344+00:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "bitbucket",
+      "platform": "bitbucket",
+      "repository": "cleisommais/pr-test-repo",
+      "url": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/8",
+      "branch": "oci-webhook/20261118/bitbucket",
+      "initialLocalCommits": [
+        "8422c3136128fa7ed38f3ec2f8a64b309bac1911",
+        "ac7153c29f389b07efe5e78d570975cb7d72ea34",
+        "cb1558d88302378b007eeae4e21751f8fa8e28cf"
+      ],
+      "stages": [
+        {
+          "stage": "initial",
+          "headSha": "cb1558d88302378b007eeae4e21751f8fa8e28cf",
+          "jobId": "8907cb85-26a6-446c-a4c4-b75cab64834d",
+          "expectedFindings": 1,
+          "findings": [
+            {
+              "file": "src/demo/OciTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop runs once with `i == values.length`, so every invocation eventually reads past the array and throws `ArrayIndexOutOfBoundsException` instead of returning the sum."
+            }
+          ],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v1",
+          "commentId": 905372799,
+          "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/8#comment-905372799",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "f7cd11a2-bd9a-3b37-892f-71faf8f0b5e2",
+              "event": "pullrequest:created",
+              "action": "pullrequest:created",
+              "received_at": "2026-11-18T13:54:15.00055+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "fixed",
+          "headSha": "87d8f7fce011112462d3617d6194db3ccc515e4d",
+          "jobId": "c46211e8-9f92-46a5-b4d8-4b5793fa4f9c",
+          "expectedFindings": 0,
+          "findings": [
+            {
+              "file": "src/demo/OciTotals.java",
+              "line": 9,
+              "evidence": "            total += value;",
+              "severity": "MEDIUM",
+              "explanation": "Java int addition overflows silently. For example, summing {Integer.MAX_VALUE, 1} returns Integer.MIN_VALUE instead of the mathematical sum, so valid inputs can produce an incorrect result."
+            }
+          ],
+          "expectedResultMatched": false,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v1",
+          "commentId": 905372799,
+          "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/8#comment-905372799",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "f5756a21-2873-321b-9f69-35913788bb67",
+              "event": "repo:push",
+              "action": "repo:push",
+              "received_at": "2026-11-18T14:01:12.576567+00:00"
+            },
+            {
+              "delivery_id": "225c02d0-8c5f-3b57-94bf-3a1043f08436",
+              "event": "pullrequest:updated",
+              "action": "pullrequest:updated",
+              "received_at": "2026-11-18T14:01:21.717586+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "regression",
+          "headSha": "cd5319b2e2b5b77561a8153826faced1e1247c6b",
+          "jobId": "60dfb652-2779-48cc-a5e0-703a0c814140",
+          "expectedFindings": 1,
+          "findings": [
+            {
+              "file": "src/demo/OciTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "When the loop reaches values.length, it indexes beyond the array, so every call\u2014including one with an empty array\u2014throws ArrayIndexOutOfBoundsException instead of returning the sum."
+            }
+          ],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v2",
+          "commentId": 905372799,
+          "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/8#comment-905372799",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "f729f1c6-6211-385b-aa2a-4f3b1a4c8b92",
+              "event": "repo:push",
+              "action": "repo:push",
+              "received_at": "2026-11-18T14:06:16.68101+00:00"
+            },
+            {
+              "delivery_id": "3b79b0ce-4fe6-31c3-958a-eacd52976911",
+              "event": "pullrequest:updated",
+              "action": "pullrequest:updated",
+              "received_at": "2026-11-18T14:06:22.910842+00:00"
+            }
+          ]
+        },
+        {
+          "stage": "fixed-again",
+          "headSha": "57ec00b2cba672e409306f8f2d5ddcf8e55251e9",
+          "jobId": "a2c21366-9176-43f4-abd2-c340fc7cbcb7",
+          "expectedFindings": 0,
+          "findings": [],
+          "expectedResultMatched": true,
+          "status": "complete",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "auditVersion": "clean-review-audit-v2",
+          "commentId": 905372799,
+          "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/8#comment-905372799",
+          "remoteReadBackVerified": true,
+          "deliveries": [
+            {
+              "delivery_id": "beb22375-bcd1-3ef1-a0b0-964fe7d93a1c",
+              "event": "repo:push",
+              "action": "repo:push",
+              "received_at": "2026-11-18T14:07:52.258791+00:00"
+            },
+            {
+              "delivery_id": "a30fa120-2d62-3033-928c-d4bcf3ca6e37",
+              "event": "pullrequest:updated",
+              "action": "pullrequest:updated",
+              "received_at": "2026-11-18T14:07:58.431303+00:00"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "githubReplay": {
+    "id": 3854756711464173568,
+    "guid": "65240550-e359-11f1-80eb-7ec3d92e4c46",
+    "event": "pull_request",
+    "action": "synchronize",
+    "status": "OK",
+    "status_code": 200,
+    "delivered_at": "2026-11-18T14:09:32.555Z",
+    "redelivery": true,
+    "duration": 0.43
+  },
+  "httpsContractChecks": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "status": 200,
+      "response": {
+        "component": "api-gateway",
+        "status": "UP"
+      },
+      "schemaValid": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/reviews/00000000-0000-0000-0000-000000000000",
+      "status": 401,
+      "response": {
+        "error": "unauthorized"
+      },
+      "schemaValid": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/reviews/00000000-0000-0000-0000-000000000000",
+      "status": 404,
+      "response": {
+        "error": "job-not-found"
+      },
+      "schemaValid": true
+    },
+    {
+      "method": "POST",
+      "path": "/webhooks/github",
+      "status": 403,
+      "response": {
+        "error": "webhook-not-authorized"
+      },
+      "schemaValid": true
+    },
+    {
+      "method": "GET",
+      "path": "/webhooks/github",
+      "status": 405,
+      "response": {
+        "error": "POST-required"
+      },
+      "schemaValid": true
+    },
+    {
+      "method": "POST",
+      "path": "/webhooks/gitlab",
+      "status": 403,
+      "response": {
+        "error": "webhook-not-authorized"
+      },
+      "schemaValid": true
+    },
+    {
+      "method": "GET",
+      "path": "/webhooks/gitlab",
+      "status": 405,
+      "response": {
+        "error": "POST-required"
+      },
+      "schemaValid": true
+    },
+    {
+      "method": "POST",
+      "path": "/webhooks/bitbucket",
+      "status": 403,
+      "response": {
+        "error": "webhook-not-authorized"
+      },
+      "schemaValid": true
+    },
+    {
+      "method": "GET",
+      "path": "/webhooks/bitbucket",
+      "status": 405,
+      "response": {
+        "error": "POST-required"
+      },
+      "schemaValid": true
+    }
+  ],
+  "inboxAtCompletion": [
+    {
+      "platform": "gitlab",
+      "state": "complete",
+      "requests": 3
+    },
+    {
+      "platform": "bitbucket",
+      "state": "complete",
+      "requests": 8
+    }
+  ],
+  "deployedJarSha256": "d81876564baaa7a9025822ad8156738668f15c396df0f71f576469712d39c8b9",
+  "budget": {
+    "gptConservativeReservationsUsd": "0.0980705000",
+    "gptReservationCapUsd": "0.20",
+    "overallTestAuthorizationUsd": "1.00",
+    "plannedStopUtc": "2026-11-18T19:27:00Z"
+  }
+}

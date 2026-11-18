@@ -1,7 +1,12 @@
 /target/
+/dist/
 .idea/
 *.iml
 .env
 .env.*
 !.env.example
 *.log
+/reports/
+/secrets/
+/compose.override.yaml
+__pycache__/
