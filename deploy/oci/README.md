@@ -14,6 +14,13 @@ headers are not stored. GitHub callbacks authenticate and enqueue the supplied
 snapshot directly. Snapshot uniqueness suppresses duplicate model jobs, including
 Bitbucket's separate push and PR-update events for the same commit.
 
+Any source/destination branch name is accepted in an allowed repository. The PR's
+actual destination branch and base/head SHAs are pinned and revalidated to avoid
+publishing an obsolete review. Retargeting creates a distinct snapshot job even
+when the old and new destination branches point at the same SHA. GitHub's
+`pull_request.edited` event handles destination changes. Legacy `baseBranch`
+entries in repository configuration are ignored and are no longer generated.
+
 ## Provision and deploy from Windows
 
 Run from the repository root with an authenticated OCI CLI profile, Docker, SSH,

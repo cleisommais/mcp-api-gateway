@@ -46,8 +46,8 @@ paths:
       summary: Queue a review for a configured repository
       description: |
         Accepts exactly platform, repository and number. Maximum body size is
-        16,384 bytes. The change must be open, non-draft, current, and target its
-        configured base branch. The service pins its base/head through MCP before
+        16,384 bytes. The change must be open, non-draft and current.
+        Any source and destination branch name is accepted. The service pins its base/head through MCP before
         enqueueing. Repeating a snapshot returns its existing job, including terminal
         jobs; it does not rerun a completed review. Model and publication settings
         cannot be supplied in this request.
@@ -126,10 +126,10 @@ paths:
       description: |
         Maximum body size is 1,000,000 bytes. GitHub computes HMAC-SHA256 over the
         exact raw request bytes using the configured webhook secret. Reformatting
-        JSON changes the signature. Installation/repository, target-branch,
+        JSON changes the signature. Installation/repository,
         contributor-association and fork policies are checked before admission.
         Ping and ignored deliveries are persisted without a job and return 200.
-        Eligible actions are opened, synchronize, reopened and ready_for_review.
+        Eligible actions are opened, synchronize, reopened, ready_for_review and edited.
         App deliveries must match the configured installation. Repository hooks
         omit installation; HMAC and repository-ID/name checks still apply, and
         the worker uses only the configured App installation for outbound access.
@@ -188,8 +188,8 @@ paths:
         Maximum body size is 1,000,000 bytes. A constant-time comparison validates
         X-Gitlab-Token before parsing/admission. Use HTTPS with certificate validation.
         Accepts native Merge Request Hook payloads with object_kind=merge_request,
-        configured project ID/path, an open non-draft same-project MR, configured
-        target branch, and action open, reopen or update. Other events are ignored.
+        configured project ID/path, an open non-draft same-project MR, any
+        destination branch, and action open, reopen or update. Other events are ignored.
         This endpoint does not use the manual API bearer token.
         Acknowledgement follows persistence of normalized routing metadata; no
         repository API or model call runs in the HTTP handler. Admission resolves
@@ -227,7 +227,7 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/PlatformWebhookReceipt'}
         '200':
-          description: Irrelevant, draft, fork or target-filtered event; no review admitted
+          description: Irrelevant, draft or fork event; no review admitted
           content:
             application/json:
               schema: {$ref: '#/components/schemas/PlatformWebhookReceipt'}
@@ -246,7 +246,7 @@ paths:
         Maximum body size is 1,000,000 bytes. Validates HMAC-SHA256 over exact raw
         bytes before admission. Only configured repositories are accepted.
         pullrequest:created and pullrequest:updated admit open non-draft same-repo
-        PRs targeting the configured branch. repo:push persists changed branch/head
+        PRs targeting any branch. repo:push persists changed branch/head
         metadata, then asynchronously discovers its open PRs; there is no scheduled
         repository poller. Deleted branches and other events are ignored.
         HTTP 202 confirms a durable receipt, not a completed review or a job ID.
@@ -282,7 +282,7 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/PlatformWebhookReceipt'}
         '200':
-          description: Irrelevant or policy-filtered event; no review admitted
+          description: Irrelevant, draft or fork event; no review admitted
           content:
             application/json:
               schema: {$ref: '#/components/schemas/PlatformWebhookReceipt'}

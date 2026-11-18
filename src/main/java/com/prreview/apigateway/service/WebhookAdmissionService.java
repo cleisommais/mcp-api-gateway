@@ -1,6 +1,5 @@
 package com.prreview.apigateway.service;
 
-import com.prreview.apigateway.config.ApiGatewayConfig;
 import com.prreview.apigateway.dto.CreateReviewRequest;
 import com.prreview.common.json.Json;
 import com.prreview.domain.model.WebhookRequest;
@@ -18,14 +17,11 @@ import java.util.concurrent.TimeUnit;
 public final class WebhookAdmissionService implements AutoCloseable {
     private final PostgresJobRepository jobs;
     private final ReviewRequestService reviews;
-    private final ApiGatewayConfig policy;
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-    public WebhookAdmissionService(
-            PostgresJobRepository jobs, ReviewRequestService reviews, ApiGatewayConfig policy) {
+    public WebhookAdmissionService(PostgresJobRepository jobs, ReviewRequestService reviews) {
         this.jobs = jobs;
         this.reviews = reviews;
-        this.policy = policy;
         executor.scheduleWithFixedDelay(this::drain, 0, 1, TimeUnit.SECONDS);
     }
 
@@ -92,12 +88,6 @@ public final class WebhookAdmissionService implements AutoCloseable {
                         || !request.repository()
                                 .equals(Json.text(Json.map(source.get("repository")), "full_name")))
                     continue;
-                if (!policy.target("bitbucket", request.repository())
-                        .baseBranch()
-                        .equals(
-                                Json.text(
-                                        Json.map(Json.map(pr.get("destination")).get("branch")),
-                                        "name"))) continue;
                 // Pin to the pushed commit, never to a temporarily stale PR-list hash.
                 admit(request, ((Number) pr.get("id")).intValue(), request.head());
             }

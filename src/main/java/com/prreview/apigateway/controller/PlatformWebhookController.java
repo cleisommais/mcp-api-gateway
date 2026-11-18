@@ -96,12 +96,10 @@ public final class PlatformWebhookController implements HttpHandler {
             String event,
             List<Map<String, Object>> receipts)
             throws Exception {
-        var rule = policy.target(platform, repository);
+        policy.target(platform, repository);
         var source = Json.map(pr.get("source"));
-        var destination = Json.map(pr.get("destination"));
         if (!"OPEN".equals(pr.get("state"))
                 || Boolean.TRUE.equals(pr.get("draft"))
-                || !rule.baseBranch().equals(Json.text(Json.map(destination.get("branch")), "name"))
                 || !repository.equals(Json.text(Json.map(source.get("repository")), "full_name")))
             return;
         receipts.add(
@@ -157,8 +155,7 @@ public final class PlatformWebhookController implements HttpHandler {
                             && !Boolean.TRUE.equals(attributes.get("work_in_progress"))
                             && attributes
                                     .get("source_project_id")
-                                    .equals(attributes.get("target_project_id"))
-                            && rule.baseBranch().equals(attributes.get("target_branch"))) {
+                                    .equals(attributes.get("target_project_id"))) {
                         receipts.add(
                                 admit(
                                         repository,

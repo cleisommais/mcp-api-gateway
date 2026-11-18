@@ -1,0 +1,176 @@
+{
+  "date": "2026-11-18",
+  "checks": 7,
+  "passed": 7,
+  "branchNameFilter": false,
+  "cases": [
+    {
+      "name": "github-public-retarget",
+      "platform": "github",
+      "number": 7,
+      "baseBranch": "oci-any-target/20261118/xxx",
+      "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+      "headSha": "c4ec97f5612cf6d9f1d1e12a51ce5b3d66410376",
+      "jobId": "54d0ab1a-e5a6-4176-899d-a742f7a0bc55",
+      "previousJobId": "e9faefeb-df60-413d-bb39-25d2e5d080bd",
+      "findings": [],
+      "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/7#issuecomment-6980739501",
+      "remoteReadBackVerified": true,
+      "events": [
+        {
+          "delivery_id": "91b91bc0-e35c-11f1-9eb0-8d2356d66427",
+          "event": "pull_request",
+          "action": "edited"
+        }
+      ]
+    },
+    {
+      "name": "github-private-retarget",
+      "platform": "github",
+      "number": 7,
+      "baseBranch": "oci-any-target/20261118/xxx",
+      "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+      "headSha": "49bb027729c49382ce2971ddb916c5410def80ae",
+      "jobId": "3ae811fd-cb44-46f6-867a-2511a1486a79",
+      "previousJobId": "2479fba9-53cb-4050-b398-4404136e02c5",
+      "findings": [],
+      "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/7#issuecomment-6980743702",
+      "remoteReadBackVerified": true,
+      "events": [
+        {
+          "delivery_id": "9497d1b0-e35c-11f1-80bc-9175affcbaec",
+          "event": "pull_request",
+          "action": "edited"
+        }
+      ]
+    },
+    {
+      "name": "gitlab-retarget",
+      "platform": "gitlab",
+      "number": 4,
+      "baseBranch": "oci-any-target/20261118/xxx",
+      "baseSha": "879f61bc5ffd8ea53558c005942255e42cbcd578",
+      "headSha": "07643e0178f0bede8461acbdbecf136503707e26",
+      "jobId": "da2d103d-434c-47a9-9fc4-7b5eae2de855",
+      "previousJobId": "8d58f6be-52b8-49d6-acc8-6f221a85fabe",
+      "findings": [],
+      "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/4#note_4265163419",
+      "remoteReadBackVerified": true,
+      "events": [
+        {
+          "delivery_id": "f7d8f7dd-6afc-31ec-8f01-5f4a46d5fdf7",
+          "event": "merge_request",
+          "action": "update"
+        }
+      ]
+    },
+    {
+      "name": "bitbucket-retarget",
+      "platform": "bitbucket",
+      "number": 8,
+      "baseBranch": "oci-any-target/20261118/xxx",
+      "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+      "headSha": "57ec00b2cba672e409306f8f2d5ddcf8e55251e9",
+      "jobId": "7fe7e8ce-12cb-4cda-9b28-8af0699c6e59",
+      "previousJobId": "a2c21366-9176-43f4-abd2-c340fc7cbcb7",
+      "findings": [],
+      "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/8#comment-905372799",
+      "remoteReadBackVerified": true,
+      "events": [
+        {
+          "delivery_id": "e2e3fb28-762d-3c7b-9a65-05f32e7b7b4f",
+          "event": "pullrequest:updated",
+          "action": "pullrequest:updated"
+        }
+      ]
+    },
+    {
+      "name": "bitbucket-user-9",
+      "platform": "bitbucket",
+      "number": 9,
+      "baseBranch": "oci-webhook/20261118/bitbucket",
+      "baseSha": "57ec00b2cba672e409306f8f2d5ddcf8e55251e9",
+      "headSha": "ed92372d9037a2941cbe63685f7c75cb429049fb",
+      "jobId": "47276063-866e-4c06-b8e1-b7e59e2c7f17",
+      "previousJobId": null,
+      "findings": [],
+      "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/9#comment-905409190",
+      "remoteReadBackVerified": true,
+      "events": [
+        {
+          "delivery_id": "e3cf53ff-c9ce-3c8e-9b63-756af72d3ee5",
+          "event": "pullrequest:updated",
+          "action": "pullrequest:updated"
+        }
+      ]
+    },
+    {
+      "name": "bitbucket-user-10",
+      "platform": "bitbucket",
+      "number": 10,
+      "baseBranch": "oci-e2e/20261118/bitbucket",
+      "baseSha": "11526f4e128b1c173796c0ae7db8840075227ce8",
+      "headSha": "b2c1c794fe465fbcff0d352625af33c476a293e4",
+      "jobId": "a654a377-36f1-4b4b-9c9e-6d8000dbd9fb",
+      "previousJobId": null,
+      "findings": [
+        {
+          "file": "src/demo/ArrayTotals.java",
+          "line": 8,
+          "evidence": "        for (int i == 0; i ==< values.length; i++) {",
+          "severity": "HIGH",
+          "explanation": "This loop header is invalid Java syntax, so the class cannot compile and `sum` cannot be used."
+        }
+      ],
+      "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/10#comment-905409410",
+      "remoteReadBackVerified": true,
+      "events": [
+        {
+          "delivery_id": "0d1e8e6c-1de0-3f0e-8eef-54b22c0e2daa",
+          "event": "pullrequest:updated",
+          "action": "pullrequest:updated"
+        }
+      ]
+    },
+    {
+      "name": "bitbucket-user-10-next",
+      "platform": "bitbucket",
+      "number": 10,
+      "baseBranch": "oci-e2e/20261118/bitbucket",
+      "headSha": "c37543176e98266cf2ac1351c5b53d90ff1cac5f",
+      "jobId": "34290f79-6d25-434c-b4c9-559b9b831181",
+      "findings": [
+        {
+          "file": "src/demo/ArrayTotals.java",
+          "line": 8,
+          "evidence": "        for (int i = 0; i =< values.length; i++) {",
+          "severity": "HIGH",
+          "explanation": "`=<` is not a valid Java operator, so the class no longer compiles."
+        },
+        {
+          "file": "src/demo/ArrayTotals.java",
+          "line": 9,
+          "evidence": "            total += values[i] + media;",
+          "severity": "HIGH",
+          "explanation": "`media` is not declared in this method or class, causing a compile error."
+        }
+      ],
+      "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/10#comment-905409410",
+      "remoteReadBackVerified": true,
+      "sameCommentAsPreviousRevision": true,
+      "manualApiReturnedDuplicate": true,
+      "events": [
+        {
+          "delivery_id": "5061f866-8bc7-357b-b15c-16b3b43d0bdc",
+          "event": "repo:push",
+          "action": "repo:push"
+        },
+        {
+          "delivery_id": "55a45269-7ce0-3979-a4f3-075e5dfdc867",
+          "event": "pullrequest:updated",
+          "action": "pullrequest:updated"
+        }
+      ]
+    }
+  ]
+}

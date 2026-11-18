@@ -101,7 +101,7 @@ public final class PostgresJobRepository {
                             connection.prepareStatement(
                                     """
 INSERT INTO jobs(id,repository_id,repository,pr_number,installation_id,base_sha,head_sha,base_branch,source_updated_at,platform)
-VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(platform,repository_id,pr_number,base_sha,head_sha)
+VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(platform,repository_id,pr_number,base_sha,head_sha,base_branch)
 DO UPDATE SET repository=EXCLUDED.repository RETURNING id
 """)) {
                         insert.setObject(1, jobId);

@@ -77,11 +77,9 @@ public final class ReviewRequestService {
             }
             if (!snapshot.state().equals("open")
                     || snapshot.draft()
-                    || !target.baseBranch().equals(snapshot.baseBranch())
                     || !source.isCurrent(snapshot)) {
                 throw new IllegalArgumentException(
-                        "Review requires a current open non-draft change on its configured target"
-                                + " branch");
+                        "Review requires a current open non-draft change");
             }
             if (!expectedHead.isBlank() && !snapshot.headSha().startsWith(expectedHead))
                 throw new IllegalArgumentException("Webhook snapshot has been superseded");
