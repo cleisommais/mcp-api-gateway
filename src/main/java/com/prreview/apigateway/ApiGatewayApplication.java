@@ -135,7 +135,7 @@ public final class ApiGatewayApplication implements AutoCloseable {
                         jobs::enqueue,
                         reviews,
                         SecretReader.required("API_TOKEN"),
-                        new WebhookAdmissionService(jobs, reviews, config));
+                        new WebhookAdmissionService(jobs, reviews));
         Runtime.getRuntime().addShutdownHook(new Thread(app::close));
         System.out.println(
                 "api-gateway listening on "

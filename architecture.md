@@ -41,7 +41,7 @@ flowchart LR
     Publisher --> Platforms
 ```
 
-Locally, only the API gateway accepts normal review traffic (`localhost:18081`). On OCI, Caddy publishes 80/443 and proxies to the private API service. GitHub/Bitbucket webhooks use raw-body HMAC; GitLab uses a dedicated secret token over TLS. Repository/branch/fork checks apply before admission; GitHub additionally checks contributor association and any supplied installation identity. Manual requests use a separate bearer token. MCP is private and requires its own bearer token plus tool/repository/SHA scope checks. The worker has no HTTP listener. An internal network does not replace these checks.
+Locally, only the API gateway accepts normal review traffic (`localhost:18081`). On OCI, Caddy publishes 80/443 and proxies to the private API service. GitHub/Bitbucket webhooks use raw-body HMAC; GitLab uses a dedicated secret token over TLS. Repository and fork checks apply before admission; branch names do not filter reviews. GitHub additionally checks contributor association and any supplied installation identity. Manual requests use a separate bearer token. MCP is private and requires its own bearer token plus tool/repository/SHA scope checks. The worker has no HTTP listener. An internal network does not replace these checks.
 
 The MCP gateway routes repository **tools**, not Claude/OpenAI/Ollama inference. It selects a configured MCP server by platform/repository; the server authenticates through a GitHub App installation token, GitLab read token or Bitbucket read token. GitHub credentials are minted by `GitHubApiClient.AppCredential`; there is no standalone broker service. Model selection belongs to `ReviewService`, based on explicit provider/model settings. Publication is a direct platform write with a separate permission path, outside read-only MCP tools.
 
@@ -58,6 +58,13 @@ The MCP gateway routes repository **tools**, not Claude/OpenAI/Ollama inference.
 
 ## Request-to-comment sequence
 
+Branch names never determine eligibility. Every open non-draft PR/MR in an
+allowed repository can be reviewed, including feature-to-feature merges.
+`base_branch` records the actual destination for snapshot consistency rather
+than an allowlist rule. Retargeting is handled by GitHub `edited`, GitLab
+`update`, and Bitbucket `pullrequest:updated`. Snapshot uniqueness includes the
+destination name so branches sharing a base SHA still receive distinct jobs.
+
 1. `ApiGatewayApplication` registers routes. `ReviewController.handle` authenticates and validates `CreateReviewRequest`; `ReviewRequestService.create` checks configuration, requests a pinned snapshot through `GatewayMcpClient`, and calls `PostgresJobRepository.enqueue`. For webhooks, `GitHubWebhookController.handle` calls `GitHubWebhookPolicy.validate` then the same repository. The HTTP acknowledgement happens **after the enqueue transaction commits**.
    `PlatformWebhookController` handles GitLab/Bitbucket callbacks: authenticate, validate routing metadata and persist `webhook_requests`, then acknowledge. `WebhookAdmissionService` claims these durable receipts, resolves the current snapshot through MCP and admits a normal job. A Bitbucket push resolves only the changed branch's open PRs after receiving that event; there is no periodic remote repository scan. Admission retries at 20-second intervals, up to 12 attempts, with a five-minute recovery lease. Receipt persistence and review-job creation are separate stages; receipt UUIDs are not job UUIDs.
 2. `ReviewWorker.once` recovers expired leases and calls `PostgresJobRepository.claim`. It starts a heartbeat and rechecks the pinned base/head and target branch through MCP. Repository code is read as data; it is never executed.
@@ -72,9 +79,9 @@ The source repository is a resource identifier, not an authenticated caller. The
 
 | Connection | Authentication and checks |
 | --- | --- |
-| GitHub -> `POST /webhooks/github` | `GitHubWebhookPolicy.validate` verifies raw-body `X-Hub-Signature-256`, repository ID/name, target branch, contributor association and fork policy. An App payload's installation must match configuration. Repository hooks omit installation; the worker still uses only the configured installation. Delivery UUID/body hash suppress duplicate jobs. |
-| GitLab -> `POST /webhooks/gitlab` | Constant-time `X-Gitlab-Token` comparison over TLS; configured project ID/path, MR action/state/draft, same-project source/target and target branch. Dedicated webhook secret, distinct from read/publish API tokens. Signing-token authentication is not implemented. |
-| Bitbucket -> `POST /webhooks/bitbucket` | Raw-body HMAC-SHA256 in `X-Hub-Signature`; configured repository, open non-draft same-repo PR and target branch. Push admissions pin the pushed commit instead of trusting a temporarily stale PR-list hash. Separate push and PR-update deliveries share one snapshot job. |
+| GitHub -> `POST /webhooks/github` | `GitHubWebhookPolicy.validate` verifies raw-body `X-Hub-Signature-256`, repository ID/name, contributor association and fork policy. An App payload's installation must match configuration. Repository hooks omit installation; the worker still uses only the configured installation. Delivery UUID/body hash suppress duplicate jobs. |
+| GitLab -> `POST /webhooks/gitlab` | Constant-time `X-Gitlab-Token` comparison over TLS; configured project ID/path, MR action/state/draft, same-project source/target; any destination branch is accepted. Dedicated webhook secret, distinct from read/publish API tokens. Signing-token authentication is not implemented. |
+| Bitbucket -> `POST /webhooks/bitbucket` | Raw-body HMAC-SHA256 in `X-Hub-Signature`; configured repository, open non-draft same-repo PR; any destination branch is accepted. Push admissions pin the pushed commit instead of trusting a temporarily stale PR-list hash. Separate push and PR-update deliveries share one snapshot job. |
 | CI/user -> `POST /api/reviews` and `GET /api/reviews/{id}` | `Authorization: Bearer <api-token>`, checked by `ReviewController.handle`. The token comes from `API_TOKEN_FILE`; requests are restricted to configured repository targets. This POC has one shared API token, not per-user or per-repository identities. |
 | API/worker -> MCP gateway | Separate internal bearer token, approved tool catalog, configured repository routing and pinned job/commit/path scope |
 | Services -> GitHub/GitLab/Bitbucket | GitHub App private key signs a JWT used to obtain a repository-scoped installation token. Reads request read permissions; publication requests Pull requests write. GitLab and Bitbucket use separate read and publish token files. Bitbucket API tokens use the configured Atlassian email for Basic authentication. These credentials are never supplied in the review request. |
@@ -111,7 +118,7 @@ Machine-readable contract: [open-api.yaml](open-api.yaml).
 | `POST /webhooks/gitlab` | `X-Gitlab-Token`, delivery identity and event headers | Native MR payload; `202 {outcome,reviews:[{receiptId,duplicate}]}` after durable receipt; `200` ignored |
 | `POST /webhooks/bitbucket` | `X-Hub-Signature` over raw body, `X-Request-UUID`, `X-Event-Key` | Native PR/push payload; same durable-receipt response; `200` ignored |
 
-Manual API errors: `400` invalid input/snapshot, `401` missing or incorrect bearer, `403` disallowed target, `413` oversized body, `503` unavailable dependency. Only open, non-draft changes on the configured target branch are accepted. The internal MCP transport is `POST /mcp` with MCP JSON-RPC and protocol/session headers, not an ordinary REST repository endpoint; use `GatewayMcpClient`.
+Manual API errors: `400` invalid input/snapshot, `401` missing or incorrect bearer, `403` disallowed target, `413` oversized body, `503` unavailable dependency. Open, non-draft changes in configured repositories are accepted regardless of source or destination branch name. The internal MCP transport is `POST /mcp` with MCP JSON-RPC and protocol/session headers, not an ordinary REST repository endpoint; use `GatewayMcpClient`.
 
 ## Database model
 
@@ -153,7 +160,7 @@ erDiagram
     }
 ```
 
-`jobs` has a unique index on `(platform, repository_id, pr_number, base_sha, head_sha)` and an index on `(state, created_at)`. A delivery can reference zero or one job; multiple deliveries can reference the same snapshot job. Reusing a delivery UUID with a different payload hash is rejected. No raw webhook body or credential is stored. The `report` JSONB contains findings, coverage, model metadata and retrieval trace. GitLab MRs and Bitbucket PRs use the shared `pr_number` column and zero `installation_id`. Bitbucket's numeric `repository_id` is a configured local queue key, not its remote UUID. [Bitbucket details](docs/bitbucket-platform.md) describe platform-specific retrieval, publication and current validation limits.
+`jobs` has a unique index on `(platform, repository_id, pr_number, base_sha, head_sha, base_branch)` and an index on `(state, created_at)`. A delivery can reference zero or one job; multiple deliveries can reference the same snapshot job. Reusing a delivery UUID with a different payload hash is rejected. No raw webhook body or credential is stored. The `report` JSONB contains findings, coverage, model metadata and retrieval trace. GitLab MRs and Bitbucket PRs use the shared `pr_number` column and zero `installation_id`. Bitbucket's numeric `repository_id` is a configured local queue key, not its remote UUID. [Bitbucket details](docs/bitbucket-platform.md) describe platform-specific retrieval, publication and current validation limits.
 
 `webhook_requests` is the durable pre-admission inbox for GitLab/Bitbucket. Its UUID derives from platform, provider delivery and PR number or changed branch. Columns retain repository/PR/branch/head, event/action, payload hash and provider delivery identity, plus state, attempts, retry time and lease. States are `queued -> processing -> complete`, or `failed` after 12 unsuccessful admissions. Only normalized metadata is stored. A callback commits this receipt before HTTP 202; the admission worker later creates/reuses a normal job and its correlated `deliveries` record. Database consumption is asynchronous; remote reads occur only in response to received callbacks.
 

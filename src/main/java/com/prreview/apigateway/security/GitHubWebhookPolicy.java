@@ -130,29 +130,22 @@ public final class GitHubWebhookPolicy {
         if (number < 1 || !baseSha.matches("[a-f0-9]{40}") || !headSha.matches("[a-f0-9]{40}"))
             throw new IllegalArgumentException("Invalid PR snapshot");
         String reason =
-                !Set.of("opened", "synchronize", "reopened", "ready_for_review").contains(action)
+                !Set.of("opened", "synchronize", "reopened", "ready_for_review", "edited")
+                                .contains(action)
                         ? "irrelevant-action"
                         : !"open".equals(pr.get("state"))
                                 ? "closed"
                                 : Boolean.TRUE.equals(pr.get("draft"))
                                         ? "draft"
-                                        : !rule.baseBranch().equals(branch)
-                                                ? "target-branch-filter"
-                                                : !config.trustedAssociations()
-                                                                .contains(
-                                                                        pr.get(
-                                                                                "author_association"))
-                                                        ? "untrusted-contributor"
-                                                        : !config.allowForks()
-                                                                        && !name.equals(
-                                                                                Json.map(
-                                                                                                head
-                                                                                                        .get(
-                                                                                                                "repo"))
-                                                                                        .get(
-                                                                                                "full_name"))
-                                                                ? "fork-policy"
-                                                                : "accepted";
+                                        : !config.trustedAssociations()
+                                                        .contains(pr.get("author_association"))
+                                                ? "untrusted-contributor"
+                                                : !config.allowForks()
+                                                                && !name.equals(
+                                                                        Json.map(head.get("repo"))
+                                                                                .get("full_name"))
+                                                        ? "fork-policy"
+                                                        : "accepted";
         return new ReviewEvent(
                 delivery,
                 hash,

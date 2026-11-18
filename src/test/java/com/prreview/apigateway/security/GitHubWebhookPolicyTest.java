@@ -113,19 +113,18 @@ public class GitHubWebhookPolicyTest {
     }
 
     @Test
-    void skipsDraftWrongBranchUntrustedAuthorForkAndIrrelevantAction() throws Exception {
-        for (String scenario : List.of("draft", "branch", "author", "fork", "action")) {
+    void skipsDraftUntrustedAuthorForkAndIrrelevantAction() throws Exception {
+        for (String scenario : List.of("draft", "author", "fork", "action")) {
             var data = payload();
             var pr = Json.map(data.get("pull_request"));
             switch (scenario) {
                 case "draft" -> pr.put("draft", true);
-                case "branch" -> pr.put("base", Map.of("sha", BASE, "ref", "other"));
                 case "author" -> pr.put("author_association", "CONTRIBUTOR");
                 case "fork" ->
                         pr.put(
                                 "head",
                                 Map.of("sha", HEAD, "repo", Map.of("full_name", "outside/fork")));
-                default -> data.put("action", "edited");
+                default -> data.put("action", "closed");
             }
             byte[] body = Json.write(data).getBytes(StandardCharsets.UTF_8);
             assertFalse(

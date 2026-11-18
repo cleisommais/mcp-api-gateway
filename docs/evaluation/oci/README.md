@@ -1,5 +1,49 @@
 # OCI reactive webhook acceptance — 2026-11-18
 
+## Follow-up correction: branch names do not filter reviews
+
+The owner's Bitbucket PRs #9 and #10 exposed an incorrect legacy destination
+filter: they targeted `oci-webhook/20261118/bitbucket` and
+`oci-e2e/20261118/bitbucket`, while configuration allowed only `main`. This was an
+application restriction, not an error in how the owner created the PRs.
+
+The filter is removed from GitHub, GitLab, Bitbucket, push admission and the
+manual API. Repository access controls remain; source/destination branch names
+do not affect eligibility. Legacy `baseBranch` configuration is ignored and
+removed from the checked-in allowlist. The actual target name/SHAs remain pinned
+for stale-review protection. Snapshot uniqueness now includes the target name,
+and GitHub `edited` events admit retargeted PRs.
+
+**6/6 additional real webhook checks passed.** A Bitbucket API update resubmitted
+the owner's existing titles unchanged, preserving both PR destinations and code.
+The resulting native `pullrequest:updated` deliveries published and read back:
+
+- [PR #9: zero findings](https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/9#comment-905409190).
+- [PR #10: one finding](https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/10#comment-905409410).
+
+The other four checks retargeted the existing public/private GitHub, GitLab and
+Bitbucket fixtures to `oci-any-target/20261118/xxx`. These target aliases point to
+the exact original base SHA. Native provider callbacks created distinct jobs
+despite unchanged base/head SHAs, and all four published complete clean reviews
+under the same comment identities. The fixture targets were restored afterward;
+the owner's #9/#10 targets were never changed. No manual review POST or simulated
+webhook was used. [any-branch.json](any-branch.json) preserves these results.
+
+During verification, the owner pushed another commit to #10,
+`c37543176e98266cf2ac1351c5b53d90ff1cac5f`. Its native push/update callbacks
+automatically created a new complete review, updated the same comment and
+retained the original non-main destination. This is a seventh successful check.
+An additional manual API request returned that existing webhook job as a
+duplicate; it did not initiate the review. The earlier verification initially
+expected the old head, detected this concurrent commit and was corrected to
+compare against the live head rather than label it a deduplication failure.
+
+`Wait-AnyBranchReviews.ps1` verifies captured cases from
+`reports/oci/any-branch/cases.json`, including the destination name and unchanged
+SHAs; `summarize_any_branch_reviews.py` verifies/export the credential-free data.
+
+## Original campaign
+
 The application and PostgreSQL run on one Oracle VPS in `us-chicago-1`, through
 `compose.vps.yaml`. GPT `gpt-6-luna` is the inference provider; no Ollama service
 runs there. Caddy supplies valid public HTTPS at
