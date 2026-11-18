@@ -91,18 +91,13 @@ public final class GitHubWebhookPolicy {
         var repository = Json.map(payload.get("repository"));
         long id = integer(repository.get("id"));
         String name = Json.text(repository, "full_name");
-        var rule =
-                config.repositories().stream()
-                        .filter(
-                                r ->
-                                        r.platform().equals("github")
-                                                && r.id() == id
-                                                && r.name().equals(name))
-                        .findFirst()
-                        .orElseThrow(
-                                () ->
-                                        new SecurityException(
-                                                "Repository is not authorized for webhooks"));
+        if (config.repositories().stream()
+                .noneMatch(
+                        r ->
+                                r.platform().equals("github")
+                                        && r.id() == id
+                                        && r.name().equals(name)))
+            throw new SecurityException("Repository is not authorized for webhooks");
         if (!"pull_request".equals(event))
             return new ReviewEvent(
                     delivery,

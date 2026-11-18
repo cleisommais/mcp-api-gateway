@@ -40,7 +40,19 @@ public final class GitLabReviewPublisher {
                 || !java.util.Set.of("complete", "partial").contains(report.get("status"))) {
             throw new IllegalArgumentException("Report is not a current GitLab review for this MR");
         }
-        var api = new GitLabChangeSource(access, repository, number);
+        try (var api = new GitLabChangeSource(access, repository, number)) {
+            return publishWithSource(repository, number, report, recovering, beforeWrite, api);
+        }
+    }
+
+    private long publishWithSource(
+            String repository,
+            int number,
+            Map<String, Object> report,
+            boolean recovering,
+            BeforeWrite beforeWrite,
+            GitLabChangeSource api)
+            throws Exception {
         var before = api.metadata();
         ensureCurrent(before, report);
         long project = GitLabChangeSource.id(before, "project_id");

@@ -49,7 +49,19 @@ public final class BitbucketReviewPublisher {
                 || !Set.of("complete", "partial").contains(report.get("status")))
             throw new IllegalArgumentException(
                     "Report is not a current Bitbucket review for this PR");
-        var source = new BitbucketChangeSource(access, repository, number);
+        try (var source = new BitbucketChangeSource(access, repository, number)) {
+            return publishWithSource(repository, number, report, recovering, beforeWrite, source);
+        }
+    }
+
+    private long publishWithSource(
+            String repository,
+            int number,
+            Map<String, Object> report,
+            boolean recovering,
+            BeforeWrite beforeWrite,
+            BitbucketChangeSource source)
+            throws Exception {
         ensureCurrent(source.metadata(), report);
         String actor = Json.text(Json.map(access.get("user")), "uuid");
         String comments = access.repositoryPath() + "/pullrequests/" + number + "/comments";
