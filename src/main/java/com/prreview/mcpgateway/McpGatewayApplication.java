@@ -168,7 +168,7 @@ public final class McpGatewayApplication implements AutoCloseable {
                             }
                         });
         wrapper.setAsyncSupported(true);
-        context.addServletMappingDecoded("/mcp", "mcp");
+        context.addServletMapping("/mcp", "mcp");
         Tomcat.addServlet(
                 context,
                 "health",
@@ -180,7 +180,7 @@ public final class McpGatewayApplication implements AutoCloseable {
                         response.getWriter().write("ready");
                     }
                 });
-        context.addServletMappingDecoded("/health", "health");
+        context.addServletMapping("/health", "health");
         tomcat.start();
     }
 

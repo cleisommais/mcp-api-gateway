@@ -11,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.time.Instant;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -75,7 +74,6 @@ public final class CapturedReviewFixture {
         private final Map<String, String> errors = new LinkedHashMap<>();
         private boolean frozen;
         private boolean current;
-        private String capturedAt = Instant.now().toString();
 
         FrozenSource(ChangeSource delegate) {
             this.delegate = delegate;
@@ -99,7 +97,6 @@ public final class CapturedReviewFixture {
                     .forEach((key, value) -> result.errors.put(key, (String) value));
             result.frozen = true;
             result.current = false;
-            result.capturedAt = Json.text(record, "capturedAt");
             return result;
         }
 
