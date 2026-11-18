@@ -9,7 +9,7 @@ A component-oriented, layered Java backend. Controllers translate HTTP to DTOs, 
 | Accept review requests | Signed GitHub App webhooks and authenticated manual/CI requests for configured GitHub/Bitbucket Cloud PRs and GitLab MRs |
 | Queue work asynchronously | Persist the delivery/job before acknowledging; deduplicate deliveries and base/head snapshots |
 | Read the correct change | Retrieve metadata, diffs and bounded file context through MCP, pinned to immutable commit SHAs |
-| Review code | Build prompts, call the selected local or explicitly enabled external model, validate JSON and exact added-line evidence; optionally verify candidates with a second model |
+| Review code | Build prompts, call the selected model, audit zero-candidate batches on the same pinned context, validate JSON and exact added-line evidence; optionally verify candidates |
 | Publish the result | Create/update a marked summary comment, including zero-findings and partial results; retain uncertain publication state for reconciliation |
 | Expose progress | Return job state, attempts, failures, analysis and the published-comment URL through the status API |
 
@@ -17,7 +17,7 @@ A component-oriented, layered Java backend. Controllers translate HTTP to DTOs, 
 | --- | --- |
 | Reproducible local operation | One Compose startup with five services; Java 21/Maven build runs in Docker; debugger attach configurations are included |
 | Durable processing and recovery | PostgreSQL transactions, unique snapshot key, atomic claims, owner fencing and renewable leases; execution is at least once |
-| Bounded resource use | Compose defaults: one active job, 8K model context, 4,096 output tokens, 240-second call timeout and 600-second review deadline; coverage exposes incomplete work |
+| Bounded resource use | Compose defaults: one active job, primary 8K context/4,096 output tokens, local clean audit 16K context/8,192 output tokens, 240-second call timeout and shared 600-second review deadline; coverage exposes incomplete work |
 | Controlled external usage | External inference is disabled by default; explicit repository allowlist, key file, persistent cost reservations and bounded calls are required |
 | Diagnosable results | Correlated job IDs, MCP audit decisions, saved coverage/errors/provider metadata and comment reconciliation |
 | Verifiable behavior | Real PostgreSQL integration tests, MCP/HTTP/provider contract tests and opt-in live/public-fixture regression checks |

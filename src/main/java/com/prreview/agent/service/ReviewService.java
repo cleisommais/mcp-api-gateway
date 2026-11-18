@@ -34,6 +34,7 @@ public final class ReviewService implements AutoCloseable {
     private final int maxCalls, context, output;
     private final ReviewModel model;
     private CandidateVerifier verified;
+    private final CleanReviewAuditor cleanAuditor;
     private final ConcurrencyGate inferenceGate;
 
     public ReviewService(Map<String, String> env, String platform, String repository)
@@ -86,6 +87,10 @@ public final class ReviewService implements AutoCloseable {
                             "frozen-validated-proposals",
                             "model",
                             primary.name()));
+        cleanAuditor =
+                new CleanReviewAuditor(
+                        primary, frozenPrimary == null ? create(false, true) : primary);
+        primary = cleanAuditor;
         if (mode.equals("verified")) {
             int verifierOutput = integer("VERIFIER_OUTPUT_TOKENS", 1536, 128, 4096);
             verified =
@@ -109,10 +114,23 @@ public final class ReviewService implements AutoCloseable {
     }
 
     private ReviewModel create(boolean verifier) throws Exception {
+        return create(verifier, false);
+    }
+
+    private ReviewModel create(boolean verifier, boolean audit) throws Exception {
         String provider = value(verifier ? "VERIFIER_PROVIDER" : "MODEL_PROVIDER", "ollama");
-        String role = verifier ? "verifier" : "primary";
+        String role = verifier ? "verifier" : audit ? "clean-audit" : "primary";
         int seconds = integer("REVIEW_TIMEOUT_SECONDS", 180, 1, 600);
         int roleOutput = verifier ? integer("VERIFIER_OUTPUT_TOKENS", 1536, 128, 4096) : output;
+        int roleContext = context;
+        if (audit && provider.equals("ollama")) {
+            roleOutput = integer("CLEAN_AUDIT_OUTPUT_TOKENS", 8192, 128, 16384);
+            roleContext = integer("CLEAN_AUDIT_CONTEXT_LENGTH", 16384, 4096, 32768);
+            if (roleContext - roleOutput < context - output + 1024)
+                throw new IllegalArgumentException(
+                        "Clean audit context must preserve primary input capacity and reserve its"
+                                + " output plus 1024 tokens for audit instructions");
+        }
         ReviewModel delegate;
         if (provider.equals("ollama")) {
             var local =
@@ -121,11 +139,13 @@ public final class ReviewService implements AutoCloseable {
                             value(
                                     verifier ? "VERIFIER_MODEL" : "OLLAMA_MODEL",
                                     verifier ? "qwen3:14b" : "gpt-oss:20b"),
-                            context,
+                            roleContext,
                             Duration.ofSeconds(seconds),
                             OllamaModelClient.parseThinking(
                                     value(
-                                            verifier ? "VERIFIER_THINK" : "OLLAMA_THINK",
+                                            verifier
+                                                    ? "VERIFIER_THINK"
+                                                    : audit ? "CLEAN_AUDIT_THINK" : "OLLAMA_THINK",
                                             verifier ? "false" : "medium")),
                             roleOutput);
             providers.add(Map.of("role", role, "provider", provider, "metadata", local.metadata()));
@@ -239,6 +259,7 @@ public final class ReviewService implements AutoCloseable {
                                 output)
                         .review(source, model);
         if (verified != null) verified.annotate(report);
+        cleanAuditor.annotate(report);
         report.put("reviewMode", mode);
         report.put(
                 "inference",

@@ -56,7 +56,7 @@ public final class OllamaModelClient implements ReviewModel {
         }
         if (context < 4096 || context > 32768)
             throw new IllegalArgumentException("Context must be 4096..32768");
-        if (outputTokens < 128 || outputTokens > 4096 || outputTokens > context - 1000)
+        if (outputTokens < 128 || outputTokens > 16384 || outputTokens > context - 1000)
             throw new IllegalArgumentException("Invalid output budget");
         if (!(thinking instanceof Boolean)
                 && !(thinking instanceof String level

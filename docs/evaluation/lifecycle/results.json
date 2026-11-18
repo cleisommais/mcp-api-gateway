@@ -1,0 +1,915 @@
+{
+  "completedDate": "2026-11-18",
+  "timezone": "America/Chicago",
+  "livePlatforms": 3,
+  "repositories": 4,
+  "acceptedRevisions": 20,
+  "trigger": "review-api; initial public GitHub revision used a signed replay",
+  "mockedResponses": false,
+  "webhookConfigurationChanged": false,
+  "targets": [
+    {
+      "platform": "github",
+      "repository": "cleisommais/pr-test-repo",
+      "number": 5,
+      "revisions": [
+        {
+          "label": "initial",
+          "jobId": "8e68a99f-e346-45f4-91fa-14e1c12ddbdb",
+          "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+          "headSha": "455399eefffc6b93e7c9e020da68f2d4da1974c8",
+          "findings": [
+            {
+              "file": "src/demo/ArrayTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop condition uses <= values.length, causing an attempt to access values[values.length] which is out of bounds and will throw ArrayIndexOutOfBoundsException for any non-empty array."
+            }
+          ],
+          "enumeratedFiles": 1,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 6966031836,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/5#issuecomment-6966031836",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": null,
+          "auditThinking": null,
+          "auditContextTokens": null,
+          "auditOutputTokens": null,
+          "completedAt": "2026-11-18T01:18:29.108137Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "unrelated",
+          "jobId": "92948560-e33d-4f35-9fa4-dcfc2d7fea65",
+          "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+          "headSha": "62ba0affed89baeb5ccf93cccc9e186082a1e6a4",
+          "findings": [
+            {
+              "file": "src/demo/ArrayTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop condition uses <= values.length, causing an attempt to access values[values.length] which is out of bounds and will throw ArrayIndexOutOfBoundsException when sum is called with a non-empty array."
+            }
+          ],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 6966031836,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/5#issuecomment-6966031836",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": null,
+          "auditThinking": null,
+          "auditContextTokens": null,
+          "auditOutputTokens": null,
+          "completedAt": "2026-11-18T01:26:30.204193Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "fixed",
+          "jobId": "5c90ed41-dfac-4406-8eb5-9a0112235278",
+          "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+          "headSha": "09d0fdff0ac726d4ae62f1a5b3793268a32a05ac",
+          "findings": [],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 6966031836,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/5#issuecomment-6966031836",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": null,
+          "auditThinking": null,
+          "auditContextTokens": null,
+          "auditOutputTokens": null,
+          "completedAt": "2026-11-18T01:27:18.472203Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "regression",
+          "jobId": "56476dfd-209d-4362-a3e3-e406d67ddbda",
+          "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+          "headSha": "7e391d49abed5810775a8e6ef63fbeec407724fc",
+          "findings": [
+            {
+              "file": "src/demo/ArrayTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop condition uses <= values.length, causing an ArrayIndexOutOfBoundsException when i equals values.length. The correct condition should be i < values.length."
+            }
+          ],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 6966031836,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/5#issuecomment-6966031836",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": null,
+          "auditThinking": null,
+          "auditContextTokens": null,
+          "auditOutputTokens": null,
+          "completedAt": "2026-11-18T01:39:38.798049Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "fixed-again",
+          "jobId": "b0eaabb8-8536-41a9-ae38-8b13bb6edadf",
+          "baseSha": "9a33851d0401f29d79fd1042cfc973a89f87f805",
+          "headSha": "88efb999d5e1bd8bba20c85c955c768a4c448493",
+          "findings": [],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 6966031836,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo/pull/5#issuecomment-6966031836",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 0
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "medium",
+          "auditContextTokens": 16384,
+          "auditOutputTokens": 8192,
+          "completedAt": "2026-11-18T12:54:33.397331Z",
+          "remoteReadBackVerified": true
+        }
+      ],
+      "finalRemoteBody": "<!-- mcp-review-poc:1456683306:5 -->\n## Automated POC review\n\nAnalyzed commit `88efb999d5e1bd8bba20c85c955c768a4c448493`. Static analysis only; human review is still required.\n\nCoverage status: **complete**; files enumerated: 2.\n\nNo validated issues found in the current PR revision.\nThis is not an approval or a guarantee that the change is correct.\n\nFiles requiring further analysis: 0. Model: gpt-oss:20b.\n",
+      "duplicateVerified": true
+    },
+    {
+      "platform": "github",
+      "repository": "cleisommais/pr-test-repo-private",
+      "number": 5,
+      "revisions": [
+        {
+          "label": "initial",
+          "jobId": "8e80ca66-018c-429e-becf-1153444b8f52",
+          "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+          "headSha": "d29595e99048447a032fe0482e7ce5600534ccbe",
+          "findings": [
+            {
+              "file": "src/demo/LifecycleTotals.java",
+              "line": 8,
+              "evidence": "for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop condition uses <= values.length, which causes an ArrayIndexOutOfBoundsException when accessing values[i] at i == values.length. The correct condition should be i < values.length."
+            }
+          ],
+          "enumeratedFiles": 1,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 6966500323,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/5#issuecomment-6966500323",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 1
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "high",
+          "auditContextTokens": 8192,
+          "auditOutputTokens": 4096,
+          "completedAt": "2026-11-18T01:46:17.952740Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "unrelated",
+          "jobId": "8c1bf938-2014-4dfc-ba25-66c3e1b8209c",
+          "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+          "headSha": "5fb9e5b05701c86af6e09f9c395104f2fab58b61",
+          "findings": [
+            {
+              "file": "src/demo/LifecycleTotals.java",
+              "line": 8,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop condition uses <= values.length, causing an ArrayIndexOutOfBoundsException when i equals values.length. The correct condition should be < values.length."
+            }
+          ],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 6966500323,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/5#issuecomment-6966500323",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 1
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "high",
+          "auditContextTokens": 8192,
+          "auditOutputTokens": 4096,
+          "completedAt": "2026-11-18T01:49:19.495674Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "fixed",
+          "jobId": "c31dc578-dbda-4aa3-8e7d-5aadc1f870ec",
+          "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+          "headSha": "acc7cdb614a753585af9b77d3efc7359fb87b8c8",
+          "findings": [],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 6966500323,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/5#issuecomment-6966500323",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 0
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "medium",
+          "auditContextTokens": 16384,
+          "auditOutputTokens": 8192,
+          "completedAt": "2026-11-18T12:49:39.734290Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "regression",
+          "jobId": "f5063084-a6ff-4534-b56f-9d72bc0d86b7",
+          "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+          "headSha": "7835ffc258809a0b44a447580d5ebb369d084dd9",
+          "findings": [
+            {
+              "file": "src/demo/LifecycleTotals.java",
+              "line": 8,
+              "evidence": "for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop condition uses <= values.length, causing the loop to access values[values.length] which is out of bounds and will throw an ArrayIndexOutOfBoundsException for any non-empty array."
+            }
+          ],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 6966500323,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/5#issuecomment-6966500323",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 1
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "medium",
+          "auditContextTokens": 16384,
+          "auditOutputTokens": 8192,
+          "completedAt": "2026-11-18T12:51:43.433006Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "fixed-again",
+          "jobId": "44a19ac0-365d-42c0-84d1-f1d57c326763",
+          "baseSha": "c383d84f95f731d057ccf082537fedad233088bb",
+          "headSha": "0260bed7b6f90c4e97f7f0fa138e31599a94e2d1",
+          "findings": [],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 6966500323,
+          "commentUrl": "https://github.com/cleisommais/pr-test-repo-private/pull/5#issuecomment-6966500323",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 0
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "medium",
+          "auditContextTokens": 16384,
+          "auditOutputTokens": 8192,
+          "completedAt": "2026-11-18T12:53:08.190623Z",
+          "remoteReadBackVerified": true
+        }
+      ],
+      "finalRemoteBody": "<!-- mcp-review-poc:1457261925:5 -->\n## Automated POC review\n\nAnalyzed commit `0260bed7b6f90c4e97f7f0fa138e31599a94e2d1`. Static analysis only; human review is still required.\n\nCoverage status: **complete**; files enumerated: 2.\n\nNo validated issues found in the current PR revision.\nThis is not an approval or a guarantee that the change is correct.\n\nFiles requiring further analysis: 0. Model: gpt-oss:20b.\n",
+      "duplicateVerified": true
+    },
+    {
+      "platform": "gitlab",
+      "repository": "cleisommais/pr-test-repo",
+      "number": 2,
+      "url": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/2",
+      "revisions": [
+        {
+          "label": "initial",
+          "jobId": "be43fd43-1cef-49fd-b267-9cbc8ad78e10",
+          "baseSha": "879f61bc5ffd8ea53558c005942255e42cbcd578",
+          "headSha": "cb92cdf7daff35d49fc5b4400f2658c630afa420",
+          "findings": [
+            {
+              "file": "src/demo/LifecycleTotals.java",
+              "line": 9,
+              "evidence": "for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop condition uses <= values.length, causing an ArrayIndexOutOfBoundsException when i equals values.length. The correct condition should be i < values.length."
+            }
+          ],
+          "enumeratedFiles": 1,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 4260331148,
+          "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/2#note_4260331148",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 1
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "high",
+          "auditContextTokens": 8192,
+          "auditOutputTokens": 4096,
+          "completedAt": "2026-11-18T01:45:24.480152Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "unrelated",
+          "jobId": "97c6282f-45b6-4a9f-a2cf-00e6d85b4ca1",
+          "baseSha": "879f61bc5ffd8ea53558c005942255e42cbcd578",
+          "headSha": "f9300291d5eed939ee1a7f1de416dcb237b10004",
+          "findings": [
+            {
+              "file": "src/demo/LifecycleTotals.java",
+              "line": 9,
+              "evidence": "        for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop condition uses <= values.length, causing an out-of-bounds access on the last iteration, leading to ArrayIndexOutOfBoundsException."
+            }
+          ],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 4260331148,
+          "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/2#note_4260331148",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 1
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "high",
+          "auditContextTokens": 8192,
+          "auditOutputTokens": 4096,
+          "completedAt": "2026-11-18T01:45:54.138183Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "fixed",
+          "jobId": "11ca180d-0eeb-4e0f-b377-76896bf6a109",
+          "baseSha": "879f61bc5ffd8ea53558c005942255e42cbcd578",
+          "headSha": "d6399bed91252441351190c899cfe61ed7dcb73b",
+          "findings": [],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 4260331148,
+          "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/2#note_4260331148",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 0
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "high",
+          "auditContextTokens": 8192,
+          "auditOutputTokens": 4096,
+          "completedAt": "2026-11-18T01:47:25.149402Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "regression",
+          "jobId": "9a145054-0405-4fbc-9d22-1895b92e0ef6",
+          "baseSha": "879f61bc5ffd8ea53558c005942255e42cbcd578",
+          "headSha": "6b2001a3192737d2212723d357f319980d5d6e46",
+          "findings": [
+            {
+              "file": "src/demo/LifecycleTotals.java",
+              "line": 9,
+              "evidence": "for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop condition uses <= values.length, causing an out-of-bounds access when i equals values.length, leading to ArrayIndexOutOfBoundsException."
+            }
+          ],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 4260331148,
+          "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/2#note_4260331148",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 1
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "high",
+          "auditContextTokens": 8192,
+          "auditOutputTokens": 4096,
+          "completedAt": "2026-11-18T01:49:37.601882Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "fixed-again",
+          "jobId": "f9fd74a2-2d47-4ea6-99a0-e40150d7fc3f",
+          "baseSha": "879f61bc5ffd8ea53558c005942255e42cbcd578",
+          "headSha": "792ac761f7377b56bbd38d5b896f86f31ca9c8ac",
+          "findings": [],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 4260331148,
+          "commentUrl": "https://gitlab.com/cleisommais/pr-test-repo/-/merge_requests/2#note_4260331148",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 0
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "medium",
+          "auditContextTokens": 16384,
+          "auditOutputTokens": 8192,
+          "completedAt": "2026-11-18T12:54:07.906704Z",
+          "remoteReadBackVerified": true
+        }
+      ],
+      "priorFailedAttempts": [
+        {
+          "label": "initial",
+          "jobId": "be43fd43-1cef-49fd-b267-9cbc8ad78e10",
+          "headSha": "cb92cdf7daff35d49fc5b4400f2658c630afa420",
+          "state": "succeeded",
+          "failedChecks": [
+            "expectedFindings",
+            "remoteResult"
+          ],
+          "findings": [],
+          "errors": [],
+          "inferenceAttempts": [
+            {
+              "role": "primary",
+              "model": "gpt-oss:20b",
+              "status": "completed",
+              "provider": "ollama",
+              "inputBytes": 1501,
+              "schemaBytes": 493,
+              "systemBytes": 1513,
+              "outputTokens": 41,
+              "promptTokens": 921,
+              "elapsedMillis": 24109,
+              "admissionWaitMillis": 0,
+              "reportedRuntimeMillis": 24107
+            }
+          ]
+        },
+        {
+          "label": "initial",
+          "jobId": "be43fd43-1cef-49fd-b267-9cbc8ad78e10",
+          "headSha": "cb92cdf7daff35d49fc5b4400f2658c630afa420",
+          "state": "succeeded",
+          "failedChecks": [
+            "expectedFindings",
+            "remoteResult"
+          ],
+          "findings": [],
+          "errors": [],
+          "inferenceAttempts": [
+            {
+              "role": "primary",
+              "model": "gpt-oss:20b",
+              "status": "completed",
+              "provider": "ollama",
+              "inputBytes": 1501,
+              "schemaBytes": 493,
+              "systemBytes": 1513,
+              "outputTokens": 37,
+              "promptTokens": 920,
+              "elapsedMillis": 828,
+              "admissionWaitMillis": 0,
+              "reportedRuntimeMillis": 823
+            },
+            {
+              "role": "primary",
+              "model": "gpt-oss:20b",
+              "status": "completed",
+              "provider": "ollama",
+              "inputBytes": 1501,
+              "schemaBytes": 493,
+              "systemBytes": 2057,
+              "outputTokens": 40,
+              "promptTokens": 1010,
+              "elapsedMillis": 685,
+              "admissionWaitMillis": 0,
+              "reportedRuntimeMillis": 682
+            }
+          ]
+        }
+      ],
+      "duplicateVerified": true,
+      "finalRemoteBody": "<!-- mcp-review-poc:gitlab:88936485:2 -->\n## Automated POC review\n\nAnalyzed commit `792ac761f7377b56bbd38d5b896f86f31ca9c8ac`. Static analysis only; human review is still required.\n\nCoverage status: **complete**; files enumerated: 2.\n\nNo validated issues found in the current PR revision.\nThis is not an approval or a guarantee that the change is correct.\n\nFiles requiring further analysis: 0. Model: gpt-oss:20b."
+    },
+    {
+      "platform": "bitbucket",
+      "repository": "cleisommais/pr-test-repo",
+      "number": 6,
+      "url": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/6",
+      "revisions": [
+        {
+          "label": "initial",
+          "jobId": "201c40e5-97be-4170-ba44-6903637f5956",
+          "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+          "headSha": "142f9d94539c7d1f7de20a91b33fbdc2d0c577bb",
+          "findings": [
+            {
+              "file": "src/demo/LifecycleTotals.java",
+              "line": 9,
+              "evidence": "for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop iterates one step beyond the array bounds, causing an ArrayIndexOutOfBoundsException when accessing values[i]."
+            }
+          ],
+          "enumeratedFiles": 1,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 904864998,
+          "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/6#comment-904864998",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": null,
+          "auditThinking": null,
+          "auditContextTokens": null,
+          "auditOutputTokens": null,
+          "completedAt": "2026-11-18T01:38:58.036740Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "unrelated",
+          "jobId": "df645d15-4907-4c47-892d-2e4d98818a2e",
+          "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+          "headSha": "1d33d2e546dc22b0275de9f405cb44ab0be22dcd",
+          "findings": [
+            {
+              "file": "src/demo/LifecycleTotals.java",
+              "line": 9,
+              "evidence": "for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop condition uses <= values.length, causing an out-of-bounds array access on the last iteration, which will throw ArrayIndexOutOfBoundsException."
+            }
+          ],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 904864998,
+          "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/6#comment-904864998",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 1
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "high",
+          "auditContextTokens": 8192,
+          "auditOutputTokens": 4096,
+          "completedAt": "2026-11-18T01:46:42.471822Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "fixed",
+          "jobId": "2eac521d-4cc2-4f7c-b2b3-1bcfa805b8d3",
+          "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+          "headSha": "8aa8645b0819a417d45df55e735aee91a0d91bde",
+          "findings": [],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 904864998,
+          "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/6#comment-904864998",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 0
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "medium",
+          "auditContextTokens": 16384,
+          "auditOutputTokens": 8192,
+          "completedAt": "2026-11-18T12:49:10.346425Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "regression",
+          "jobId": "6021d10c-8a9d-49d1-8a3f-102efed193ee",
+          "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+          "headSha": "e5af7c7a0e575df0fcb47b7942a7574e6ad69589",
+          "findings": [
+            {
+              "file": "src/demo/LifecycleTotals.java",
+              "line": 9,
+              "evidence": "for (int i = 0; i <= values.length; i++) {",
+              "severity": "HIGH",
+              "explanation": "The loop condition uses <= values.length, causing the loop to access values[values.length] on the final iteration, which throws an ArrayIndexOutOfBoundsException. This off\u2011by\u2011one error makes the method unusable for any non\u2011empty array and also fails for empty arrays."
+            }
+          ],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 904864998,
+          "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/6#comment-904864998",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 1
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "medium",
+          "auditContextTokens": 16384,
+          "auditOutputTokens": 8192,
+          "completedAt": "2026-11-18T12:50:47.064688Z",
+          "remoteReadBackVerified": true
+        },
+        {
+          "label": "fixed-again",
+          "jobId": "e2600eb6-29d5-4d03-9f76-c9a38bb0d60e",
+          "baseSha": "8665b9928b7cfce9e44c2b6981585e852ca18d52",
+          "headSha": "1e8de0d4b442c3d09b5e727b8c3a9591726fe147",
+          "findings": [],
+          "enumeratedFiles": 2,
+          "state": "succeeded",
+          "coverage": "complete",
+          "commentId": 904864998,
+          "commentUrl": "https://bitbucket.org/cleisommais/pr-test-repo/pull-requests/6#comment-904864998",
+          "model": "gpt-oss:20b",
+          "promptVersion": "review-original-v3",
+          "cleanReviewAudit": {
+            "scope": "Second correctness pass on zero-candidate batches; not a guarantee of no missed defects",
+            "batches": [
+              {
+                "status": "completed",
+                "findings": 0
+              }
+            ],
+            "version": "clean-review-audit-v1"
+          },
+          "auditThinking": "medium",
+          "auditContextTokens": 16384,
+          "auditOutputTokens": 8192,
+          "completedAt": "2026-11-18T12:52:16.271837Z",
+          "remoteReadBackVerified": true
+        }
+      ],
+      "priorFailedAttempts": [
+        {
+          "label": "unrelated",
+          "jobId": "df645d15-4907-4c47-892d-2e4d98818a2e",
+          "headSha": "1d33d2e546dc22b0275de9f405cb44ab0be22dcd",
+          "state": "succeeded",
+          "failedChecks": [
+            "expectedFindings",
+            "remoteResult"
+          ],
+          "findings": [],
+          "errors": [],
+          "inferenceAttempts": [
+            {
+              "role": "primary",
+              "model": "gpt-oss:20b",
+              "status": "completed",
+              "provider": "ollama",
+              "inputBytes": 1783,
+              "schemaBytes": 493,
+              "systemBytes": 1513,
+              "outputTokens": 38,
+              "promptTokens": 995,
+              "elapsedMillis": 569,
+              "admissionWaitMillis": 0,
+              "reportedRuntimeMillis": 566
+            }
+          ]
+        },
+        {
+          "label": "unrelated",
+          "jobId": "df645d15-4907-4c47-892d-2e4d98818a2e",
+          "headSha": "1d33d2e546dc22b0275de9f405cb44ab0be22dcd",
+          "state": "succeeded",
+          "failedChecks": [
+            "expectedFindings",
+            "remoteResult"
+          ],
+          "findings": [],
+          "errors": [],
+          "inferenceAttempts": [
+            {
+              "role": "primary",
+              "model": "gpt-oss:20b",
+              "status": "completed",
+              "provider": "ollama",
+              "inputBytes": 1783,
+              "schemaBytes": 493,
+              "systemBytes": 1513,
+              "outputTokens": 39,
+              "promptTokens": 994,
+              "elapsedMillis": 772,
+              "admissionWaitMillis": 0,
+              "reportedRuntimeMillis": 769
+            },
+            {
+              "role": "primary",
+              "model": "gpt-oss:20b",
+              "status": "completed",
+              "provider": "ollama",
+              "inputBytes": 1783,
+              "schemaBytes": 493,
+              "systemBytes": 2057,
+              "outputTokens": 37,
+              "promptTokens": 1084,
+              "elapsedMillis": 643,
+              "admissionWaitMillis": 0,
+              "reportedRuntimeMillis": 641
+            }
+          ]
+        },
+        {
+          "label": "fixed",
+          "jobId": "2eac521d-4cc2-4f7c-b2b3-1bcfa805b8d3",
+          "headSha": "8aa8645b0819a417d45df55e735aee91a0d91bde",
+          "state": "partial",
+          "failedChecks": [
+            "jobSucceeded",
+            "completeCoverage",
+            "remoteResult"
+          ],
+          "findings": [],
+          "errors": [
+            "Batch 1: IncompleteGeneration: Incomplete model generation"
+          ],
+          "inferenceAttempts": [
+            {
+              "role": "primary",
+              "model": "gpt-oss:20b",
+              "status": "completed",
+              "provider": "ollama",
+              "inputBytes": 1723,
+              "schemaBytes": 493,
+              "systemBytes": 1513,
+              "outputTokens": 29,
+              "promptTokens": 966,
+              "elapsedMillis": 662,
+              "admissionWaitMillis": 0,
+              "reportedRuntimeMillis": 659
+            },
+            {
+              "role": "clean-audit",
+              "model": "gpt-oss:20b",
+              "status": "failed",
+              "provider": "ollama",
+              "inputBytes": 1723,
+              "schemaBytes": 493,
+              "systemBytes": 2057,
+              "outputTokens": 4096,
+              "promptTokens": 1056,
+              "elapsedMillis": 50385,
+              "admissionWaitMillis": 0,
+              "reportedRuntimeMillis": 50383
+            }
+          ]
+        },
+        {
+          "label": "fixed",
+          "jobId": "2eac521d-4cc2-4f7c-b2b3-1bcfa805b8d3",
+          "headSha": "8aa8645b0819a417d45df55e735aee91a0d91bde",
+          "state": "partial",
+          "failedChecks": [
+            "jobSucceeded",
+            "completeCoverage",
+            "remoteResult"
+          ],
+          "findings": [],
+          "errors": [
+            "Batch 1: IncompleteGeneration: Incomplete model generation"
+          ],
+          "inferenceAttempts": [
+            {
+              "role": "primary",
+              "model": "gpt-oss:20b",
+              "status": "completed",
+              "provider": "ollama",
+              "inputBytes": 1723,
+              "schemaBytes": 493,
+              "systemBytes": 1513,
+              "outputTokens": 55,
+              "promptTokens": 965,
+              "elapsedMillis": 939,
+              "admissionWaitMillis": 0,
+              "reportedRuntimeMillis": 934
+            },
+            {
+              "role": "clean-audit",
+              "model": "gpt-oss:20b",
+              "status": "failed",
+              "provider": "ollama",
+              "inputBytes": 1723,
+              "schemaBytes": 493,
+              "systemBytes": 2057,
+              "outputTokens": 8192,
+              "promptTokens": 1055,
+              "elapsedMillis": 116138,
+              "admissionWaitMillis": 0,
+              "reportedRuntimeMillis": 116134
+            }
+          ]
+        }
+      ],
+      "duplicateVerified": true,
+      "finalRemoteBody": "<!-- mcp-review-poc:bitbucket:cleisommais/pr-test-repo:6 -->\n## Automated POC review\n\nAnalyzed commit `1e8de0d4b442c3d09b5e727b8c3a9591726fe147`. Static analysis only; human review is still required.\n\nCoverage status: **complete**; files enumerated: 2.\n\nNo validated issues found in the current PR revision.\nThis is not an approval or a guarantee that the change is correct.\n\nFiles requiring further analysis: 0. Model: gpt-oss:20b."
+    }
+  ]
+}

@@ -285,6 +285,19 @@ components:
             baseBranch: {type: string}
             model: {type: string}
             promptVersion: {type: string}
+            cleanReviewAudit:
+              type: object
+              description: Second correctness pass for zero-candidate batches; failures leave partial coverage.
+              properties:
+                version: {type: string, example: clean-review-audit-v1}
+                scope: {type: string}
+                batches:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      status: {type: string, enum: [completed, incomplete]}
+                      findings: {type: integer, minimum: 0}
             current: {type: boolean}
             qualityStatus: {type: string, example: requires-human-review}
             enumerationComplete: {type: boolean}

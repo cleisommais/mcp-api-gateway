@@ -32,7 +32,7 @@ public class ReviewServiceTest {
                                 assertTrue(
                                         system.contains(
                                                 "Severity must reflect demonstrated impact"));
-                            else assertEquals(ReviewEngine.SYSTEM, system);
+                            else assertTrue(system.startsWith(ReviewEngine.SYSTEM));
                             return new com.prreview.domain.model.ModelGeneration(
                                     Json.write(
                                             Map.of(

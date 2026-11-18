@@ -155,10 +155,27 @@ public final class GitHubReviewPublisher {
                                     + " disagreements.\n\n");
         }
         var findings = Json.list(report.get("findings"));
-        if (findings.isEmpty())
+        long pending =
+                Json.list(report.get("coverage")).stream()
+                        .map(Json::map)
+                        .filter(
+                                entry ->
+                                        !List.of("analyzed", "excluded")
+                                                .contains(entry.get("status")))
+                        .count();
+        if (findings.isEmpty()) {
+            boolean complete =
+                    "complete".equals(report.get("status"))
+                            && Boolean.TRUE.equals(report.get("current"))
+                            && Boolean.TRUE.equals(report.get("enumerationComplete"))
+                            && pending == 0;
             result.append(
-                    "No validated findings were produced. This is not an approval or a guarantee"
-                            + " that the change is correct.\n");
+                    complete
+                            ? "No validated issues found in the current PR revision.\n"
+                            : "Review incomplete or outdated; no validated findings were produced. "
+                                    + "Do not treat this as a clean review.\n");
+            result.append("This is not an approval or a guarantee that the change is correct.\n");
+        }
         for (Object item : findings) {
             var finding = Json.map(item);
             String text =
@@ -177,14 +194,6 @@ public final class GitHubReviewPublisher {
             }
             result.append(text);
         }
-        long pending =
-                Json.list(report.get("coverage")).stream()
-                        .map(Json::map)
-                        .filter(
-                                entry ->
-                                        !List.of("analyzed", "excluded")
-                                                .contains(entry.get("status")))
-                        .count();
         result.append("\nFiles requiring further analysis: ")
                 .append(pending)
                 .append(". Model: ")
