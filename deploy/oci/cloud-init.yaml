@@ -1,0 +1,26 @@
+#cloud-config
+package_update: true
+packages:
+  - ca-certificates
+  - curl
+  - git
+  - docker.io
+  - docker-compose-v2
+  - python3
+users:
+  - default
+write_files:
+  - path: /etc/sysctl.d/90-prreview.conf
+    content: |
+      vm.swappiness=10
+runcmd:
+  - [systemctl, enable, --now, docker]
+  - [usermod, -aG, docker, ubuntu]
+  - [install, -d, -o, ubuntu, -g, ubuntu, -m, '0700', /opt/prreview]
+  - [sysctl, --system]
+  - [sh, -c, 'if [ ! -f /swapfile ]; then fallocate -l 2G /swapfile; chmod 600 /swapfile; mkswap /swapfile; fi; swapon /swapfile || true']
+  - [sh, -c, 'grep -q "^/swapfile " /etc/fstab || printf "/swapfile none swap sw 0 0\n" >> /etc/fstab']
+  - [sh, -c, 'iptables -C INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || iptables -I INPUT 5 -p tcp --dport 80 -j ACCEPT']
+  - [sh, -c, 'iptables -C INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || iptables -I INPUT 5 -p tcp --dport 443 -j ACCEPT']
+  - [sh, -c, 'command -v netfilter-persistent >/dev/null && netfilter-persistent save || true']
+  - [sh, -c, 'touch /var/lib/cloud/prreview-bootstrap-complete']

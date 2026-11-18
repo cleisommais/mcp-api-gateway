@@ -18,7 +18,7 @@ tags:
   - name: Reviews
     description: Authenticated manual or CI-triggered reviews
   - name: Webhooks
-    description: Signed GitHub App deliveries
+    description: Authenticated native GitHub, GitLab and Bitbucket callbacks
 paths:
   /health:
     get:
@@ -122,7 +122,7 @@ paths:
     post:
       operationId: receiveGitHubWebhook
       tags: [Webhooks]
-      summary: Receive a signed GitHub App webhook
+      summary: Receive a signed GitHub App or repository webhook
       description: |
         Maximum body size is 1,000,000 bytes. GitHub computes HMAC-SHA256 over the
         exact raw request bytes using the configured webhook secret. Reformatting
@@ -130,6 +130,9 @@ paths:
         contributor-association and fork policies are checked before admission.
         Ping and ignored deliveries are persisted without a job and return 200.
         Eligible actions are opened, synchronize, reopened and ready_for_review.
+        App deliveries must match the configured installation. Repository hooks
+        omit installation; HMAC and repository-ID/name checks still apply, and
+        the worker uses only the configured App installation for outbound access.
         This endpoint does not authenticate with the manual API bearer token.
       security:
         - githubSignature: []
@@ -153,10 +156,12 @@ paths:
               additionalProperties: true
               description: |
                 Native GitHub webhook payload. Pull-request events must include
-                installation.id, repository.id/full_name, action, number, and
+                repository.id/full_name, action, number, and
                 pull_request with state, draft, author_association, updated_at,
                 base.sha/ref and head.sha/repo.full_name. The service does not
                 define a replacement GitHub event format.
+                installation.id is required and checked when an installation
+                object is present; repository hooks normally omit that object.
       responses:
         '202':
           description: Eligible delivery and new review job persisted
@@ -168,6 +173,119 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/WebhookReceipt'}
+        '400': {$ref: '#/components/responses/InvalidInput'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+        '413': {$ref: '#/components/responses/BodyTooLarge'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /webhooks/gitlab:
+    post:
+      operationId: receiveGitLabWebhook
+      tags: [Webhooks]
+      summary: Receive a GitLab merge-request webhook
+      description: |
+        Enabled when GITLAB_WEBHOOK_SECRET or its _FILE setting is configured.
+        Maximum body size is 1,000,000 bytes. A constant-time comparison validates
+        X-Gitlab-Token before parsing/admission. Use HTTPS with certificate validation.
+        Accepts native Merge Request Hook payloads with object_kind=merge_request,
+        configured project ID/path, an open non-draft same-project MR, configured
+        target branch, and action open, reopen or update. Other events are ignored.
+        This endpoint does not use the manual API bearer token.
+        Acknowledgement follows persistence of normalized routing metadata; no
+        repository API or model call runs in the HTTP handler. Admission resolves
+        the pinned snapshot asynchronously and retries transient/inconsistent data.
+        Raw request bodies and authentication headers are not retained.
+        GitLab signing-token headers are not validated by this implementation.
+      security:
+        - gitlabToken: []
+      parameters:
+        - name: X-Gitlab-Event
+          in: header
+          required: true
+          schema: {type: string}
+          example: Merge Request Hook
+        - name: webhook-id
+          in: header
+          description: Stable provider message ID. Required unless X-Gitlab-Webhook-UUID is supplied.
+          schema: {type: string, maxLength: 100}
+        - name: X-Gitlab-Webhook-UUID
+          in: header
+          description: Delivery identity fallback when webhook-id is absent.
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: Native GitLab payload, including project and object_attributes with iid, action, state, source/target_project_id, target_branch and last_commit.id.
+      responses:
+        '202':
+          description: Authenticated event persisted, including duplicate receipt IDs
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PlatformWebhookReceipt'}
+        '200':
+          description: Irrelevant, draft, fork or target-filtered event; no review admitted
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PlatformWebhookReceipt'}
+        '400': {$ref: '#/components/responses/InvalidInput'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+        '413': {$ref: '#/components/responses/BodyTooLarge'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /webhooks/bitbucket:
+    post:
+      operationId: receiveBitbucketWebhook
+      tags: [Webhooks]
+      summary: Receive a signed Bitbucket Cloud PR or push webhook
+      description: |
+        Enabled when BITBUCKET_WEBHOOK_SECRET or its _FILE setting is configured.
+        Maximum body size is 1,000,000 bytes. Validates HMAC-SHA256 over exact raw
+        bytes before admission. Only configured repositories are accepted.
+        pullrequest:created and pullrequest:updated admit open non-draft same-repo
+        PRs targeting the configured branch. repo:push persists changed branch/head
+        metadata, then asynchronously discovers its open PRs; there is no scheduled
+        repository poller. Deleted branches and other events are ignored.
+        HTTP 202 confirms a durable receipt, not a completed review or a job ID.
+        Event and snapshot uniqueness suppress repeated jobs from push plus PR-update
+        deliveries. Provider metadata consistency is checked against the pushed SHA.
+        No repository API or model call runs in the callback; raw bodies/headers are
+        not retained. This endpoint does not use the manual API bearer token.
+      security:
+        - bitbucketSignature: []
+      parameters:
+        - name: X-Request-UUID
+          in: header
+          required: true
+          description: Provider delivery identity, with or without UUID braces.
+          schema: {type: string, maxLength: 100}
+        - name: X-Event-Key
+          in: header
+          required: true
+          schema: {type: string}
+          example: repo:push
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: Native Bitbucket repository plus pullrequest, or repository plus push.changes with new branch name and target.hash. PR commit hashes may be abbreviated; admitted jobs use full SHAs.
+      responses:
+        '202':
+          description: Authenticated normalized event persisted, including duplicate receipt IDs
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PlatformWebhookReceipt'}
+        '200':
+          description: Irrelevant or policy-filtered event; no review admitted
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PlatformWebhookReceipt'}
         '400': {$ref: '#/components/responses/InvalidInput'}
         '403': {$ref: '#/components/responses/Forbidden'}
         '405': {$ref: '#/components/responses/MethodNotAllowed'}
@@ -187,6 +305,16 @@ components:
       in: header
       name: X-Hub-Signature-256
       description: 'Computed HMAC, not a static API key: sha256=<64 lowercase hex digits>, using the webhook secret and raw request bytes.'
+    gitlabToken:
+      type: apiKey
+      in: header
+      name: X-Gitlab-Token
+      description: Dedicated webhook token from GITLAB_WEBHOOK_SECRET_FILE, sent over HTTPS. This is not the GitLab read/publish API token.
+    bitbucketSignature:
+      type: apiKey
+      in: header
+      name: X-Hub-Signature
+      description: 'Computed HMAC-SHA256 over the raw body: sha256=<64 lowercase hex digits>, using BITBUCKET_WEBHOOK_SECRET_FILE.'
   responses:
     InvalidInput:
       description: Invalid JSON, fields, event identifiers or ineligible manual snapshot
@@ -222,6 +350,22 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/Error'}
   schemas:
+    PlatformWebhookReceipt:
+      type: object
+      additionalProperties: false
+      required: [outcome, reviews]
+      properties:
+        outcome: {type: string, enum: [accepted, ignored]}
+        reviews:
+          type: array
+          description: Durable admission receipts. These UUIDs are not review job IDs.
+          items:
+            type: object
+            additionalProperties: false
+            required: [receiptId, duplicate]
+            properties:
+              receiptId: {type: string, format: uuid}
+              duplicate: {type: boolean}
     CreateReviewRequest:
       type: object
       additionalProperties: false

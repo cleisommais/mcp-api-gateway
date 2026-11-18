@@ -38,6 +38,10 @@ public final class GitHubWebhookPolicy {
         return Json.read(Files.readString(path), new TypeRef<>() {});
     }
 
+    public ApiGatewayConfig config() {
+        return config;
+    }
+
     public ReviewEvent validate(String delivery, String event, String signature, byte[] body)
             throws Exception {
         if (signature == null || !signature.matches("sha256=[a-f0-9]{64}"))
@@ -76,7 +80,12 @@ public final class GitHubWebhookPolicy {
                     "ping");
         if (installationId < 1)
             throw new IllegalStateException("GitHub installation is not configured");
-        long receivedInstallation = integer(Json.map(payload.get("installation")).get("id"));
+        // Repository webhooks are HMAC-authenticated but have no installation object.
+        // The configured installation remains the only identity used by the worker.
+        long receivedInstallation =
+                payload.containsKey("installation")
+                        ? integer(Json.map(payload.get("installation")).get("id"))
+                        : installationId;
         if (receivedInstallation != installationId)
             throw new SecurityException("Unexpected GitHub installation");
         var repository = Json.map(payload.get("repository"));

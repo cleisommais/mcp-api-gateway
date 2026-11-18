@@ -4,6 +4,7 @@ import com.prreview.common.config.SecretReader;
 import com.prreview.domain.model.EnqueueResult;
 import com.prreview.domain.model.ReviewEvent;
 import com.prreview.domain.model.ReviewJob;
+import com.prreview.domain.model.WebhookRequest;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -158,6 +159,83 @@ AND state='queued' AND id<>? AND source_updated_at<? AND platform=?
                 connection.rollback();
                 throw error;
             }
+        }
+    }
+
+    public boolean acceptWebhook(WebhookRequest request) throws Exception {
+        try (var connection = connection();
+                var insert =
+                        connection.prepareStatement(
+                                """
+INSERT INTO webhook_requests(id,platform,provider_delivery,repository,pr_number,source_branch,head_sha,event,action,payload_hash)
+VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING
+""")) {
+            insert.setObject(1, request.id());
+            insert.setString(2, request.platform());
+            insert.setString(3, request.delivery());
+            insert.setString(4, request.repository());
+            insert.setInt(5, request.number());
+            insert.setString(6, request.branch());
+            insert.setString(7, request.head());
+            insert.setString(8, request.event());
+            insert.setString(9, request.action());
+            insert.setString(10, request.payloadHash());
+            boolean added = insert.executeUpdate() == 1;
+            if (!added)
+                try (var query =
+                        connection.prepareStatement(
+                                "SELECT payload_hash FROM webhook_requests WHERE id=?")) {
+                    query.setObject(1, request.id());
+                    try (var rows = query.executeQuery()) {
+                        if (!rows.next() || !rows.getString(1).equals(request.payloadHash()))
+                            throw new SecurityException("Delivery ID reused with a different body");
+                    }
+                }
+            return added;
+        }
+    }
+
+    public WebhookRequest claimWebhook() throws Exception {
+        try (var connection = connection();
+                var claim =
+                        connection.prepareStatement(
+                                """
+WITH candidate AS (
+ SELECT id FROM webhook_requests WHERE (state='queued' AND next_attempt_at<=now())
+ OR (state='processing' AND lease_until<now())
+ ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1)
+UPDATE webhook_requests SET state='processing',attempts=attempts+1,lease_until=now()+interval '5 minutes',updated_at=now()
+FROM candidate WHERE webhook_requests.id=candidate.id RETURNING webhook_requests.*
+""")) {
+            try (var rows = claim.executeQuery()) {
+                if (!rows.next()) return null;
+                return new WebhookRequest(
+                        (UUID) rows.getObject("id"),
+                        rows.getString("platform"),
+                        rows.getString("provider_delivery"),
+                        rows.getString("repository"),
+                        rows.getInt("pr_number"),
+                        rows.getString("source_branch"),
+                        rows.getString("head_sha"),
+                        rows.getString("event"),
+                        rows.getString("action"),
+                        rows.getString("payload_hash"));
+            }
+        }
+    }
+
+    public void finishWebhook(UUID id, String failure) throws Exception {
+        try (var connection = connection();
+                var update =
+                        connection.prepareStatement(
+                                """
+UPDATE webhook_requests SET state=CASE WHEN ?::text IS NULL THEN 'complete' WHEN attempts>=12 THEN 'failed' ELSE 'queued' END,
+failure_code=?,lease_until=NULL,next_attempt_at=now()+interval '20 seconds',updated_at=now() WHERE id=?
+""")) {
+            update.setString(1, failure);
+            update.setString(2, failure);
+            update.setObject(3, id);
+            update.executeUpdate();
         }
     }
 

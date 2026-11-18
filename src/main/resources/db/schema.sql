@@ -34,3 +34,24 @@ CREATE TABLE IF NOT EXISTS deliveries (
  job_id uuid REFERENCES jobs(id),
  received_at timestamptz NOT NULL DEFAULT now()
 );
+-- Authenticated webhook admission waits for provider consistency outside the HTTP callback.
+-- Only normalized routing metadata is retained; raw payloads and authentication headers are not.
+CREATE TABLE IF NOT EXISTS webhook_requests (
+ id uuid PRIMARY KEY,
+ platform text NOT NULL,
+ provider_delivery text NOT NULL,
+ repository text NOT NULL,
+ pr_number integer NOT NULL,
+ source_branch text NOT NULL,
+ head_sha text NOT NULL,
+ event text NOT NULL,
+ action text NOT NULL,
+ payload_hash char(64) NOT NULL,
+ state text NOT NULL DEFAULT 'queued',
+ attempts integer NOT NULL DEFAULT 0,
+ next_attempt_at timestamptz NOT NULL DEFAULT now(),
+ lease_until timestamptz,
+ failure_code text,
+ created_at timestamptz NOT NULL DEFAULT now(),
+ updated_at timestamptz NOT NULL DEFAULT now()
+);

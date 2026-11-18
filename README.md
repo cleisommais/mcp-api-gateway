@@ -4,6 +4,10 @@ Java 21 service that reviews GitHub and Bitbucket Cloud pull requests and GitLab
 
 ## Start locally
 
+For the temporary Oracle VPS deployment with GPT, PostgreSQL and reactive callbacks, see
+[OCI deployment](deploy/oci/README.md). [Live webhook evidence](docs/evaluation/oci/README.md)
+records PR creation and subsequent local fix commits on all three platforms.
+
 Run commands from the repository root. Install Git and [Docker with Compose](https://docs.docker.com/compose/install/): Docker Desktop with Linux containers on Windows/macOS, or Docker Engine plus the Compose plugin on Linux. Start Docker before continuing; `docker version` and `docker compose version` must succeed. On Linux, configure your account's [Docker access](https://docs.docker.com/engine/install/linux-postinstall/) so the commands below work without `sudo`.
 
 Windows uses Windows PowerShell 5.1 or later. macOS/Linux uses Bash 3.2 or later and Python 3.9 or later (standard library only; no `pip` packages). For example, install Python with `brew install python` on macOS with [Homebrew](https://brew.sh/), or `sudo apt-get install git python3 curl` on Debian/Ubuntu after `sudo apt-get update`. Other Linux distributions can use their package manager. Check `bash --version` and `python3 --version`. No host Java or Maven is required to build, run or test containers.
@@ -121,7 +125,7 @@ status_url=$(printf '%s' "$job" | python3 -c 'import json,sys; print(json.load(s
 curl --fail --silent --show-error "http://localhost:18081$status_url" -H "Authorization: Bearer $token"
 ```
 
-For GitHub automation, expose only the API gateway through your HTTPS callback/tunnel and set the App webhook URL to `/webhooks/github`, content type JSON and the secret from `secrets/github-webhook-secret`. An optional local tunnel starts with `docker compose -f compose.yaml -f compose.webhook.yaml up -d`; read its URL with `docker compose -f compose.yaml -f compose.webhook.yaml logs tunnel`. GitLab and Bitbucket currently use the manual API; their webhook endpoints are not implemented.
+For reactive reviews, expose the API gateway through HTTPS and configure provider webhooks. GitHub App or repository hooks use `/webhooks/github`, JSON, Pull request events and the configured GitHub webhook secret. An optional local tunnel starts with `docker compose -f compose.yaml -f compose.webhook.yaml up -d`; read its URL with `docker compose -f compose.yaml -f compose.webhook.yaml logs tunnel`. GitLab uses `/webhooks/gitlab` with Merge request events and a dedicated secret token. Bitbucket uses `/webhooks/bitbucket` with PR created/updated and repository push events, authenticated by HMAC-SHA256. The new routes require their webhook secrets to be mounted/configured; [VPS setup](deploy/oci/README.md) provides those mounts and instructions. There is no repository polling service. The worker updates its existing summary when the next commit is reviewed.
 
 The tunnel and debug commands use explicit `-f` files, which disable automatic override loading. If using the NVIDIA override, insert `-f compose.override.yaml` immediately after `-f compose.yaml` in those commands. These Docker commands work in both PowerShell and Bash.
 

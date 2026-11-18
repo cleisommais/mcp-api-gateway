@@ -39,12 +39,36 @@ public final class ReviewRequestService {
     }
 
     public CreateReviewResponse create(CreateReviewRequest request) throws Exception {
+        return admit(request, UUID.randomUUID(), null, "manual_review", "requested", "");
+    }
+
+    public CreateReviewResponse webhook(
+            CreateReviewRequest request,
+            UUID deliveryId,
+            String payloadHash,
+            String event,
+            String action,
+            String expectedHead)
+            throws Exception {
+        return admit(request, deliveryId, payloadHash, event, action, expectedHead);
+    }
+
+    private CreateReviewResponse admit(
+            CreateReviewRequest request,
+            UUID requestId,
+            String payloadHash,
+            String event,
+            String action,
+            String expectedHead)
+            throws Exception {
         var target = policy.target(request.platform(), request.repository());
-        UUID requestId = UUID.randomUUID();
         com.prreview.domain.model.ChangeSnapshot snapshot;
         try (var source =
                 sources.open(
-                        request.platform(), request.repository(), request.number(), requestId)) {
+                        request.platform(),
+                        request.repository(),
+                        request.number(),
+                        payloadHash == null ? requestId : UUID.randomUUID())) {
             snapshot = source.snapshot();
             if (!snapshot.platform().equals(request.platform())
                     || !snapshot.repository().equals(request.repository())
@@ -59,6 +83,8 @@ public final class ReviewRequestService {
                         "Review requires a current open non-draft change on its configured target"
                                 + " branch");
             }
+            if (!expectedHead.isBlank() && !snapshot.headSha().startsWith(expectedHead))
+                throw new IllegalArgumentException("Webhook snapshot has been superseded");
         } // Close admission MCP context before the worker can claim this ID.
         String hash =
                 HexFormat.of()
@@ -73,9 +99,9 @@ public final class ReviewRequestService {
                 jobs.enqueue(
                         new ReviewEvent(
                                 requestId.toString(),
-                                hash,
-                                "manual_review",
-                                "requested",
+                                payloadHash == null ? hash : payloadHash,
+                                event,
+                                action,
                                 target.id(),
                                 request.repository(),
                                 request.number(),

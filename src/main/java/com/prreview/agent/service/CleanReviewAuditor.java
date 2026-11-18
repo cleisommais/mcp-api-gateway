@@ -10,7 +10,7 @@ import java.util.Map;
 
 /** A zero-candidate review needs a second pass over the same complete pinned context. */
 final class CleanReviewAuditor implements ReviewModel {
-    static final String VERSION = "clean-review-audit-v1";
+    static final String VERSION = "clean-review-audit-v2";
     private static final String INSTRUCTION =
             """
 
@@ -19,6 +19,10 @@ Trace changed control flow with concrete inputs, including boundary and empty in
 For newly added files, all supplied added lines are introduced code and must be reviewed.
 Check that changed conditions, indexing, arithmetic and interactions preserve valid behavior.
 Report only demonstrable introduced failures; a correct change still returns no findings.
+Establish expected behavior from supplied code, callers or an explicit contract before calling
+a concrete input a failure. Do not invent requirements for null handling or numeric range.
+Language-defined arithmetic such as Java int wraparound alone is not evidence of a defect;
+report it only when supplied behavior or requirements establish that overflow is incorrect.
 Use the original exact addedLines mapping for every finding and follow the same output schema.
 """;
     private final ReviewModel delegate, auditModel;
@@ -68,6 +72,6 @@ Use the original exact addedLines mapping for every finding and follow the same 
                         List.copyOf(batches),
                         "scope",
                         "Second correctness pass on zero-candidate batches; not a guarantee of no"
-                            + " missed defects"));
+                                + " missed defects"));
     }
 }

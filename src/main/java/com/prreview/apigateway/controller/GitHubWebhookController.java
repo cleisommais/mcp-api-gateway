@@ -46,6 +46,25 @@ public final class GitHubWebhookController implements HttpHandler {
                             headers.getFirst("X-Hub-Signature-256"),
                             bytes);
             var receipt = queue.enqueue(event);
+            System.out.println(
+                    "Webhook github; delivery="
+                            + event.deliveryId()
+                            + "; event="
+                            + event.event()
+                            + "; action="
+                            + event.action()
+                            + "; repository="
+                            + event.repository()
+                            + "; number="
+                            + event.number()
+                            + "; head="
+                            + event.headSha()
+                            + "; outcome="
+                            + receipt.outcome()
+                            + "; duplicate="
+                            + receipt.duplicate()
+                            + "; job="
+                            + receipt.jobId());
             status = receipt.jobId() != null && !receipt.duplicate() ? 202 : 200;
             response =
                     Map.of(

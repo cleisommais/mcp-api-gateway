@@ -2,9 +2,11 @@ package com.prreview.apigateway;
 
 import com.prreview.apigateway.controller.GitHubWebhookController;
 import com.prreview.apigateway.controller.HealthController;
+import com.prreview.apigateway.controller.PlatformWebhookController;
 import com.prreview.apigateway.controller.ReviewController;
 import com.prreview.apigateway.security.GitHubWebhookPolicy;
 import com.prreview.apigateway.service.ReviewRequestService;
+import com.prreview.apigateway.service.WebhookAdmissionService;
 import com.prreview.common.config.SecretReader;
 import com.prreview.mcp.client.GatewayMcpClient;
 import com.prreview.persistence.repository.PostgresJobRepository;
@@ -19,6 +21,7 @@ import java.nio.file.Path;
  */
 public final class ApiGatewayApplication implements AutoCloseable {
     private final HttpServer server;
+    private final WebhookAdmissionService webhookAdmissions;
     private final java.util.concurrent.ExecutorService executor =
             java.util.concurrent.Executors.newFixedThreadPool(4);
 
@@ -35,12 +38,36 @@ public final class ApiGatewayApplication implements AutoCloseable {
             ReviewRequestService reviews,
             String apiToken)
             throws Exception {
+        this(port, policy, queue, reviews, apiToken, null);
+    }
+
+    private ApiGatewayApplication(
+            int port,
+            GitHubWebhookPolicy policy,
+            GitHubWebhookController.Queue queue,
+            ReviewRequestService reviews,
+            String apiToken,
+            WebhookAdmissionService admissions)
+            throws Exception {
+        webhookAdmissions = admissions;
         server = HttpServer.create(new InetSocketAddress(port), 16);
         server.setExecutor(executor);
         server.createContext("/health", new HealthController());
         server.createContext("/webhooks/github", new GitHubWebhookController(policy, queue));
         if (reviews != null)
             server.createContext("/api/reviews", new ReviewController(reviews, apiToken));
+        if (admissions != null) {
+            var config = policy.config();
+            for (String platform : java.util.List.of("gitlab", "bitbucket")) {
+                String secret =
+                        SecretReader.optional(
+                                platform.toUpperCase(java.util.Locale.ROOT) + "_WEBHOOK_SECRET");
+                if (!secret.isBlank())
+                    server.createContext(
+                            "/webhooks/" + platform,
+                            new PlatformWebhookController(platform, secret, config, admissions));
+            }
+        }
         server.start();
     }
 
@@ -52,6 +79,7 @@ public final class ApiGatewayApplication implements AutoCloseable {
     public void close() {
         server.stop(1);
         executor.shutdownNow();
+        if (webhookAdmissions != null) webhookAdmissions.close();
     }
 
     public static void main(String[] args) throws Exception {
@@ -106,7 +134,8 @@ public final class ApiGatewayApplication implements AutoCloseable {
                                 config),
                         jobs::enqueue,
                         reviews,
-                        SecretReader.required("API_TOKEN"));
+                        SecretReader.required("API_TOKEN"),
+                        new WebhookAdmissionService(jobs, reviews, config));
         Runtime.getRuntime().addShutdownHook(new Thread(app::close));
         System.out.println(
                 "api-gateway listening on "
